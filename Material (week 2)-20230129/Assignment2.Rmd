@@ -65,6 +65,7 @@ SCdata %>% cor() %>% round(digits = 2)
 # correlation plot:
 SCdata %>% cor() %>% corrplot()
 
+#my trial
 ```
 
 ### Define and estimate a CFA model:
@@ -94,7 +95,7 @@ summary(cfa1, fit.measures = TRUE, standardized = TRUE)
 
 ### Visualize the CFA model:
 
-```{r}
+```{r, fig.width= 5, fig.height=7}
 library(semPlot) # install.packages("semPlot")
 
 # Path model based on the model object (TRY AND MODIFY!)
@@ -105,14 +106,14 @@ semPaths(cfa1, style = "lisrel")
 
 # "some" more options added:
 semPaths(cfa1, style = "lisrel", layout = "tree2", what = "path", whatLabels = "name",
-    intercepts = FALSE, residuals = TRUE, thresholds = FALSE, reorder = FALSE,
+    intercepts = F, residuals = T, thresholds = FALSE, reorder = FALSE,
     rotation = 2, 
     latents = c("MSC","ESC", "ASC" ,"GSC"),
     sizeLat = 10, sizeLat2 = 5,
     manifests = rev(colnames(SCdata)),
-    sizeMan = 10, sizeMan2 = 2
+    sizeMan = 15, sizeMan2 = 4
     )
-
+?semPaths
 ```
 
 ## Exercise 2.2
