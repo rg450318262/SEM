@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE, message = F, warning = F)
 
 # 1 Preparation
 
-## 1.1 Load packages
+## 1.1 Load packages 
 
 ```{r, message = F, warning = F}
 library(tidyverse) 
