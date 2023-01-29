@@ -1,0 +1,486 @@
+---
+title: "COS-D419 Factor Analysis and Structural Equation Models 2023, Assignment 1"
+author: "Rong Guang"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE, message = F, warning = F}
+knitr::opts_chunk$set(echo = TRUE, message = F, warning = F)
+```
+
+# 1 Preparation
+
+## 1.1 Load packages
+
+```{r, message = F, warning = F}
+library(tidyverse) 
+library(corrplot) 
+library(psych)
+library(GGally) 
+```
+
+## 1.2 Load dataset
+
+```{r}
+# read the data from the Survo website:
+deca <- read.table("https://survo.fi/data/Decathlon.txt", header = TRUE, sep = '\t')
+```
+
+## 1.3 Check dataset
+
+### 1.3.1 Check first 15 rows
+
+```{r}
+library(knitr)
+deca[-1] %>% head(15) %>% t() %>% kable (align = "rrrrrrrrrrrrr") 
+```
+
+### 1.3.2 Check dimensions
+
+```{r}
+paste(dim(deca) [1], "observations")
+paste(dim(deca) [2], "variables")
+```
+
+### 1.3.3 Check summary statistics
+
+```{r}
+library(finalfit)
+kable(ff_glimpse(deca)$Continuous[,c(3:4,6:12)], digits = 2, align = "rrrrrrrrr")
+```
+
+## 1.4 Add labels to variables
+
+```{r}
+library(expss)
+deca <-  apply_labels(deca, Name = "name of athlete",
+                            Points = "number of points obtained by the athlete",
+                              Run100m = "run 100m in seconds",
+                              Longjump = "Long jump in meters",
+                              Shotput = "shot-put in meters",
+                              Hijump = "High jump in meters",
+                              Run400m = "run 400m in seconds",
+                              Hurdles = "110 m hurdles in meters",
+                              Discus = "discus-throw in meters",
+                              Polevlt = "pole-valut in meters",
+                              Javelin = "Javelin-throw in meters",
+                              Run1500m = "run 1500m in seconds",
+                              Height = "height",
+                              Weight = "weight")
+```
+
+## 1.5 Check labels
+
+```{r}
+library(sjlabelled)
+get_label(deca)
+```
+
+
+# 2 Data visualization
+
+## 2.1 Scatterplot
+
+### 2.1.1 First day sports
+
+```{r, message = F, warning = F}
+#define a function that allows me for more control over ggpairs
+#this function produces density plot 
+my.fun.density <- function(data, mapping, ...) { #notes are roughly same with above
+
+    ggplot(data = data, mapping = mapping) +
+       geom_histogram(aes(y=..density..),
+                      color = "black", 
+                      fill = "white")+
+       geom_density(fill = "#FF6666", alpha = 0.25) +
+       theme(panel.grid.major = element_blank(), 
+             panel.grid.minor = element_blank(),
+             panel.background = element_rect(fill = "#9999CC",
+                                             color = "black"))
+} 
+
+#define a function that allows me to fine-tune the matrix
+my.fun.smooth <- function(data,    #my function needs 3 arguments
+                          mapping,
+                          method = "loess"){
+  ggplot(data = data, #data is passed from ggpairs' arguments
+         mapping = mapping)+#aes is passed from ggpairs' arguments
+           geom_point(size = 0.3,  #draw points
+                      color = "blue")+
+           geom_smooth(method = method,  #fit a linear regression
+                       size = 0.3, 
+                       color = "red")+
+           theme(panel.grid.major = element_blank(), #get rid of the grids
+                 panel.grid.minor = element_blank(),
+                 panel.background = element_rect(fill = "#F0E442", #adjust background
+                                                 color = "black"))
+} 
+
+#draw it
+deca %>% select(Run100m:Run400m) %>% 
+  ggpairs(lower = 
+          list(continuous = my.fun.smooth), #lower half show points with fitted line
+        diag =
+          list(continuous = my.fun.density), #diagonal grids show density plots
+        title = "Fig1. Relationships among performance of first day sports") + #title
+  theme (plot.title = element_text(size = 11,  #adjust title visuals
+                                   face = "bold")) 
+```
+
+### 2.1.2 Second day sports
+
+```{r, message = F, warning = F}
+#draw it
+deca %>% select(Hurdles:Run1500m) %>% 
+  ggpairs(lower = 
+          list(continuous = my.fun.smooth), #lower half show points with fitted line
+        diag =
+          list(continuous = my.fun.density), #diagonal grids show density plots
+        title = "Fig2. Relationships among performance of second day sports") + #title
+  theme (plot.title = element_text(size = 11,  #adjust title visuals
+                                   face = "bold")) 
+```
+
+### 2.1.3 Height and weight
+
+```{r}
+deca %>% ggplot(aes(x = Height, y = Weight)) +
+  geom_point(shape = 16, size = 5, color = "red", alpha = .4)+
+  geom_point(shape = 1, size = 5, color = "black")+
+  theme_bw()+
+  theme(panel.grid.major = element_blank())+
+  labs(title = "Fig3. Scatterplot for height and weight")+
+  geom_smooth(method="loess")
+
+```
+
+## 2.2 Visual correlation matrix
+
+### Correlation strength visualized in size
+
+```{r, caption = "Fig4. Visual correlation matrix for the variables"}
+deca %>% 
+  select(-Name) %>% 
+  cor() %>% 
+  corrplot(title = "Fig4. Visual correlation matrix for the variables",
+           mar=c(0,0,1,0))
+```
+
+### Correlation strength shown in correlation coefficients
+
+```{r}
+deca %>% select(-Name) %>% cor() %>% 
+  corrplot(method = 'number', 
+           number.cex = 0.7, 
+           number.digits = 1,
+           title = "Fig5. Correlation matrix for the variables",
+           mar=c(0,0,1,0))
+```
+
+# 3 Exploratory factor analysis
+
+## 3.1 Check linearity assumption
+
+Findings were the assumption of multivariate normality was basically met (at least half of the variables were not normal), see Fig 1 and 2. 
+
+## 3.2 Check factoribility
+
+Factorability of the items was examined. Several well-recognized criteria for the factorability of a correlation were used.
+
+### 3.2.1 Correlation matrix
+
+It was observed that all of the 10 items correlated at least 0.3 with at least one other item, suggesting good factorability. See fig 6.
+
+```{r}
+deca_perform <- deca %>% 
+  select(-c("Name","Points", "Height", "Weight")) 
+
+deca_perform %>% cor() %>% 
+  corrplot(method = 'number',
+           type = "upper",
+           number.cex = 0.7, 
+           number.digits = 1,
+           title = "Fig6. Correlation matrix for the performance variables",
+           mar=c(0,0,1,0))
+```
+
+### 3.2.2 KMO test
+
+```{r, fig.width=8}
+deca_matrix <- deca_perform %>% 
+  cor.plot()
+KMO(deca_matrix) 
+```
+
+The Kaiser-Meyer-Olkin measure of sampling adequacy was .61, indicating mediocre adequacy according to Kaiser.
+
+### 3.2.3 Bartlett test
+
+```{r}
+cortest.bartlett(deca_matrix, nrow(deca_perform))
+```
+
+Bartlett’s test of sphericity was significant (p < .05), suggesting that the null hypothesis that our matrix be equal to an identity matrix was objected, and hence good factorability.
+
+## 3.3 Estimate factor structure
+
+The number of factors was estimated. Several well-recognized criteria for exploring factor structure solution were used.
+
+```{r}
+fa.parallel(deca_matrix, fa = "fa", fm = "ml", plot = T)
+```
+
+The scree plot graphs the eigenvalue against the factor number. From the third factor on, the line is almost flat, meaning the each successive factor is accounting for smaller and smaller amounts of the total variance.
+
+## 3.4 Very simple structure and BIC
+
+```{r}
+a <- nfactors(deca_matrix, n=3, rotate = "oblimin", fm = "pa", n.obs=12)
+```
+
+The parallel analysis and scree plot based on correlation matrix suggested 3-factor structure, and the VSS was also favourable to a 3-factor interpretation. This was further consolidated by sample size adjusted BIC. While results from the Velicer MAP achieves a minimum of 0.05  with  2  factors, pointing to the optimal number of two factor, and Emprirical BIC suggested a uni-dimension solution. Overall, 3 factor solution was the most universally favored structure, and it was hence adopted in the current task.
+
+## 3.4 Factor analysis
+
+### 3.4.1 Remove items not well explained by factors
+
+```{r}
+#factoring the items
+deca_fa3 <- fa(deca_perform, nfactors=3, fm="ml", 
+             rotate = "varimax", scores = "regression")
+#display results
+print(deca_fa3$communalities)
+```
+
+Variables Polevlt, Javelin, Hijump and Hurdles showed very low commonality (<0.3), suggesting the proportion of their variance cannot be well captured by the factors. They were hence removed.
+
+
+```{r}
+deca_perform_reduced <- deca_perform %>% 
+  select(-Polevlt, -Javelin, -Hurdles, -Hijump)
+```
+
+```{r}
+deca_reduced_fa3 <- fa(deca_perform_reduced, nfactors=3, fm="ml", 
+             rotate = "varimax", scores = "regression")
+
+print(deca_reduced_fa3$communalities)
+```
+
+Variables Longjump showed very low commonality (<0.3), suggesting the proportion of its variance cannot be well captured by the factors. It was hence removed.
+
+```{r}
+deca_perform_reduced <- deca_perform_reduced %>% 
+  select(-Longjump)
+```
+
+```{r}
+deca_reduced_fa3 <- fa(deca_perform_reduced, nfactors=3, fm="pf", 
+             rotate = "varimax", scores = "regression")
+
+print(deca_reduced_fa3, digits = 2, sort = TRUE)
+```
+
+Then all the items had commonalities >0.3, suggesting they can be well-represented by the factors.
+
+### 3.4.2 Factor structure analysis for the remaining 5 items
+
+(1) scree plot
+
+```{r}
+deca_matrix <- deca_perform_reduced %>% 
+  cor.plot()
+fa.parallel(deca_matrix, fa = "fa", fm = "ml", plot = T)
+```
+
+Elbow effect was observed at the 3rd factor.
+
+(2) Very simple structure and BIC
+
+```{r}
+deca_reduced_fa3 <- fa(deca_perform_reduced, nfactors=3, fm="ml", 
+             rotate = "varimax", scores = "regression")
+
+print(deca_reduced_fa3, digits = 2, sort = TRUE)
+
+nfactors(deca_matrix, n=3, rotate = "oblimin", fm = "pa", n.obs=12)
+```
+
+Rotation method was switched to varimax since the performance of these remaining sports can be dependent on different capacity. 
+
+VSS and BCI results suggested a 1 or 2 factor solution. I tested the 2-factor solution.
+
+```{r}
+deca_reduced_fa2 <- fa(deca_perform_reduced, nfactors=2, fm="ml", 
+             rotate = "varimax", scores = "regression")
+
+print(deca_reduced_fa2$loadings,cutoff = 0.3, sort=TRUE)
+
+fa.diagram(deca_reduced_fa2, cut = 0, main = "Factor Analysis, orthogonal rotation")
+```
+
+Shot-put, Discus and Run1500m predominantly loaded together. Run100m and Run400m loaded together. Though Run400m also negatively loaded together with the other factor, the variability explained is quite smaller than when it loads with Run100m 
+
+As such, I defined the factors in the following way. F1-Shotput, Discus and Run1500m-captures a latent factor of strength; F2-Run100m and Run1500m-captures a latent factor of explosiveness. 
+
+# 4 Generate factor scores
+
+```{r}
+scores <- as.data.frame(deca_reduced_fa2$scores) %>%
+  mutate(Name = deca$Name) %>%
+  rename(fa_strength = ML1, 
+         fa_explosiveness = ML2)
+#join into the dataset
+deca_new <- left_join(deca, scores)
+```
+
+
+# 5 Regression
+
+## 5.1 Check distribution
+
+```{r}
+factor.labs <- c("Explosiveness","Strength")
+names(factor.labs) <- c("fa_explosiveness", "fa_strength")
+
+
+scores %>% 
+  select(contains("fa_")) %>%  
+  pivot_longer(everything(), 
+               names_to = "factor", 
+               values_to = "score") %>% 
+  ggplot(aes(x = score))+
+  geom_histogram(bins=7, color = "black", fill = "lightblue")+
+  facet_wrap(~factor, labeller = labeller(factor = factor.labs))+
+  theme(panel.background = element_rect(fill = "white",
+                                        color = "black"),
+        strip.background = element_rect(color = "black",
+                                        fill = "coral"),
+        strip.text = element_text(color= "white",
+                                  size = 10,
+                                  face = "bold"))
+```
+
+## 5.2 Check scatterplot
+
+```{r}
+library(ggrepel)
+deca_new %>% 
+  ggplot(aes(y = fa_strength, x = fa_explosiveness, label = Name)) +
+  geom_point() + geom_text_repel()
+```
+
+```{r, message = F, warning = F}
+#draw it
+deca_new %>% select(Points, contains("fa_")) %>% 
+  ggpairs(lower = 
+          list(continuous = my.fun.smooth), #lower half show points with fitted line
+        diag =
+          list(continuous = my.fun.density)) + #diagonal grids show density plots) 
+  theme (plot.title = element_text(size = 11,  #adjust title visuals
+                                   face = "bold")) 
+```
+
+## 5.3 Predicting points
+
+### 5.3.1 model
+
+```{r}
+lm_deca <- lm(Points ~ fa_strength + fa_explosiveness, data = deca_new)
+summary(lm_deca)
+```
+
+### 5.3.2 finetue model
+
+```{r}
+lm_deca <- lm(Points ~ fa_explosiveness, data = deca_new)
+summary(lm_deca)
+```
+
+# 5.3.3 Model Diagnostic
+
+```{r}
+library(ggfortify)
+autoplot(lm_deca)
+```
+
+# 6 Confirmatory factor analysis (Bonus)
+
+# 6.1 Sepcify the model
+
+```{r}
+install.packages("lavaan")
+library(lavaan)
+
+deca.cfa <- ' Strength =~ Discus + Shotput
+              Explosiveness =~ Run100m + Run400m
+              Endurance =~ Run1500m '
+```
+
+
+# 6.2 Fit the model and display the output
+
+```{r}
+fit <- cfa(deca.cfa, data = deca)
+summary(fit, fit.measures = T)
+```
+
+# 6.3 
+
+```{r}
+
+
+deca.cfa <- ' Strength =~ Discus + Shotput + Run1500m + Polevlt
+              Explosiveness =~ Run100m + Run400m + Hijump
+              Skill =~ Longjump + Hurdles '
+```
+
+
+```{r}
+fit <- cfa(deca.cfa, data = deca)
+summary(fit, fit.measures = T)
+```
+
+
+```{r}
+deca.cfa <- ' Strength =~ Discus + Shotput + Polevlt
+              Explosiveness =~ Run100m + Run400m + Hijump + Hurdles +Javelin
+              Endurance =~ Run1500m'
+```
+
+
+```{r}
+fit <- cfa(deca.cfa, data = deca)
+summary(fit, fit.measures = T)
+```
+
+```{r}
+```
+
+```{r}
+deca.cfa <- ' Strength =~ Discus + Shotput + Run1500m
+              Explosiveness =~ Run100m + Run400m'
+```
+
+
+```{r}
+fit <- cfa(deca.cfa, data = deca)
+summary(fit, fit.measures = T)
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
