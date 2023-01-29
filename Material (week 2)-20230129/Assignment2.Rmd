@@ -66,6 +66,7 @@ SCdata %>% cor() %>% round(digits = 2)
 SCdata %>% cor() %>% corrplot()
 
 #my trial
+https://briatte.github.io/ggcorr/
 ```
 
 ### Define and estimate a CFA model:
