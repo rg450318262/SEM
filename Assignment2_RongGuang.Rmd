@@ -5,8 +5,8 @@ date: "`r Sys.Date()`"
 output: pdf_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r setup, include=FALSE, warning = F, message=F}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message=F)
 ```
 
 # 1 Exercise 2.1
@@ -23,13 +23,31 @@ Visualize the model.
 
 Start by downloading the data file from Moodle to Project folder.
 
-```{r}
+```{r, warning = F, message=F}
 library(tidyverse)#data wrangling 
 library(readr)# read data into r
 orig_data <- read_csv("ASC7INDM.CSV", show_col_types = FALSE) 
 ```
 
-## 1.2 Subset the data set
+## 1.2 Write functions
+
+```{r}
+unique.levels <-  function(sc){
+  values <- lapply(sc, function(x)sort(unique(x))) 
+for(x in 1:ncol(sc)){
+  a <- paste(c("Variable ", 
+               names(values)[x], 
+               " has values of ", 
+               paste(values[[x]], 
+                     collapse = ",")), 
+             collapse = "")
+  print(a)
+  }
+}
+```
+
+
+## 1.3 Subset the data set
 
 Subset the variables for analysis and name it as sc (Self-concept).
 
@@ -38,7 +56,7 @@ Subset the variables for analysis and name it as sc (Self-concept).
 sc <- orig_data %>% dplyr::select(starts_with("SDQ2N")) # namming logic: sc = self-concept
 ```
 
-## 1.3 Inspect the data
+## 1.4 Inspect the data
 
 Have a quick overview of the data.
 
@@ -46,15 +64,79 @@ Have a quick overview of the data.
 glimpse(sc)
 ```
 
-The data set includes 16 variables from 265 observations. All the variables are numeric.
+The data set includes 16 variables from 265 observations. All the variables are numeric. Next, I examined the unique values of each variables.
 
 ```{r}
-library(purrr)
-lapply(sc, function(x)unique(x)) %>% nest()
+unique.levels(sc)
+```
+
+For each variable, the values distribute from 1 to 6. 
+
+# 2 Explore the data
+
+## 2.1 Descriptive statistics
+
+```{r, warning = F, message=F}
+library(kableExtra)#publication-ready table
+library(psych)#for function "describe"
+sc.ds <- sc %>%  #sc.ds = self-concept descriptive statistics
+  describe(IQR = T) %>%
+  select(mean, median, sd, range, se, IQR)
+
+#print the descriptive statistics table
+sc.ds %>% 
+  kable(booktabs=T,
+        longtable=T,
+        digits = 2,
+        caption = "Descriptive dtatistics of selected variables",
+        linesep = "") %>% 
+  add_header_above(c("", "centralized tendency" = 2, "dispersion tendency" = 4)) %>% 
+  kable_styling(latex_options = c("striped","repeat_header")) %>% 
+  column_spec(1, width = "3cm", bold = T, color = "red")
+#sc.ds %>%
+#  tab_df(digits = 2, 
+#        alternate.rows = T,
+#        title = "Table 1. Descriptive dtatistics of selected variables",
+#        CSS = list(css.centralign='text-align: right;'))
+```
+
+## 2.2 Visualization
+
+### 2.2.1 Histogram
+
+```{r, fig.width = 6, fig.height=5, warning = F, message=F}
+#plot it
+sc %>% 
+  pivot_longer(everything()) %>%  #longer format
+  ggplot(aes(x = value)) + #x axis used variable "value" (a default of pivot)
+  geom_histogram(binwidth = 1,
+                 aes(y = ..density..), #match ys of density and histogram plots
+                 color = "black", #my favorite border color
+                 fill = "#9999CC")+  # I heard this is a beautiful color
+  geom_density(fill = "pink", 
+               alpha = 0.25)+ #adjust the aesthetics for density plot
+  facet_wrap(~name, scales = "free" #wrap by name variable
+             ) + #use the label I set above
+  theme(panel.grid.major = element_blank(), #get rid of the  grids
+        panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = "white",#adjust the background
+                                        color = "black"),
+        strip.background = element_rect(color = "black",#adjust the strips aes
+                                        fill = "steelblue"),
+        strip.text = element_text(size =8, 
+                                  color = "white"), #adjust the strip text
+        axis.title.x = element_text(size = 3), #adjust the x text
+        axis.title.y = element_text(size = 3), # adjust the y text
+        plot.title = element_text(size = 12, face = "bold"))+ #adjust the title
+  labs(title = "Fig. 2.1.2.1 Distribution of variables", #title it
+       )
 ```
 
 
 ```{r}
+
+library(GGally)
+
 ```
 
 
