@@ -1,0 +1,133 @@
+---
+title: "COS-D419 Factor Analysis and Structural Equation Models 2023, Assignment 2"
+author: "write your name here"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# CFA & self-concept (SC)
+
+## Exercise 2.1
+
+Specify and test the hypothesis given on the page 1 of the lecture material.
+
+Draw conclusions based on the $\chi^2$ statistic and the CFI, TLI, RMSEA, and SRMR indices.
+
+What can you say about the parameter estimates?
+
+Visualize the model.
+
+### Read in the data set:
+
+Start by downloading the data file from Moodle to your Project folder!
+
+```{r}
+library(tidyverse)
+library(readr)
+
+orig_data <- read_csv("ASC7INDM.CSV", show_col_types = FALSE) 
+
+# we will only use a subset of the data here:
+SCdata <- orig_data %>% dplyr::select(starts_with("SDQ2N"))
+glimpse(SCdata)
+```
+
+### Explore the data (always do that!):
+
+```{r}
+library(psych)
+library(dplyr)
+library(knitr)
+library(tidyr)
+library(corrplot)
+
+# these are just examples - you can well do other things, too!
+
+# basic statistics:
+SCdata %>% describe() %>% 
+  as.data.frame() %>%
+  select(mean, sd, min, max) %>%
+  kable(digits = 2)
+
+# histograms:
+SCdata %>% pivot_longer(cols = everything()) %>%
+  ggplot(aes(x = value)) + 
+  geom_histogram(binwidth = 1) +
+  facet_wrap(~name, nrow = 4, ncol = 4)
+
+# correlation matrix:
+SCdata %>% cor() %>% round(digits = 2)
+
+# correlation plot:
+SCdata %>% cor() %>% corrplot()
+
+```
+
+### Define and estimate a CFA model:
+
+```{r}
+library(lavaan) # install.packages("lavaan")
+
+# Define a CFA model using the lavaan package:
+# NOTE: with the model definitions in lavaan syntax you have to
+# SELECT all the code up to ' and then press Ctrl+Enter / Cmd+Enter
+# when activating operations individually.
+
+model1 <- '# CFA model of self-concept (SC):
+           GSC =~ SDQ2N01 + SDQ2N13 + SDQ2N25 + SDQ2N37
+           ASC =~ SDQ2N04 + SDQ2N16 + SDQ2N28 + SDQ2N40
+           ESC =~ SDQ2N10 + SDQ2N22 + SDQ2N34 + SDQ2N46
+           MSC =~ SDQ2N07 + SDQ2N19 + SDQ2N31 + SDQ2N43
+          '
+
+# Estimate the model using the data defined earlier:
+cfa1 <- cfa(model1, data = SCdata)
+
+# Numerical summary of the model:
+summary(cfa1, fit.measures = TRUE, standardized = TRUE)
+
+```
+
+### Visualize the CFA model:
+
+```{r}
+library(semPlot) # install.packages("semPlot")
+
+# Path model based on the model object (TRY AND MODIFY!)
+semPaths(cfa1) # default options
+
+# LISREL style (introduced by K. Jöreskog in the 1970s - still the standard):
+semPaths(cfa1, style = "lisrel")
+
+# "some" more options added:
+semPaths(cfa1, style = "lisrel", layout = "tree2", what = "path", whatLabels = "name",
+    intercepts = FALSE, residuals = TRUE, thresholds = FALSE, reorder = FALSE,
+    rotation = 2, 
+    latents = c("MSC","ESC", "ASC" ,"GSC"),
+    sizeLat = 10, sizeLat2 = 5,
+    manifests = rev(colnames(SCdata)),
+    sizeMan = 10, sizeMan2 = 2
+    )
+
+```
+
+## Exercise 2.2
+
+Specify and test these two additional hypotheses (again draw conclusions based on the $\chi^2$ statistic and the CFI, TLI, RMSEA, and SRMR indices):
+
+- *Hypothesis 2:* SC is a two-factor structure consisting of GSC and ASC (so that the four GSC measures load onto the GSC and all other onto the ASC).
+
+- *Hypothesis 3:* SC is a one-factor structure.
+
+Visualize the models and compare them with the four-factor model analyzed in Exercise 2.1.
+
+```{r}
+
+# (copy and modify the R codes given above!)
+
+```
+
