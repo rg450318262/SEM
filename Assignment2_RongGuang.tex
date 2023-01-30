@@ -258,8 +258,7 @@ For each variable, the values distribute from 1 to 6.
 \FunctionTok{library}\NormalTok{(psych)}\CommentTok{\#for function "describe"}
 \NormalTok{sc.ds }\OtherTok{\textless{}{-}}\NormalTok{ sc }\SpecialCharTok{\%\textgreater{}\%}  \CommentTok{\#sc.ds = self{-}concept descriptive statistics}
   \FunctionTok{describe}\NormalTok{(}\AttributeTok{IQR =}\NormalTok{ T) }\SpecialCharTok{\%\textgreater{}\%}
-  \FunctionTok{as.data.frame}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%} 
-\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(mean, median, sd, range, se, IQR)}
+  \FunctionTok{select}\NormalTok{(mean, median, sd, range, se, IQR)}
 \CommentTok{\#print the descriptive statistics table}
 \NormalTok{sc.ds }\SpecialCharTok{\%\textgreater{}\%} 
   \FunctionTok{kable}\NormalTok{(}\AttributeTok{booktabs=}\NormalTok{T,}
