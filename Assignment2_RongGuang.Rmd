@@ -81,7 +81,8 @@ library(kableExtra)#improved table visuals
 library(psych)#for function "describe"
 sc.ds <- sc %>%  #sc.ds = self-concept descriptive statistics
   describe(IQR = T) %>%
-  select(mean, median, sd, range, se, IQR)
+    as.data.frame() %>% 
+  dplyr::select(mean, median, sd, range, se, IQR)
 #print the descriptive statistics table
 sc.ds %>% 
   kable(booktabs=T,
@@ -149,9 +150,10 @@ ggcorr(sc,
          alpha = FALSE) +
   labs(title = "Figure 2. Spearman correlation matrix of the selected items",
        caption = 
-         "Red circles indicates correlation coefficient ≥ 0.5; gree circle indicates ≥ 0.3")
+         "Red circles indicates correlation coefficient >= 0.5; gree circle indicates >= 0.3")
 ```
-It is found that each variable correlated with at least one of the other variable with a spearman correlation coefficient ≥0.3, except for item SDQ2N46 and SDQ2N34. 
+
+It is found that each variable correlated with at least one of the other variable with a Spearman correlation coefficient $>=$ 0.3, except for item SDQ2N46 and SDQ2N34. 
 
 ```{r}
 ```
