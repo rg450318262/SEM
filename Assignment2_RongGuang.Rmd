@@ -77,12 +77,12 @@ For each variable, the values distribute from 1 to 6.
 ## 2.1 Descriptive statistics
 
 ```{r, warning = F, message=F}
-library(kableExtra)#publication-ready table
+library(kableExtra)#improved table visuals
 library(psych)#for function "describe"
 sc.ds <- sc %>%  #sc.ds = self-concept descriptive statistics
   describe(IQR = T) %>%
-  select(mean, median, sd, range, se, IQR)
-
+  as.data.frame() %>% 
+  dplyr::select(mean, median, sd, range, se, IQR)
 #print the descriptive statistics table
 sc.ds %>% 
   kable(booktabs=T,
@@ -159,6 +159,7 @@ It is found that each variable correlated with at least one of the other variabl
 
 
 ```{r}
+
 ```
 
 
