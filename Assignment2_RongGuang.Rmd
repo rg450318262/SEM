@@ -105,40 +105,54 @@ sc.ds %>%
 ### 2.2.1 Histogram
 
 ```{r, fig.width = 6, fig.height=5, warning = F, message=F}
-#plot it
 sc %>% 
   pivot_longer(everything()) %>%  #longer format
   ggplot(aes(x = value)) + #x axis used variable "value" (a default of pivot)
-  geom_histogram(binwidth = 1,
-                 aes(y = ..density..), #match ys of density and histogram plots
-                 color = "black", #my favorite border color
-                 fill = "#9999CC")+  # I heard this is a beautiful color
-  geom_density(fill = "pink", 
-               alpha = 0.25)+ #adjust the aesthetics for density plot
-  facet_wrap(~name, scales = "free" #wrap by name variable
-             ) + #use the label I set above
+  geom_histogram(binwidth = 1, aes(y = ..density..), #match ys of density and histogram plots
+                 color = "black",  fill = "#9999CC")+  # adjust aesthetics for hist
+  geom_density(fill = "pink", alpha = 0.25)+ #adjust aesthetics for density plot
+  facet_wrap(~name, scales = "free") + #wrap by name variable
   theme(panel.grid.major = element_blank(), #get rid of the  grids
         panel.grid.minor = element_blank(),
         panel.background = element_rect(fill = "white",#adjust the background
                                         color = "black"),
         strip.background = element_rect(color = "black",#adjust the strips aes
                                         fill = "steelblue"),
-        strip.text = element_text(size =8, 
-                                  color = "white"), #adjust the strip text
+        strip.text = element_text(size =8, color = "white"), #adjust strip text
         axis.title.x = element_text(size = 3), #adjust the x text
         axis.title.y = element_text(size = 3), # adjust the y text
         plot.title = element_text(size = 12, face = "bold"))+ #adjust the title
-  labs(title = "Fig. 2.1.2.1 Distribution of variables", #title it
-       )
+  labs(title = "Figure 1 Distribution of selected items") #title it
 ```
 
+### 2.2.2 Correlation plot
 
 ```{r}
-
 library(GGally)
-
+ggcorr(sc, 
+       geom = "blank", 
+       label = TRUE, 
+       hjust = 0.85, 
+       color = "red", 
+       face = "bold", 
+       method = c("pairwise","spearman"),
+       digits = 2,
+       label_size = 2.5,
+       label_round = 2) +
+  geom_point(size = 9, 
+             aes(color = "red", 
+                 alpha = abs(coefficient) > 0.3)) +
+  scale_alpha_manual(values = c("TRUE" = 0.3, "FALSE" = 0)) +
+    geom_point(size = 10, 
+               aes(color = "green", alpha = abs(coefficient) > 0.6)) +
+  scale_alpha_manual(values = c("TRUE" = 0.5, "FALSE" = 0)) +
+  guides(color = FALSE, 
+         alpha = FALSE) +
+  labs(title = "Figure 2. Spearman correlation matrix of the selected items",
+       caption = 
+         "Red circles indicates correlation coefficient ≥ 0.5; gree circle indicates ≥ 0.3")
 ```
-
+It is found that each variable correlated with at least one of the other variable with a spearman correlation coefficient ≥0.3, except for item SDQ2N46 and SDQ2N34. 
 
 ```{r}
 ```
