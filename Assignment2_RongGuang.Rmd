@@ -280,7 +280,8 @@ result <- mvn(sc, mvnTest = "mardia", univariateTest = "SW")
 
 #tabulate the result
 result$univariateNormality %>% 
-  kable(booktabs = TRUE, 
+  kable(booktabs = TRUE,
+        format = "markdown",
         digits = 2,
         caption = "Univariate distribution tests") %>% 
   kable_styling(latex_options = "striped") %>% 
@@ -291,7 +292,8 @@ The test showed none of the variables had a normal distribution, which was consi
 
 ```{r}
 result$multivariateNormality %>% 
-  kable(booktabs = TRUE, 
+  kable(booktabs = TRUE,
+        format = "markdown",
         digits = 2,
         caption = "Multivariate distribution tests",
         linesep = "") %>% 
@@ -377,7 +379,15 @@ cfa1.fig.b <- parameterEstimates(cfa1, standardized=TRUE) %>%
 Variance were obtained.
 
 ```{r}
-#Some notes from tutorial: in the "Variances:" section, there is a dot before the observed variables names. This is because they are dependent (or endogenous) variables (predicted by the latent variables), and therefore, the value for the variance that is printed in the output is an estimate of the residual variance: the left-over variance that is not explained by the predictor(s). By contrast, there is no dot before the latent variable names, because they are exogenous variables in this model (there are no single-headed arrows pointing to them). The values for the variances here are the estimated total variances of the latent variables.
+#Some notes from tutorial: in the "Variances:" section, there is a dot before 
+#the observed variables names. This is because they are dependent (or endogenous)
+#variables (predicted by the latent variables), and therefore, the value for the 
+#variance that is printed in the output is an estimate of the residual variance: 
+#the left-over variance that is not explained by the predictor(s). By contrast, 
+#there is no dot before the latent variable names, because they are exogenous 
+#variables in this model (there are no single-headed arrows pointing to them). 
+#The values for the variances here are the estimated total variances of the 
+#latent variables.
 
 type <- rep(c("Residual variance", "Total variance"), #generate a new column
             time = c(ncol(sc), 4))
