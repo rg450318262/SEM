@@ -1,0 +1,239 @@
+---
+title: "COS-D419 Factor Analysis and Structural Equation Models 2023, Assignment 3"
+author: "Rong Guang"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+CFA & teacher burnout
+
+## Exercise 3.1
+
+Specify and test the hypothesis given on the pages 2 and 3 of the lecture material.
+
+Use 1) ML estimator, 2) MLM estimator.
+
+Compare the fit indices and draw conclusions concerning the model fit.
+
+Visualize the model.
+
+### Read in the data set:
+
+Start by downloading the data file from Moodle to your Project folder!
+
+## 1.1 Read in the data set
+
+Start by downloading the data file from Moodle to Project folder.
+
+```{r}
+library(tidyverse)
+library(readr)
+
+mbi <- read_csv("ELEMM1.CSV", show_col_types = FALSE) 
+```
+
+## 1.2 Write functions
+
+Write some functions to improve the fluency of reporting by minimizing paragraphs frequently interrupted by long codes.
+
+### 1.2.1 to check unique values
+
+```{r}
+unique.levels <-  function(sc){
+  values <- lapply(sc, function(x)sort(unique(x))) 
+for(x in 1:ncol(sc)){
+  a <- paste(c("Variable ", 
+               names(values)[x], 
+               " has values of ", 
+               paste(values[[x]], 
+                     collapse = ",")), 
+             collapse = "")
+  print(a)
+  }
+}
+```
+
+### 1.2.2 to generate CFA results with improved readability
+
+## 1.3 Inspect the data
+
+### 1.3.1 Data structure
+
+Have a quick overview of the data structure
+
+```{r}
+dim(mbi)
+mbi %>% apply(2, function(x)class(x))
+unique.levels(mbi)
+```
+
+The data set contains 22 variables of 372 observations. All of the variable are numeric. Their values appear to follow a consistent patter covering the integer from 1 to 7, except for Item 4, 7, 17 and 21, all of which did not include a value of 1. 
+
+### 1.3.2 Descriptive statistics of measured variables
+
+```{r}
+library(finalfit)
+library(kableExtra)
+inspect.table <- ff_glimpse(mbi)$Continuous
+inspect.table$label <- NULL
+inspect.table %>% 
+  mutate('Q1Q3' = paste(quartile_25, 
+                        quartile_75, 
+                        sep = " ~ ")) %>% 
+  select(n, 
+         'n of NA' = missing_n, 
+         'Mean' = mean, 
+         'Median' = median,
+         'SD' = sd, 
+         'Min' = min, 
+         'Max' = max,
+         'Q1~Q3' = Q1Q3) %>%
+  kable(booktabs = T,  
+        align = "r",
+        longtable = T,
+        linesep = "",
+        caption = "Descriptive statistics for measurements") %>% 
+  add_header_above(c(" ", 
+                     " " = 2,
+                     "Central tendency" = 2, 
+                     "Dispersion tendency" = 4)) %>% 
+  kable_styling(latex_options = c("striped", 
+                                  "repeat_header")) %>% 
+  column_spec(1, width = "3cm")
+```
+
+### 1.3.3 Visualization
+
+(1) Histogram
+
+Distribution of the data was examined via Histogram
+
+```{r, fig.width = 7, fig.height=10, warning = F, message=F}
+mbi %>% 
+  pivot_longer(everything()) %>%  #longer format
+  ggplot(aes(x = value)) + #x axis used variable "value" (a default of pivot)
+  geom_histogram(binwidth = 1, aes(y = ..density..), #match ys of density and histogram plots
+                 color = "black",  fill = "#9999CC")+  # adjust aesthetics for hist
+  geom_density(fill = "pink", alpha = 0.25)+ #adjust aesthetics for density plot
+  facet_wrap(~name, scales = "free", ncol =4) + #wrap by name variable
+  theme(panel.grid.major = element_blank(), #get rid of the  grids
+        panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = "white",#adjust the background
+                                        color = "black"),
+        strip.background = element_rect(color = "black",#adjust the strips aes
+                                        fill = "steelblue"),
+        strip.text = element_text(size =8, color = "white"), #adjust strip text
+        axis.title.x = element_text(size = 3), #adjust the x text
+        axis.title.y = element_text(size = 3), # adjust the y text
+        plot.title = element_text(size = 12, face = "bold"))+ #adjust the title
+  labs(title = "Figure 1 Distribution of selected items") #title it
+```
+
+(2) Violin plot
+
+Violin plot also provides information on distribution, plus ideas on out-liers.
+
+```{r fig.width=9, fig.height=3}
+
+mbi.long <- mbi %>% pivot_longer(everything(), names_to = "item", values_to = "score")
+
+mbi.long %>% 
+  ggplot(aes(x = item, y = score)) +
+  geom_violin(trim=F, fill = "#9999CC") +
+  theme(legend.position = "none", 
+        axis.text.x = element_text(angle = 45, hjust =1),
+        axis.title = element_text(size = 12),
+        panel.background = element_rect(fill = "white", color = "black"),
+        plot.title = element_text(face="bold"),
+        axis.title.x = element_blank())+
+  labs(x = "Item", 
+       y = "Score",
+       title = "Figure 2. Violin plot of the selected items")+
+  geom_boxplot(width = 0.1, fill = "white")
+  
+```
+
+(3) Correlation among items
+
+```{r, fig.width = 6, fig.height=6}
+library(GGally)
+ggcorr(mbi, 
+       geom = "blank", 
+       label = TRUE, 
+       hjust = 0.9, 
+       color = "red", 
+       face = "bold", 
+       method = c("pairwise","pearson"),
+       digits = 2,
+       size= 2.5,
+       label_size = 2.5,
+       label_round = 2,
+       layout.exp =1) +
+  geom_point(size = 7, 
+             aes(color = "red", 
+                 alpha = abs(coefficient) > 0.3)) +
+  scale_alpha_manual(values = c("TRUE" = 0.3, "FALSE" = 0)) +
+    geom_point(size = 8, 
+               aes(color = "steelblue", 
+                   alpha = abs(coefficient) > 0.6)) +
+  scale_alpha_manual(values = c("TRUE" = 0.2, 
+                                "FALSE" = 0)) +
+  guides(color = FALSE, 
+         alpha = FALSE) +
+  labs(title = "Figure 3. Pearson correlation matrix of the selected items",
+       caption = 
+         " Red circles indicates the absolute of correlation coefficient >= 0.6 
+        green circle indicates >= 0.3")+
+  theme(plot.title = element_text(size = 12,
+                                  face = "bold"))
+```
+
+All variables had a pearson correlation coefficient >0.3 with at least one other variable, except for ITEM22. 
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+

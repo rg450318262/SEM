@@ -1,0 +1,127 @@
+---
+title: "COS-D419 Factor Analysis and Structural Equation Models 2023, Assignment 3"
+author: "write your name here"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# CFA & teacher burnout
+
+## Exercise 3.1
+
+Specify and test the hypothesis given on the pages 2 and 3 of the lecture material.
+
+Use 1) ML estimator, 2) MLM estimator.
+
+Compare the fit indices and draw conclusions concerning the model fit.
+
+Visualize the model.
+
+### Read in the data set:
+
+Start by downloading the data file from Moodle to your Project folder!
+
+```{r}
+library(tidyverse)
+library(readr)
+
+MBIdata <- read_csv("ELEMM1.CSV", show_col_types = FALSE) 
+glimpse(MBIdata)
+```
+
+### Explore the data (always do that!):
+
+```{r}
+
+# (copy and modify the R codes given in Assignment 2)
+
+```
+
+### Define and estimate a CFA model:
+
+Note: you must first complete the model definition, it is not ready yet!
+
+```{r}
+library(lavaan)
+
+# Define a CFA model using the lavaan (Latent Variable Analysis) syntax:
+# see https://lavaan.ugent.be/tutorial/syntax1.html
+
+model1 <- '
+# CFA model for the burnout:
+# EE: EmotionalExhaustion
+# DP: Depersonalization
+# PA: PersonalAccomplishment
+  EE =~ ITEM1 + ...
+  DP =~ ITEM5 + ...
+  PA =~ ITEM4 + ...
+'
+
+# Estimate the model with the default (ML) estimator:
+cfa1 <- cfa(model1, data = MBIdata)
+
+# Numerical summary of the model:
+summary(cfa1, fit.measures = TRUE, standardized = TRUE)
+
+# Use a robust (MLM) estimator:
+cfa2 <- cfa(model1, data = MBIdata, estimator = "MLM")
+
+# Numerical summary of the model:
+summary(cfa2, fit.measures = TRUE, standardized = TRUE)
+```
+
+Example of creating a table for comparing two models (here, ML and MLM):
+
+```{r}
+fit_ml <- fitMeasures(cfa1, c("chisq", "cfi", "tli", "rmsea", "rmsea.ci.lower", "rmsea.ci.upper"), output = "matrix")
+fit_mlm <- fitMeasures(cfa2, c("chisq.scaled", "cfi.robust", "tli.robust", "rmsea.robust", "rmsea.ci.lower.robust", "rmsea.ci.upper.robust"), output = "matrix")
+ML <- as.data.frame(t(fit_ml))
+MLM <- as.data.frame(t(fit_mlm))
+colnames(ML) <- colnames(MLM) <- c("Chisq", "CFI", "TLI", "RMSEA", "CI lower", "CI upper")
+fit_table <- rbind(ML, MLM)
+rownames(fit_table) <- c("ML", "MLM")
+
+kable(fit_table, digits = 3, align = "lcccc", booktabs = TRUE,
+             caption = "Comparison of fit indices between ML and MLM estimators")
+```
+
+### Visualize the CFA model:
+
+```{r}
+library(semPlot)
+
+# (copy and modify the R codes given in Assignment 2)
+
+```
+
+## Exercise 3.2
+
+Continue with post hoc model fitting (exploratory approach).
+
+Proceed **step by step** following the guidelines given in the lecture material, i.e., implement the modifications **one at a time**, testing and studying each step. See (and report) how the fit improves and which parameters are suggested to be modified. Please be careful! There will (always) be a lot of suggestions...
+
+You may also test what happens to your model, if you go 'too far' (that is, further than in the lecture material and the book)... *but please come back!* ;-)
+
+Draw the graph of the final model and present its fit indices and the essential parameter estimates (both unstandardized and standardized).
+
+```{r}
+
+# (copy and modify the R codes given earlier)
+
+# You will get the list of the MIs (Modification Indices) as follows (here, cfa2 is a fit object created by the cfa() function)
+modindices(cfa2, standardized = TRUE, sort. = TRUE)
+
+# another way, by saving the result to the object MI and listing only the 10 largest ones:
+MI <- modindices(cfa2, standardized = TRUE, sort. = TRUE)
+head(MI, n = 10)
+
+# still another way, listing only the 10 largest and displaying them as a table:
+modindices(cfa2, standardized = TRUE, sort = TRUE, maximum.number = 10) %>%
+  kable(digits = 3, align = "rclccccc")
+
+```
+
