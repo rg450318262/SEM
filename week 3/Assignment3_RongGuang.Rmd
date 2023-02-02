@@ -30,8 +30,7 @@ Start by downloading the data file from Moodle to your Project folder!
 Start by downloading the data file from Moodle to Project folder.
 
 ```{r}
-library(tidyverse)
-library(readr)
+library(tidyverse);library(readr)
 
 mbi <- read_csv("ELEMM1.CSV", show_col_types = FALSE) 
 ```
@@ -42,7 +41,7 @@ Write some functions to improve the fluency of reporting by minimizing paragraph
 
 ### 1.2.1 to check unique values
 
-```{r}
+```{r, echo = F}
 unique.levels <-  function(sc){
   values <- lapply(sc, function(x)sort(unique(x))) 
 for(x in 1:ncol(sc)){
@@ -59,26 +58,244 @@ for(x in 1:ncol(sc)){
 
 ### 1.2.2 to generate CFA results with improved readability
 
-## 1.3 Inspect the data
+### 1.2.2 to generate CFA results with improved readability
 
-### 1.3.1 Data structure
+```{r, echo = F}
+#goodness of fit indicators for ml
+cfa.summary.ml.a <- function(fit, fa.num, item.num, estimator){
+  options(scipen = 999)
+  cfa.measure <- fitMeasures(fit,    #obtain specified measured.
+                            c("chisq", 
+                              "df", 
+                              "pvalue", 
+                              "cfi", 
+                              "tli",
+                              "rmsea",
+                              "rmsea.pvalue",
+                              "srmr",
+                              "chisq.scaling.factor")) 
+  names(cfa.measure) <- c("chi square", "df", "p value", "CFI", "TLI", "RMSEA", "RMSEA p value", "SRMR")
+  #turn named vector to data frame
+cfa.tab.a <- cfa.measure %>%  
+  tibble(name= names(cfa.measure), value = cfa.measure) %>% # vector to df
+  select(Measure = name, Value = value) %>%  #select and rename columns
+  mutate(Value = round(as.numeric(Value),3)) %>%  # round
+  kable(format = "markdown",   # table aesthetics 
+        booktabs = T, #Latex booktabs
+        caption =  #caption
+          paste("Goodness-of-fit and subjective indices of fit for", fa.num, "factor model ", estimator)) %>%
+  kable_styling(latex_options = "striped") %>% # gray every other row
+  row_spec(0, background = "#9999CC")
+ cfa.tab.a
+}
 
-Have a quick overview of the data structure
+#goodness of fit indicators for mlm
+cfa.summary.mlm.a <- function(fit, fa.num, item.num, estimator){
+  options(scipen = 999)
+  cfa.measure <- fitMeasures(fit,    #obtain specified measured.
+                            c("chisq.scaled", 
+                              "df.scaled", 
+                              "pvalue.scaled", 
+                              "cfi.scaled", 
+                              "tli.scaled",
+                              "rmsea.scaled",
+                              "rmsea.pvalue.scaled",
+                              "srmr_bentler",
+                              "chisq.scaling.factor")) 
+  names(cfa.measure) <- c("chi square", "df", "p value", "CFI", "TLI", "RMSEA", "RMSEA p value", "SRMR")
+  #turn named vector to data frame
+cfa.tab.a <- cfa.measure %>%  
+  tibble(name= names(cfa.measure), value = cfa.measure) %>% # vector to df
+  select(Measure = name, Value = value) %>%  #select and rename columns
+  mutate(Value = round(as.numeric(Value),3)) %>%  # round
+  kable(format = "markdown",   # table aesthetics 
+        booktabs = T, #Latex booktabs
+        caption =  #caption
+          paste("Goodness-of-fit and subjective indices of fit for", fa.num, "factor model ", estimator)) %>%
+  kable_styling(latex_options = "striped") %>% # gray every other row
+  row_spec(0, background = "#9999CC")
+ cfa.tab.a
+}
 
-```{r}
-dim(mbi)
-mbi %>% apply(2, function(x)class(x))
-unique.levels(mbi)
+#factor loading
+cfa.summary.b <- function(fit, fa.num, item.num, estimator){
+  options(scipen = 999)
+  #factor loading
+  cfa.tab.b <- parameterEstimates(fit, standardized=TRUE) %>% # obtain estimates
+  filter(op == "=~") %>%  #select "is measured by" rows
+  select('Latent Factor'=lhs, #left hand side column
+         Indicator=rhs, #right hand side column
+         B=est, #estimates
+         SE=se, #standard error
+         Z=z, #z statistics
+         'p-value'=pvalue, #p value
+         Beta=std.all) %>%  
+  kable(digits = 3, #rounded to 3
+        format="markdown", #Latex markdown
+        booktabs=TRUE, #Latex booktabs
+        caption=paste("Factor Loadings for",fa.num,"factor CFA model estimated by ", estimator)) %>% #caption
+  kable_styling(latex_options = "striped") %>% #gray every other row
+  row_spec(0, background = "#9999CC") # color the first row
+  cfa.tab.b
+  }
+
+#Variance
+cfa.summary.c <- function(fit, fa.num, item.num, estimator){
+  options(scipen = 999)
+  #Variance
+  type <- rep(c("Residual variance", "Total variance"), 
+            time = c(item.num, fa.num)) #create a new row clarifying types of variance
+
+variance <- parameterEstimates(fit, standardized=TRUE) %>% #obtain estimates
+  filter(op == "~~") #select "is correlated with" rows
+variance <- variance[1:sum(item.num,fa.num),] #subset 1:18 rows (variance row)
+variance <- cbind(type, variance) #add column
+cfa.tab.c <- variance %>%select(Type = type, #select and rename variables
+                   Indicator=rhs, #right hand side column
+                   B=est, #estimates
+                   SE=se,#standard error
+                   Z=z, #z statistics
+                   'p-value'=pvalue, #p value
+                   Beta=std.all) %>% 
+  kable(digits = 3, #rounded
+        format="markdown",  #Latex markdown
+        booktabs=TRUE, #Latex booktabs
+        caption=paste("Variances for", fa.num, "factor model estimated by ", estimator)) %>% #caption
+  kable_styling(latex_options = "striped") %>% # gray every other row
+  row_spec(0, background = "#9999CC") # color the variable row
+  cfa.tab.c
+}
+
+#Covariance
+cfa.summary.d <- function(fit, fa.num, item.num, estimator){
+  options(scipen = 999)
+  #covariance
+  variance <- parameterEstimates(fit, standardized=TRUE) %>%
+  filter(op == "~~")
+  covar.num = (fa.num+(fa.num-1))/2
+variance <- variance[sum(item.num,fa.num,1):sum(item.num,fa.num,covar.num),]
+type <- paste(variance$lhs, "with", variance$rhs) 
+variance <- cbind(type, variance)
+rownames(variance) <- NULL
+cfa.tab.d <- variance %>%select(Type=type, 
+                   B=est, 
+                   SE=se,
+                   Z=z, 
+                   'p-value'=pvalue, 
+                   Beta=std.all) %>% 
+  kable(digits = 3, 
+        format="markdown", 
+        booktabs=TRUE, 
+        caption=paste("Covariances for", fa.num, 
+                      "factor model estimated by ", 
+                      estimator)) %>% 
+  kable_styling(latex_options = "striped") %>% 
+  row_spec(0, background = "#9999CC")
+  cfa.tab.d
+}
+
 ```
 
-The data set contains 22 variables of 372 observations. All of the variable are numeric. Their values appear to follow a consistent patter covering the integer from 1 to 7, except for Item 4, 7, 17 and 21, all of which did not include a value of 1. 
+### 1.2.3 to generate a function for correlation matrix with numbers
 
-### 1.3.2 Descriptive statistics of measured variables
 
-```{r}
-library(finalfit)
+```{r, echo = F}
+mymatrix <- function(data, fig.num = 3){
+  library(GGally)
+ggcorr(data, 
+       geom = "blank", 
+       label = TRUE, 
+       hjust = 0.9, 
+       color = "red", 
+       face = "bold", 
+       method = c("pairwise","pearson"),
+       digits = 2,
+       size= 2.5,
+       label_size = 2.5,
+       label_round = 2,
+       layout.exp =1) +
+  geom_point(size = 7, 
+             aes(color = "steelblue", 
+                 alpha = abs(coefficient) > 0.3)) +
+  scale_alpha_manual(values = c("TRUE" = 0.4, 
+                                "FALSE" = 0)) +
+    geom_point(size = 8, 
+               aes(color = "red", 
+                   alpha = abs(coefficient) > 0.6)) +
+  scale_alpha_manual(values = c("TRUE" = 0.4, 
+                                "FALSE" = 0)) +
+  guides(color = FALSE, 
+         alpha = FALSE) +
+  labs(title = paste("Figure ", fig.num," Pearson correlation matrix of the selected items"),
+       caption = 
+         " Red circles indicates the absolute of correlation coefficient >= 0.6 
+        green circle indicates >= 0.3")+
+  theme(plot.title = element_text(size = 12,
+                                  face = "bold",
+                                  hjust = 0.5),
+        plot.caption = element_text(color = "red"))
+}
+
+```
+
+### 1.2.4 to generate a function for histogram overlapping with density plot
+
+```{r, echo = F}
+corr.density <- function(data, fig.num = 1){
+  data %>% 
+  pivot_longer(everything()) %>%  #longer format
+  ggplot(aes(x = value)) + #x axis used variable "value" (a default of pivot)
+  geom_histogram(binwidth = 1, aes(y = ..density..), #match ys of density and histogram plots
+                 color = "black",  fill = "#9999CC")+  # adjust aesthetics for hist
+  geom_density(fill = "pink", alpha = 0.25)+ #adjust aesthetics for density plot
+  facet_wrap(~name, scales = "free", ncol =4) + #wrap by name variable
+  theme(panel.grid.major = element_blank(), #get rid of the  grids
+        panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = "white",#adjust the background
+                                        color = "black"),
+        strip.background = element_rect(color = "black",#adjust the strips aes
+                                        fill = "steelblue"),
+        strip.text = element_text(size =8, color = "white"), #adjust strip text
+        axis.title.x = element_text(size = 3), #adjust the x text
+        axis.title.y = element_text(size = 3), # adjust the y text
+        plot.title = element_text(size = 12, 
+                                  face = "bold",
+                                  hjust = 0.5))+ #adjust the title
+  labs(title = paste("Figure ", fig.num," Distribution of selected items")) #title it
+  }
+
+```
+
+### 1.2.4 to generate a function for violin overlapping with box plot
+
+```{r, echo = F}
+violin.box <- function(data, fig.num = 2){
+  mbi.long <- data %>% pivot_longer(everything(), names_to = "item", values_to = "score")
+
+mbi.long %>% 
+  ggplot(aes(x = item, y = score)) +
+  geom_violin(trim=F, fill = "#9999CC") +
+  theme(legend.position = "none", 
+        axis.text.x = element_text(angle = 45, hjust =1),
+        axis.title = element_text(size = 12),
+        panel.background = element_rect(fill = "white", color = "black"),
+        plot.title = element_text(face="bold",
+                                  hjust = 0.5),
+        axis.title.x = element_blank())+
+  labs(x = "Item", 
+       y = "Score",
+       title = paste("Figure 2 ", fig.num, " Violin plot of the selected items"))+
+  geom_boxplot(width = 0.1, fill = "white")
+}
+```
+
+### 1.2.5 To generate a function describing continuous data set
+
+```{r, echo=F}
+descriptive <- function(data){
+  library(finalfit)
 library(kableExtra)
-inspect.table <- ff_glimpse(mbi)$Continuous
+inspect.table <- ff_glimpse(data)$Continuous
 inspect.table$label <- NULL
 inspect.table %>% 
   mutate('Q1Q3' = paste(quartile_25, 
@@ -104,6 +321,26 @@ inspect.table %>%
   kable_styling(latex_options = c("striped", 
                                   "repeat_header")) %>% 
   column_spec(1, width = "3cm")
+}
+```
+
+## 1.3 Inspect the data
+
+### 1.3.1 Data structure
+
+Have a quick overview of the data structure
+
+```{r}
+dim(mbi);mbi %>% apply(2, function(x)class(x));unique.levels(mbi)
+```
+
+The data set contains 22 variables of 372 observations. All of the variable are numeric. Their values appear to follow a consistent patter covering the integer from 1 to 7, except for Item 4, 7, 17 and 21, all of which did not include a value of 1. 
+
+### 1.3.2 Descriptive statistics of measured variables
+
+```{r}
+library(finalfit);library(kableExtra)
+descriptive(mbi)
 ```
 
 ### 1.3.3 Visualization
@@ -113,24 +350,7 @@ inspect.table %>%
 Distribution of the data was examined via Histogram
 
 ```{r, fig.width = 7, fig.height=10, warning = F, message=F}
-mbi %>% 
-  pivot_longer(everything()) %>%  #longer format
-  ggplot(aes(x = value)) + #x axis used variable "value" (a default of pivot)
-  geom_histogram(binwidth = 1, aes(y = ..density..), #match ys of density and histogram plots
-                 color = "black",  fill = "#9999CC")+  # adjust aesthetics for hist
-  geom_density(fill = "pink", alpha = 0.25)+ #adjust aesthetics for density plot
-  facet_wrap(~name, scales = "free", ncol =4) + #wrap by name variable
-  theme(panel.grid.major = element_blank(), #get rid of the  grids
-        panel.grid.minor = element_blank(),
-        panel.background = element_rect(fill = "white",#adjust the background
-                                        color = "black"),
-        strip.background = element_rect(color = "black",#adjust the strips aes
-                                        fill = "steelblue"),
-        strip.text = element_text(size =8, color = "white"), #adjust strip text
-        axis.title.x = element_text(size = 3), #adjust the x text
-        axis.title.y = element_text(size = 3), # adjust the y text
-        plot.title = element_text(size = 12, face = "bold"))+ #adjust the title
-  labs(title = "Figure 1 Distribution of selected items") #title it
+corr.density(mbi, fig.num = 1)
 ```
 
 (2) Violin plot
@@ -139,76 +359,205 @@ Violin plot also provides information on distribution, plus ideas on out-liers.
 
 ```{r fig.width=9, fig.height=3}
 
-mbi.long <- mbi %>% pivot_longer(everything(), names_to = "item", values_to = "score")
-
-mbi.long %>% 
-  ggplot(aes(x = item, y = score)) +
-  geom_violin(trim=F, fill = "#9999CC") +
-  theme(legend.position = "none", 
-        axis.text.x = element_text(angle = 45, hjust =1),
-        axis.title = element_text(size = 12),
-        panel.background = element_rect(fill = "white", color = "black"),
-        plot.title = element_text(face="bold"),
-        axis.title.x = element_blank())+
-  labs(x = "Item", 
-       y = "Score",
-       title = "Figure 2. Violin plot of the selected items")+
-  geom_boxplot(width = 0.1, fill = "white")
+violin.box(mbi, fig.num = 2)
   
 ```
 
 (3) Correlation among items
 
-```{r, fig.width = 6, fig.height=6}
-library(GGally)
-ggcorr(mbi, 
-       geom = "blank", 
-       label = TRUE, 
-       hjust = 0.9, 
-       color = "red", 
-       face = "bold", 
-       method = c("pairwise","pearson"),
-       digits = 2,
-       size= 2.5,
-       label_size = 2.5,
-       label_round = 2,
-       layout.exp =1) +
-  geom_point(size = 7, 
-             aes(color = "red", 
-                 alpha = abs(coefficient) > 0.3)) +
-  scale_alpha_manual(values = c("TRUE" = 0.3, "FALSE" = 0)) +
-    geom_point(size = 8, 
-               aes(color = "steelblue", 
-                   alpha = abs(coefficient) > 0.6)) +
-  scale_alpha_manual(values = c("TRUE" = 0.2, 
-                                "FALSE" = 0)) +
-  guides(color = FALSE, 
-         alpha = FALSE) +
-  labs(title = "Figure 3. Pearson correlation matrix of the selected items",
-       caption = 
-         " Red circles indicates the absolute of correlation coefficient >= 0.6 
-        green circle indicates >= 0.3")+
-  theme(plot.title = element_text(size = 12,
-                                  face = "bold"))
+```{r, fig.width = 7, fig.height=7}
+mymatrix(mbi, fig.num = 3)
 ```
 
 All variables had a pearson correlation coefficient >0.3 with at least one other variable, except for ITEM22. 
 
+# 2 Factorial validity 
+
+This is to test for the factorial validity of the MBI for elementary teachers using a confirmatory factor analytic approach.
+
+## 2.1 Define and estimate a CFA model
+
+This report started by estimating the factorial validity of initially postulated model. As was stated by Byrne in the 1991 study:
+
+*"The CFA model in the present study hypothesized a priori that: (a) responses to the MBI could be explained by three factors, (b) each item would have a non-zero loading on the burnout factor it was designed to measure, and zero loadings on all other factors, (c) the three factors would be correlated and, (d) the error-uniqueness terms for the item variables would be uncorrelated."*
+
+### 2.1.1 Hypothesis testing via different estimation
+
+(1) ML estimation
+
 ```{r}
+library(lavaan)
+library(kableExtra)
+#define model
+model1 <- '
+# CFA model for the burnout:
+# EE: EmotionalExhaustion
+# DP: Depersonalization
+# PA: PersonalAccomplishment
+  EE =~ ITEM1 + ITEM2 + ITEM3 + ITEM6 + ITEM8 + 
+        ITEM13 + ITEM14 + ITEM16 + ITEM20
+  DP =~ ITEM5 + ITEM10 + ITEM11 + ITEM15 +ITEM22
+  PA =~ ITEM4 + ITEM7 + ITEM9 + ITEM12 + 
+        ITEM17 + ITEM18 + ITEM19 + ITEM21
+'
+
+# Estimate the model with the default (ML) estimator:
+cfa1 <- cfa(model1, data = mbi)
+
+# Numerical summary of the model:
+cfa.summary.ml.a(cfa1, 3, 22, "ML");cfa.summary.b(cfa1, 3, 22, "ML");
+cfa.summary.c(cfa1, 3, 22, "ML");cfa.summary.d(cfa1, 3, 22, "ML")
+
+```
+
+(2) MLM estimation
+
+```{r}
+# Use a robust (MLM) estimator:
+cfa2 <- cfa(model1, data = mbi, estimator = "MLM")
+
+# Numerical summary of the model:
+cfa.summary.mlm.a(cfa2, 3, 22, "MLM");cfa.summary.b(cfa2, 3, 22, "MLM");
+cfa.summary.c(cfa2, 3, 22, "MLM");cfa.summary.d(cfa2, 3, 22, "MLM")
+
+#summary(cfa2, fit.measures = TRUE, standardized = TRUE)
+```
+
+### 2.1.2 Results comparison (ML vs MLM)
+
+```{r}
+
 ```
 
 
 ```{r}
+options(scipen = 999)
+#obtain measures from ML estimation
+  cfa.measure.ml <- fitMeasures(cfa1,    #obtain specified measured.
+                            c("chisq", 
+                              "df", 
+                              "pvalue", 
+                              "cfi", 
+                              "tli",
+                              "rmsea",
+                              "rmsea.pvalue",
+                              "srmr")) 
+  names(cfa.measure.ml) <- c("chi square", 
+                             "df", 
+                             "p value", 
+                             "CFI", 
+                             "TLI", 
+                             "RMSEA", 
+                             "RMSEA p value", 
+                             "SRMR")
+
+cfa.measure.ml <- cfa.measure.ml %>%
+  tibble(Indicator = names(cfa.measure.ml), "By ML" = round(cfa.measure.ml, 3)) %>% 
+  select(Indicator, "By ML") 
+
+
+#obtain measures from MLM estimation
+    cfa.measure.mlm <- fitMeasures(cfa2,    #obtain specified measured.
+                            c("chisq.scaled", 
+                              "df.scaled", 
+                              "pvalue.scaled", 
+                              "cfi.scaled", 
+                              "tli.scaled",
+                              "rmsea.scaled",
+                              "rmsea.pvalue.scaled",
+                              "srmr_bentler",
+                              "chisq.scaling.factor")) 
+
+  names(cfa.measure.mlm) <- c("chi square", 
+                              "df", 
+                              "p value", 
+                              "CFI", 
+                              "TLI", 
+                              "RMSEA", 
+                              "RMSEA p value", 
+                              "SRMR", 
+                              "Scaling correct factor")
+  
+#combine the indicators from both estimations  
+cfa.measure.mlm <- cfa.measure.mlm %>%
+  tibble(Indicator = names(cfa.measure.mlm), "By MLM" = round(cfa.measure.mlm, 3)) %>% 
+  select(Indicator, "By MLM")
+
+#ordered row
+name.order <- c("chi square", 
+                "df", 
+                "p value", 
+                "CFI", 
+                "TLI", 
+                "RMSEA", 
+                "RMSEA p value", 
+                "SRMR", 
+                "Scaling correct factor")
+
+#generate the table
+estimation.comparison <- merge(cfa.measure.ml, 
+                               cfa.measure.mlm, 
+                               by = "Indicator", 
+                               all.y = T) %>% 
+  arrange(factor(Indicator, levels = name.order)) 
+
+
+estimation.comparison$'Contrast: MLM-ML' <- estimation.comparison$`By MLM`-
+  estimation.comparison$`By ML`
+
+
+
+#display the table
+estimation.comparison %>% 
+  kable(booktabs = T,
+        linesep = "",
+        caption = "Comparing indicators generated by ML vs MLM",
+        digits = 3) %>% 
+  kable_styling() %>% 
+  row_spec(c(1,4,5,6,8,9), background = "#D3D3D3") %>% 
+  footnote(symbol = c("Larger value indicates better fit", 
+                      "Smaller value indicates better fit",
+                      ">1 indicates the data violates normality assumption and MLM is a better estimator")) %>% 
+  column_spec(3, width = "2.5cm") %>% 
+  column_spec(0, width = "3cm")
+
+```
+
+According to the table, comparing to the statistics estimated by ML, MLM estimation provided smaller chi square (by 127), higher CFI (by 0.017), higher TLI by 0.19 and smaller RMSEA (by 0.011). The scaling correct factor is 1.225 (>1), indicating some violence of the normality assumption and MLM is more optimal a estimator for the data.
+
+# 2.1.3 vsiualize the CFA model
+
+```{r, fig.width=8, fig.height = 12}
+library(semPlot)
+library(wesanderson)#a handful of color palettes from Wes anderson movies
+mycols <- wes_palette(name = "Zissou1", n = 3, type = "discrete")
+colorlist <- list(man = mycols[2], lat = mycols[3])
+
+semPaths(cfa2, 
+         "par", 
+         weighted = FALSE, #no weight
+         curvature = 1,  #curvature strength
+         shapeMan = "rectangle", #manifest variable's shape
+         sizeMan = 8, # manifest variable's font size
+         sizeMan2 = 3, # manifest variable's tile size
+         rotation = 2, # turn vertical
+         color = colorlist, #specify color by calling colorlist defined above
+         edge.color = "steelblue", #specify line color
+         edge.label.cex = 0.7,
+         title = T) #specify line label font size
+title("Figure 4. Three factor MBI CFA model diagram")
 ```
 
 
-```{r}
-```
+## Exercise 3.2
 
+Continue with post hoc model fitting (exploratory approach).
 
-```{r}
-```
+Proceed **step by step** following the guidelines given in the lecture material, i.e., implement the modifications **one at a time**, testing and studying each step. See (and report) how the fit improves and which parameters are suggested to be modified. Please be careful! There will (always) be a lot of suggestions...
 
+You may also test what happens to your model, if you go 'too far' (that is, further than in the lecture material and the book)... *but please come back!* ;-)
+
+Draw the graph of the final model and present its fit indices and the essential parameter estimates (both unstandardized and standardized).
 
 ```{r}
 ```
