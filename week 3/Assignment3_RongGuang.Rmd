@@ -2,44 +2,29 @@
 title: "COS-D419 Factor Analysis and Structural Equation Models 2023, Assignment 3"
 author: "Rong Guang"
 date: "`r Sys.Date()`"
-output: pdf_document
+output: 
+  bookdown::pdf_document2:
+    latex_engine: lualatex
 ---
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
 ```
 
-CFA & teacher burnout
+# Preparation
 
-## Exercise 3.1
-
-Specify and test the hypothesis given on the pages 2 and 3 of the lecture material.
-
-Use 1) ML estimator, 2) MLM estimator.
-
-Compare the fit indices and draw conclusions concerning the model fit.
-
-Visualize the model.
-
-### Read in the data set:
-
-Start by downloading the data file from Moodle to your Project folder!
-
-## 1.1 Read in the data set
-
-Start by downloading the data file from Moodle to Project folder.
+## Read in the data set
 
 ```{r}
-library(tidyverse);library(readr)
-
-mbi <- read_csv("ELEMM1.CSV", show_col_types = FALSE) 
+library(tidyverse);library(readr);mbi <- read_csv("ELEMM1.CSV", show_col_types = FALSE) 
 ```
 
-## 1.2 Write functions
+## Write functions
 
-Write some functions to improve the fluency of reporting by minimizing paragraphs frequently interrupted by long codes.
+To control length of reports, codes already shown in the previous homework were not showing in the current report. Yet they are available in .rmd report.
 
-### 1.2.1 to check unique values
+### to check unique values
 
 ```{r, echo = F}
 unique.levels <-  function(sc){
@@ -56,9 +41,7 @@ for(x in 1:ncol(sc)){
 }
 ```
 
-### 1.2.2 to generate CFA results with improved readability
-
-### 1.2.2 to generate CFA results with improved readability
+### to generate CFA results with improved readability
 
 ```{r, echo = F}
 #goodness of fit indicators for ml
@@ -102,7 +85,7 @@ cfa.summary.mlm.a <- function(fit, fa.num, item.num, estimator){
                               "rmsea.pvalue.scaled",
                               "srmr_bentler",
                               "chisq.scaling.factor")) 
-  names(cfa.measure) <- c("chi square", "df", "p value", "CFI", "TLI", "RMSEA", "RMSEA p value", "SRMR")
+  names(cfa.measure) <- c("chi square", "df", "p value", "CFI", "TLI", "RMSEA", "RMSEA p value", "SRMR", "CSF")
   #turn named vector to data frame
 cfa.tab.a <- cfa.measure %>%  
   tibble(name= names(cfa.measure), value = cfa.measure) %>% # vector to df
@@ -196,8 +179,7 @@ cfa.tab.d <- variance %>%select(Type=type,
 
 ```
 
-### 1.2.3 to generate a function for correlation matrix with numbers
-
+### to generate a function for correlation matrix with numbers
 
 ```{r, echo = F}
 mymatrix <- function(data, fig.num = 3){
@@ -238,7 +220,7 @@ ggcorr(data,
 
 ```
 
-### 1.2.4 to generate a function for histogram overlapping with density plot
+### to generate a function for histogram overlapping with density plot
 
 ```{r, echo = F}
 corr.density <- function(data, fig.num = 1){
@@ -266,7 +248,7 @@ corr.density <- function(data, fig.num = 1){
 
 ```
 
-### 1.2.4 to generate a function for violin overlapping with box plot
+### to generate a function for violin overlapping with box plot
 
 ```{r, echo = F}
 violin.box <- function(data, fig.num = 2){
@@ -289,7 +271,7 @@ mbi.long %>%
 }
 ```
 
-### 1.2.5 To generate a function describing continuous data set
+### To generate a function describing continuous data set
 
 ```{r, echo=F}
 descriptive <- function(data){
@@ -324,9 +306,9 @@ inspect.table %>%
 }
 ```
 
-## 1.3 Inspect the data
+## Inspect the data
 
-### 1.3.1 Data structure
+### Data structure
 
 Have a quick overview of the data structure
 
@@ -334,16 +316,15 @@ Have a quick overview of the data structure
 dim(mbi);mbi %>% apply(2, function(x)class(x));unique.levels(mbi)
 ```
 
-The data set contains 22 variables of 372 observations. All of the variable are numeric. Their values appear to follow a consistent patter covering the integer from 1 to 7, except for Item 4, 7, 17 and 21, all of which did not include a value of 1. 
+The data set contains 22 numeric variables of 372 obs. Their values appear to follow a consistent pattern covering the integer from 1 to 7, except for Items 4, 7, 17 and 21, which did not include a value of 1. 
 
-### 1.3.2 Descriptive statistics of measured variables
+### Descriptive statistics of measured variables
 
 ```{r}
-library(finalfit);library(kableExtra)
-descriptive(mbi)
+library(finalfit);library(kableExtra);descriptive(mbi)
 ```
 
-### 1.3.3 Visualization
+### Visualization
 
 (1) Histogram
 
@@ -371,23 +352,71 @@ mymatrix(mbi, fig.num = 3)
 
 All variables had a pearson correlation coefficient >0.3 with at least one other variable, except for ITEM22. 
 
-# 2 Factorial validity 
+## Add variable labels
+
+```{r}
+library(expss)
+mbi <-  apply_labels(mbi, 
+                      ITEM1 = "I feel emotionally drained from my work",
+                      ITEM2 = "I feel used up at the end of the workday.",
+                      ITEM3 = "I feel fatigued when I get up in the morning and 
+                      have to faceanother day on the job.",
+                      ITEM4 = "I can easily understand how my students feel 
+                      about things.",
+                      ITEM5 = "I feel I treat some students as if they were 
+                      impersonal objects.",
+                      ITEM6 = "Working with people all day is really a 
+                      strain for me.",
+                      ITEM7 = "I deal very effectively with the problems of 
+                      my students.",
+                      ITEM8 = "I feel burned out from my work.",
+                      ITEM9 = "I feel I'm positively influencing other people's 
+                      lives through my work.",
+                      ITEM10 = "I've become more callous toward people since I 
+                      took this job.",
+                      ITEM11 = "I worry that this job is hardening me 
+                      emotionally.",
+                      ITEM12 = "I feel very energetic.",
+                      ITEM13 = " I feel frustrated by my job.",
+                      ITEM14 = "I feel I'm working too hard on my job.",
+                      ITEM15 = "I don't care what happens to some students.",
+                      ITEM16 = "Working with people directly puts too much 
+                      stress on me.",
+                      ITEM17 = " I can easily create a relaxed atmosphere 
+                      with my students.",
+                      ITEM18 = " I feel exhilarated after working closely 
+                      with my students.",
+                      ITEM19 = "I have accomplished many worthwhile things in 
+                      this job.",
+                      ITEM20 = "I feel like I'm at the end of my rope.",
+                      ITEM21 = "In my work, I deal with emotional problems 
+                      very calmly.",
+                      ITEM22 = "I feel students blame me for some of their 
+                      problems."
+                      )
+```
+
+```{r}
+library(sjlabelled)
+get_label(mbi) %>% kable()
+```
+
+# Factorial validity 
 
 This is to test for the factorial validity of the MBI for elementary teachers using a confirmatory factor analytic approach.
 
-## 2.1 Define and estimate a CFA model
+## Define and estimate a CFA model
 
 This report started by estimating the factorial validity of initially postulated model. As was stated by Byrne in the 1991 study:
 
 *"The CFA model in the present study hypothesized a priori that: (a) responses to the MBI could be explained by three factors, (b) each item would have a non-zero loading on the burnout factor it was designed to measure, and zero loadings on all other factors, (c) the three factors would be correlated and, (d) the error-uniqueness terms for the item variables would be uncorrelated."*
 
-### 2.1.1 Hypothesis testing via different estimation
+### Hypothesis testing via different estimation
 
 (1) ML estimation
 
 ```{r}
-library(lavaan)
-library(kableExtra)
+library(lavaan);library(kableExtra)
 #define model
 model1 <- '
 # CFA model for the burnout:
@@ -400,14 +429,12 @@ model1 <- '
   PA =~ ITEM4 + ITEM7 + ITEM9 + ITEM12 + 
         ITEM17 + ITEM18 + ITEM19 + ITEM21
 '
-
 # Estimate the model with the default (ML) estimator:
 cfa1 <- cfa(model1, data = mbi)
 
 # Numerical summary of the model:
 cfa.summary.ml.a(cfa1, 3, 22, "ML");cfa.summary.b(cfa1, 3, 22, "ML");
 cfa.summary.c(cfa1, 3, 22, "ML");cfa.summary.d(cfa1, 3, 22, "ML")
-
 ```
 
 (2) MLM estimation
@@ -419,113 +446,79 @@ cfa2 <- cfa(model1, data = mbi, estimator = "MLM")
 # Numerical summary of the model:
 cfa.summary.mlm.a(cfa2, 3, 22, "MLM");cfa.summary.b(cfa2, 3, 22, "MLM");
 cfa.summary.c(cfa2, 3, 22, "MLM");cfa.summary.d(cfa2, 3, 22, "MLM")
-
-#summary(cfa2, fit.measures = TRUE, standardized = TRUE)
 ```
 
-### 2.1.2 Results comparison (ML vs MLM)
-
-```{r}
-
-```
-
+### Results comparison (ML vs MLM)
 
 ```{r}
 options(scipen = 999)
+ml.names <- c("chisq", "df", "pvalue","cfi", "tli","rmsea",
+              "rmsea.ci.lower", "rmsea.ci.upper", "srmr")
+mlm.names <- c("chisq.scaled", "df.scaled", "pvalue.scaled", 
+               "cfi.scaled", "tli.scaled","rmsea.scaled",
+               "rmsea.ci.lower.robust", "rmsea.ci.upper.robust", 
+               "srmr", "chisq.scaling.factor")
+merge.names <- c(ml.names, "csf") #csf is for shisq.scaling.factor
 #obtain measures from ML estimation
-  cfa.measure.ml <- fitMeasures(cfa1,    #obtain specified measured.
-                            c("chisq", 
-                              "df", 
-                              "pvalue", 
-                              "cfi", 
-                              "tli",
-                              "rmsea",
-                              "rmsea.pvalue",
-                              "srmr")) 
-  names(cfa.measure.ml) <- c("chi square", 
-                             "df", 
-                             "p value", 
-                             "CFI", 
-                             "TLI", 
-                             "RMSEA", 
-                             "RMSEA p value", 
-                             "SRMR")
-
-cfa.measure.ml <- cfa.measure.ml %>%
-  tibble(Indicator = names(cfa.measure.ml), "By ML" = round(cfa.measure.ml, 3)) %>% 
-  select(Indicator, "By ML") 
-
+ml.indicator <- fitMeasures(cfa1,    #obtain specified measured.
+                            ml.names,
+                            output = "matrix") %>% 
+                round(3)
+colnames(ml.indicator) <- "ML"
+ml.indicator <- rbind(ml.indicator, 999) %>% na_if(999)
 
 #obtain measures from MLM estimation
-    cfa.measure.mlm <- fitMeasures(cfa2,    #obtain specified measured.
-                            c("chisq.scaled", 
-                              "df.scaled", 
-                              "pvalue.scaled", 
-                              "cfi.scaled", 
-                              "tli.scaled",
-                              "rmsea.scaled",
-                              "rmsea.pvalue.scaled",
-                              "srmr_bentler",
-                              "chisq.scaling.factor")) 
+mlm.indicator <- fitMeasures(cfa2,  
+                             mlm.names,
+                             output = "matrix") %>% 
+                 round(3)
+colnames(mlm.indicator) <- "MLM"
+rownames(ml.indicator) <- merge.names
+rownames(mlm.indicator) <- merge.names
 
-  names(cfa.measure.mlm) <- c("chi square", 
-                              "df", 
-                              "p value", 
-                              "CFI", 
-                              "TLI", 
-                              "RMSEA", 
-                              "RMSEA p value", 
-                              "SRMR", 
-                              "Scaling correct factor")
-  
-#combine the indicators from both estimations  
-cfa.measure.mlm <- cfa.measure.mlm %>%
-  tibble(Indicator = names(cfa.measure.mlm), "By MLM" = round(cfa.measure.mlm, 3)) %>% 
-  select(Indicator, "By MLM")
+compare.tab <- data.frame(ML = ml.indicator,
+                          MLM = mlm.indicator)
 
-#ordered row
-name.order <- c("chi square", 
-                "df", 
-                "p value", 
-                "CFI", 
-                "TLI", 
-                "RMSEA", 
-                "RMSEA p value", 
-                "SRMR", 
-                "Scaling correct factor")
+compare.tab <- compare.tab %>% 
+  mutate(contrast = MLM-ML) %>% 
+  round(3)
 
-#generate the table
-estimation.comparison <- merge(cfa.measure.ml, 
-                               cfa.measure.mlm, 
-                               by = "Indicator", 
-                               all.y = T) %>% 
-  arrange(factor(Indicator, levels = name.order)) 
+compare.tab <- as.data.frame(t(compare.tab))
 
+compare.tab <- compare.tab %>% 
+  mutate(chisq.df.p = paste(chisq, "(", df, " ,", pvalue, ")"),
+         rmsea.ci =
+           paste(rmsea, "(", rmsea.ci.lower, ", ", rmsea.ci.upper, ")")) %>% 
+  select(chisq.df.p, cfi, tli, rmsea.ci, srmr, csf) %>% 
+  mutate(csf = csf %>% as.character(),
+        csf = replace_na(csf, "--"))
 
-estimation.comparison$'Contrast: MLM-ML' <- estimation.comparison$`By MLM`-
-  estimation.comparison$`By ML`
+colnames(compare.tab) <- c("chi-square (df,p)*", "CFI†", "TLI†", 
+                           "RMSEA(95%CI)*", "SRMR*", "CSF‡")
 
-
-
-#display the table
-estimation.comparison %>% 
-  kable(booktabs = T,
+rownames(compare.tab) <- c("ML estimation", "MLM estimation", 
+                           "Estimator Contrast§")
+compare.tab %>% 
+  kable(booktabs =T,
         linesep = "",
-        caption = "Comparing indicators generated by ML vs MLM",
-        digits = 3) %>% 
-  kable_styling() %>% 
-  row_spec(c(1,4,5,6,8,9), background = "#D3D3D3") %>% 
-  footnote(symbol = c("Larger value indicates better fit", 
-                      "Smaller value indicates better fit",
-                      ">1 indicates the data violates normality assumption and MLM is a better estimator")) %>% 
-  column_spec(3, width = "2.5cm") %>% 
-  column_spec(0, width = "3cm")
-
+        align = "r",
+        caption = "Comparison of fit indices between ML and MLM estimators") %>% 
+  kable_styling(full_width = TRUE) %>% 
+  column_spec(1, "3.2cm") %>% 
+  column_spec(2,"3cm") %>% 
+  column_spec(3, "0.7cm") %>% 
+  column_spec(4, "0.7cm") %>% 
+  column_spec(5, "3.8cm") %>% 
+  footnote(symbol = c("Smaller value indicates better fit", 
+                      "Larger value indicates better fit",
+                      ">1 indicates the data violates normality assumption and MLM is a better estimator",
+                      "Constrast of results from estimations rather than direct model values: MLM-ML"))
 ```
+
 
 According to the table, comparing to the statistics estimated by ML, MLM estimation provided smaller chi square (by 127), higher CFI (by 0.017), higher TLI by 0.19 and smaller RMSEA (by 0.011). The scaling correct factor is 1.225 (>1), indicating some violence of the normality assumption and MLM is more optimal a estimator for the data.
 
-# 2.1.3 vsiualize the CFA model
+# Vsiualize the CFA model
 
 ```{r, fig.width=8, fig.height = 12}
 library(semPlot)
@@ -534,7 +527,8 @@ mycols <- wes_palette(name = "Zissou1", n = 3, type = "discrete")
 colorlist <- list(man = mycols[2], lat = mycols[3])
 
 semPaths(cfa2, 
-         "par", 
+         "par",
+         "std",
          weighted = FALSE, #no weight
          curvature = 1,  #curvature strength
          shapeMan = "rectangle", #manifest variable's shape
@@ -549,40 +543,536 @@ title("Figure 4. Three factor MBI CFA model diagram")
 ```
 
 
-## Exercise 3.2
+# Finetune model base on Modification Indices
 
-Continue with post hoc model fitting (exploratory approach).
+## MI-based finetuning on initial model
 
-Proceed **step by step** following the guidelines given in the lecture material, i.e., implement the modifications **one at a time**, testing and studying each step. See (and report) how the fit improves and which parameters are suggested to be modified. Please be careful! There will (always) be a lot of suggestions...
-
-You may also test what happens to your model, if you go 'too far' (that is, further than in the lecture material and the book)... *but please come back!* ;-)
-
-Draw the graph of the final model and present its fit indices and the essential parameter estimates (both unstandardized and standardized).
+### Inspect MIs
 
 ```{r}
+#Generate MI table
+MI1 <- modindices(cfa2, 
+                  standardized = TRUE, 
+                  sort. = TRUE, 
+                  maximum.number = 10)
+
+#improve readibility and select columns
+MI1 <- MI1 %>% mutate(op = if_else(op == "~~", 
+                                  "←→", 
+                                  "→"))%>% 
+  mutate (Parameter = paste(lhs, " ", op, " ", rhs)) %>% 
+  select(Parameter, MI = mi, EPC = epc, SEPC = sepc.all)
+
+#remove row names
+rownames(MI1) <- NULL
+
+#display table
+MI1 %>% 
+  kable(booktabs = T,
+        caption = "Largest modification indices for fixed parameters",
+        linesep = "",
+        digits = 3,
+        align = "lrrr") %>% 
+  kable_styling(latex_options = "striped") %>% 
+  footnote(general =c("→ indicates a factor loading. ←→ indicates a covariance.",
+                      "MI, modification index; (S)EPC, (standardized) expected 
+                      parameter change")) %>% 
+  column_spec(1, width = "6cm") %>% 
+  column_spec(2, width = "2cm") %>% 
+  column_spec(3, width = "2cm") %>% 
+  column_spec(4, width = "2cm")
+```
+
+According to Byrne, the contents of the items Item16 and Item6 overlap (they essentially ask the same question). They were checked below.
+
+```{r}
+get_label(mbi, ITEM6, ITEM16) %>% kable
+```
+
+Indeed, both focused on the pressure felt during working with people. Not much a difference. I will modify the model by allowing them freely to co-vary with each other, albeit deleting one of the item might be another solution.  
+
+### Modify the model (1st time)
+
+```{r}
+model2 <- '
+  EE =~ ITEM1 + ITEM2 + ITEM3 + ITEM6 + ITEM8 + 
+        ITEM13 + ITEM14 + ITEM16 + ITEM20
+  DP =~ ITEM5 + ITEM10 + ITEM11 + ITEM15 +ITEM22
+  PA =~ ITEM4 + ITEM7 + ITEM9 + ITEM12 + 
+        ITEM17 + ITEM18 + ITEM19 + ITEM21
+  ITEM6 ~~ITEM16
+'
+cfa.modified.1 <- cfa(model2, data = mbi, estimator = "MLM")
+#summary(cfa.modified.1, fit.measures = TRUE, standardized = TRUE)
+cfa.summary.mlm.a(cfa.modified.1, 3, 22, "MLM")
+```
+
+## MI-based finetuning on model 2
+
+### Inspect MIs of model 2
+
+```{r}
+#Generate MI table
+MI.modified.1 <- modindices(cfa.modified.1, 
+                  standardized = TRUE, 
+                  sort. = TRUE, 
+                  maximum.number = 10)
+
+#improve readability and select columns
+MI.modified.1 <- MI.modified.1 %>% mutate(op = if_else(op == "~~", 
+                                  "←→", 
+                                  "→")) %>% 
+  mutate (Parameter = paste(lhs, " ", op, " ", rhs)) %>% 
+  select(Parameter, MI = mi, EPC = epc, SEPC = sepc.all)
+
+#remove row names
+rownames(MI.modified.1) <- NULL
+
+#display table
+MI.modified.1 %>% 
+  kable(booktabs = T,
+        caption = "Largest modification indices for fixed parameters",
+        linesep = "",
+        digits = 3,
+        align = "lrrr") %>% 
+  kable_styling(latex_options = "striped") %>% 
+  footnote(general =c("→ indicates a factor loading. ←→ indicates a covariance.",
+                      "MI, modification index; (S)EPC, (standardized) expected 
+                      parameter change.")) %>% 
+  column_spec(1, width = "6cm") %>% 
+  column_spec(2, width = "2cm") %>% 
+  column_spec(3, width = "2cm") %>% 
+  column_spec(4, width = "2cm") 
+            
+```
+
+Residual covariance related to items 1 and 2 remains a strongly misspecific parameter (MI = 78.275, EPC = 0.591). Also  (according to Byrne) we have clear overlap of content with these items. I had checked it as below.
+
+```{r}
+get_label(mbi, ITEM1, ITEM2) %>% kable
+```
+
+It appears item 1 focuses on about exhaustion on emotional side, while item 2 looks at exhaustion all-round. Indeed, they have overlap but are not measuring exactly the same thing. I will set the parameter free in the model.
+
+### Modify the model (2nd time)
+
+```{r}
+model3 <- '
+  EE =~ ITEM1 + ITEM3 + ITEM2 + ITEM6 + ITEM8 + 
+        ITEM13 + ITEM16 + ITEM14 + ITEM20
+  DP =~ ITEM5 + ITEM10 + ITEM15 + ITEM11 +ITEM22
+  PA =~ ITEM4 + ITEM7 + ITEM9 + ITEM12 + 
+        ITEM17 + ITEM18 + ITEM19 + ITEM21
+  ITEM6 ~~ITEM16
+  ITEM1 ~~ITEM2
+'
+cfa.modified.2 <- cfa(model3, data = mbi, estimator = "MLM")
+#summary(cfa.modified.2, fit.measures = TRUE, standardized = TRUE)
+cfa.summary.mlm.a(cfa.modified.2, 3, 22, "MLM")
+```
+
+## MI-based finetuning on model 3
+
+### Inspect MIs of model 3
+
+```{r}
+#Generate MI table
+MI.modified.2 <- modindices(cfa.modified.2, 
+                  standardized = TRUE, 
+                  sort. = TRUE, 
+                  maximum.number = 10)
+
+#improve readability and select columns
+MI.modified.2 <- MI.modified.2 %>% mutate(op = if_else(op == "~~", 
+                                  "←→", 
+                                  "→")) %>% 
+  mutate (Parameter = paste(lhs, " ", op, " ", rhs)) %>% 
+  select(Parameter, MI = mi, EPC = epc, SEPC = sepc.all)
+
+#remove row names
+rownames(MI.modified.2) <- NULL
+
+#display table
+MI.modified.2 %>% 
+  kable(booktabs = T,
+        #format = "markdown",
+        caption = "Largest modification indices for fixed parameters",
+        linesep = "",
+        digits = 3,
+        align = "lrrr") %>% 
+  kable_styling(latex_options = "striped") %>% 
+  footnote(general =c("→ indicates a factor loading. ←→ indicates a covariance.",
+                      "MI, modification index; (S)EPC, (standardized) expected 
+                      parameter change.")) %>% 
+  column_spec(1, width = "6cm") %>% 
+  column_spec(2, width = "2cm") %>% 
+  column_spec(3, width = "2cm") %>% 
+  column_spec(4, width = "2cm") 
+
+```
+
+The largest MI is the mis-specified factor loading of EE onto item 12. However, according to Byrne it seems evident and logical to have this cross-loading. I tried to find out why as below.
+
+```{r}
+get_label(mbi, ITEM12) %>% kable
+```
+
+This item belongs to personal accomplishment (PA) in the initial model. Yet, by MI we were informed that it had cross-loading with emotional exhaustion (EE). I could see how feeling energetic being one important component of personal accomplishment. A sense of accomplishment is often rewarding mentally. On the other hand, it is not difficult to see the fact that "energetic" happens to be the reverse of "exhaustion", at least linguistically. Such a semantic connection would very possible lead the respondent to thinking congeneric aspects (though reversely) of their lives, and hence we saw the negative correlation (SEPC=-0.339).  This reminds us the caution should be taken in using synonyms and antonyms in the wording of items expected to load on different factors of one scale.
+
+Additionally, residual covariance related to items 11 and 10 remains a strongly misspecific parameter (MI = 37.190; SEPC = 0.523). I checked the items as follows. 
+
+```{r}
+get_label(mbi, ITEM10, ITEM11) %>% kable
+```
+
+The words "callous" (from item 10) and "hardening" (item 11) seem to be of similar connotations. And both items concern how the respondents feel about the job. They are to me more like one questions worded in different ways. Though deleting one of them looks more sensible to me, I would still follow the steps of the slides and set this parameter free to estimate.
+
+### Modify the model (3rd time)
+
+```{r}
+model4 <- '
+  EE =~ ITEM1 + ITEM2 + ITEM3 + ITEM6 + ITEM8 + 
+        ITEM16 + ITEM14 + ITEM20 + ITEM13
+  DP =~ ITEM5 + ITEM10 + ITEM11 + ITEM15 +ITEM22
+  PA =~ ITEM4 + ITEM7 + ITEM9 + ITEM12 + 
+        ITEM17 + ITEM18 + ITEM19 + ITEM21
+  ITEM6 ~~ITEM16
+  ITEM1 ~~ITEM2
+  ITEM10 ~~ ITEM11
+'
+cfa.modified.3 <- cfa(model4, data = mbi, estimator = "MLM")
+#summary(cfa.modified.3, fit.measures = TRUE, standardized = TRUE)
+cfa.summary.mlm.a(cfa.modified.3, 3, 22, "MLM")
+```
+
+## MI-based finetuning on model 4
+
+I started by checking the MI of model 4.
+
+```{r}
+#Generate MI table
+MI.modified.3 <- modindices(cfa.modified.3, 
+                  standardized = TRUE, 
+                  sort. = TRUE, 
+                  maximum.number = 10)
+
+#improve readability and select columns
+MI.modified.3 <- MI.modified.3 %>% mutate(op = if_else(op == "~~", 
+                                  "←→", 
+                                  "→")) %>% 
+  mutate (Parameter = paste(lhs, " ", op, " ", rhs)) %>% 
+  select(Parameter, MI = mi, EPC = epc, SEPC = sepc.all)
+
+#remove row names
+rownames(MI.modified.3) <- NULL
+
+#display table
+MI.modified.3 %>% 
+  kable(booktabs = T,
+        #format = "markdown",
+        caption = "Largest modification indices for fixed parameters",
+        linesep = "",
+        digits = 3,
+        align = "lrrr") %>% 
+  kable_styling(latex_options = "striped") %>% 
+  footnote(general =c("→ indicates a factor loading. ←→ indicates a covariance.",
+                      "MI, modification index; (S)EPC, (standardized) expected 
+                      parameter change.")) %>% 
+  column_spec(1, width = "6cm") %>% 
+  column_spec(2, width = "2cm") %>% 
+  column_spec(3, width = "2cm") %>% 
+  column_spec(4, width = "2cm") 
+```
+
+As expected, the cross-loading of Item12 onto Factor 1 is still very strong, with the highest MI (40.621). As discussed above, there are reasons to include this parameter in the model.
+
+## Summarize the models fitted
+
+All the four models fitted were tabulated in one table for easy and clear comparison.
+
+
+```{r}
+#define the indicator and parameters I need to obtain.
+options(scipen = 999)
+
+indicator.names <- c("chisq.scaled", "df.scaled", 
+               "cfi.scaled", "tli.scaled","rmsea.scaled",
+               "srmr")
+parameter.names <- c("lhs", "op", "rhs", "pvalue", "std.all")
 ```
 
 
 ```{r}
+#obtain fit.measures of initial model to model 3
+indicator.initial <- fitMeasures(cfa2, indicator.names, output = "matrix")
+indicator.modified1 <- fitMeasures(cfa.modified.1, indicator.names, output = "matrix")
+indicator.modified2 <- fitMeasures(cfa.modified.2, indicator.names, output = "matrix")
+indicator.modified3 <- fitMeasures(cfa.modified.3, indicator.names, output = "matrix")
+
+#assign their column names as model0 to model 3
+colnames(indicator.initial) <- "model0"
+colnames(indicator.modified1) <- "model1"
+colnames(indicator.modified2) <- "model2"
+colnames(indicator.modified3) <- "model3"
+
+#bind the columns
+indicator.tab <- cbind(indicator.initial, indicator.modified1, 
+                       indicator.modified2, indicator.modified3)
 ```
 
+```{r, echo = F}
+#obtain and tabulate model1's estimates of parameters newly set free
+parameter.modified1 <- parameterEstimates(cfa.modified.1, standardized=TRUE) %>% 
+  filter(op == "~~", lhs == "ITEM6", rhs == "ITEM16") %>%
+  select(parameter.names) 
+parameter.modified1 <- parameter.modified1 %>% t() %>% as.matrix()
+colnames(parameter.modified1) <- "model1"
+
+#obtain and tabulate model2's estimates of parameters newly set free
+parameter.modified2 <- parameterEstimates(cfa.modified.2, standardized=TRUE) %>% 
+  filter(op == "~~", lhs == "ITEM1", rhs == "ITEM2") %>%
+  select(parameter.names) 
+parameter.modified2 <- parameter.modified2 %>% t() %>% as.matrix()
+colnames(parameter.modified2) <- "model2"
+
+#obtain and tabulate model3's estimates of parameters newly set free
+parameter.modified3 <- parameterEstimates(cfa.modified.3, standardized=TRUE) %>% 
+  filter(op == "~~", lhs == "ITEM10", rhs == "ITEM11") %>%
+  select(parameter.names) 
+parameter.modified3 <- parameter.modified3 %>% t() %>% as.matrix()
+colnames(parameter.modified3) <- "model3"
+
+#obtain and tabulate model0's estimates of parameters newly set free (none)
+parameter.initial <- rep(999, 5)
+parameter.initial <- as.matrix(parameter.initial)
+
+rownames(parameter.initial) <- parameter.names 
+#parameter.initial <- parameter.initial %>% t() %>% as.matrix()
+
+colnames(parameter.initial) <- "model0"
+#bind the columns
+parameter.tab <- cbind(parameter.initial, 
+                       parameter.modified1,
+                       parameter.modified2, 
+                       parameter.modified3)
+
+```
 
 ```{r}
-```
+#merge the two table
+summary.table <- rbind(parameter.tab,indicator.tab)
+summary.table <- summary.table %>% 
+  t() %>% 
+  as.matrix
 
+#correct the variable type and round the data to the 3rd position after dot. 
+summary.table <- summary.table %>% 
+  as.data.frame() %>% 
+  mutate(across(4:11, as.numeric)) %>%
+  mutate(across(4:11, round, 3)) %>% 
+  na_if(999)
+
+#calcuate, select and rename needed variabbles.
+summary.table <- summary.table %>% 
+  mutate(parameter = paste(lhs, "←→", rhs)) %>% 
+  select("Chi square*" = chisq.scaled, 
+         "df" = df.scaled, 
+         "CFI†" = cfi.scaled, 
+         "TLI†" = tli.scaled, 
+         "RMSEA*" = rmsea.scaled, 
+         "Parameter" = parameter, 
+         "p§" = pvalue, 
+         "Estimate§" = std.all)
+
+#Initial model is the reference
+summary.table[1,6] <- NA
+```
 
 ```{r}
+#finetune aesthetics of the table and display it
+summary.table %>% 
+  kable(booktab = T,
+        #format = "markdown",
+        linesep = "",
+        caption = "Model modification summary") %>% 
+  add_header_above(c(" ", 
+                     "Fit Indexes" = 5,
+                     "Parameter set free‡" = 3)) %>% 
+  kable_styling() %>%  
+  footnote(general = " ←→ indicates a covariance.",
+           symbol = c("Smaller value indicates better fit", 
+                      "Larger value indicates better fit",
+                      "Parameters set free to estimate compared to model 0",
+                      "p and Standardized regression coeffient for the parameter"))
 ```
 
+From model 0 to 3, Chi square value and RMSEA kept decreasing, while CFI and TLI continued increasing. All the parameters newly set free were significant and the standardized regression coefficient were 0.369~0.497, which were fairly considerable correlation. This demonstrated that, with the progression of our modification, we were achieving better and better model. 
 
-```{r}
+## Draw the graph of the final model
+
+Since I had decided upon the forth model to be the final model, its model diagram was plotted.
+
+```{r, fig.width=7, fig.height = 9}
+grps <- list(EE = c("ITEM1", "ITEM2", "ITEM3", "ITEM6", "ITEM8", 
+        "ITEM13", "ITEM14",  "ITEM16", "ITEM20"), 
+        DP = c("ITEM5", "ITEM10", "ITEM11", "ITEM15","ITEM22"),
+        PA = c("ITEM4", "ITEM7", "ITEM9", "ITEM12",
+               "ITEM17", "ITEM18", "ITEM19", "ITEM21"))
+
+semPaths(cfa.modified.3, 
+         "par", 
+         "std",
+         residuals = F,
+         weighted = FALSE, #no weight
+         groups = grps,
+         posColor = c("red", "purple", "yellow", "black"),
+         color = c("#bdeaee", "#dcedc1", "#8b9dc3"), 
+         curvature = 1,  #curvature strength
+         shapeMan = "rectangle", #manifest variable's shape
+         sizeMan = 8, # manifest variable's font size
+         sizeMan2 = 3, # manifest variable's tile size
+         rotation = 2, # turn vertical
+         edge.color = "steelblue", #specify line color
+         edge.label.cex = 0.6,
+         title = T,
+         curve =1.5,
+         legend = F,
+         asize = 1,
+         style = "ram",
+         #layoutSplit= T,
+         fixedStyle = c("red",3),
+         #edge.color = "#bdeaee",
+         layout = "spring") #specify line label font size
+title("Figure 5.Modifed MBI CFA model diagram")
 ```
 
+# More exploration
 
-```{r}
+The modifications cannot be statistical decisions (alone), they require good knowledge about the data and the theory. This is definitely true. However, I am curious about what would happen if we keep modifying the model by always following what MI has informed us, regardless of any theory. This way, had this shown equally same results from theory-aided practice, or had we seen a trend of consistently improving fit indices, we would then see the importance of using MI with tremendous domain knowledge, since statistics would anyway provide better and better results (And my assumption is this is true).This would be very dangerous in practice.
+
+Considering we still have 231 degrees of freedom left at the final model, I tested my assumption by setting up a loop that automatically performs MI-based model modification for 100 times. Some model fit indices and model parameters for each model fitted were archived during this process. In this automation, model modification was always done indiscriminately according to the largest MI at each iteration. For each largest MI from a BY relationship, set free was indiscriminately the residual covariance of the items; for each largest MI from a WITH relationship, set free was indiscriminately the cross-loading of item on the identified factor. I understand, there were considerably huge problem in this process, like, in practice covariance might also indicate item deletion and cross-lading might be addressed by switching the item to the identified factor. But it did not hurt to do as an exercise. 
+
+```{r, cache=TRUE}
+ #initial model
+  formula <- "EE =~ ITEM1 + ITEM2 + ITEM3 + ITEM6 + ITEM8 + 
+        ITEM16 + ITEM14 + ITEM20 + ITEM13
+  DP =~ ITEM5 + ITEM10 + ITEM11 + ITEM15 +ITEM22
+  PA =~ ITEM4 + ITEM7 + ITEM9 + ITEM12 + 
+        ITEM17 + ITEM18 + ITEM19 + ITEM21
+  ITEM6 ~~ITEM16
+  ITEM1 ~~ITEM2
+  ITEM10 ~~ ITEM11"
+
+#fit indices used
+mlm.names <- c("chisq.scaled", "df.scaled", "pvalue.scaled", 
+               "cfi.scaled", "tli.scaled","rmsea.scaled",
+               "rmsea.ci.lower.robust", "rmsea.ci.upper.robust", 
+               "srmr", "chisq.scaling.factor")
+
+#MI-related indicators
+mi.names <- c("lhs", "op", "rhs", "mi", "epc", "sepc.all")
+
+#combine them
+matrix.names <- c(mlm.names, mi.names)
+
+#generate the matrix
+mymatrix <- matrix(NA, 100, 16)
+
+#set column names
+colnames(mymatrix) <- matrix.names
+
+#go through the loop
+for (i in 1:100){
+  #fit
+  model <- cfa(formula, data = mbi, estimator = "MLM")
+  mi.tab <- modindices(model, standardized = TRUE, sort. = TRUE, 
+                       maximum.number = 1)
+  mlm.indicator <- fitMeasures(model, mlm.names, output = "matrix") %>% t()
+  mi.tab <- mi.tab %>% select(mi.names)
+  rownames(mi.tab) <- NULL
+  one.row <- cbind(mlm.indicator, mi.tab) 
+  one.row <- one.row %>% mutate(across(where(is.numeric), round, 3))
+  #save the values into a row of the matrix
+  mymatrix[i,] <- unname(unlist(one.row[1,]))
+  #refit the modified model
+  free.parameter <- paste(unname(unlist(select(one.row, lhs, op, rhs)[1,])), 
+                          collapse = "")
+  formula <- paste(formula, "\n",free.parameter)
+}
 ```
 
+```{r, fig.width= 10, fig.height=8}
+#further selected some representative indicators 
+myframe <- mymatrix  %>% as.data.frame()
+myframe <- myframe %>% 
+  mutate(iteration.num = 1:100) %>% 
+  dplyr::select(iteration.num, everything()) %>% 
+  select(-lhs, -op, -rhs, -epc )
 
-```{r}
+#turn character variable to numeric
+myframe <- myframe %>% 
+  lapply(as.numeric) %>% 
+  data.frame()
+
+#remae the indicators to improve clarity
+names(myframe) <- c("Iteration", "Chi square", "df", "p-value", "CFI", "TLI", 
+                    "RMSEA", "RMSEA upper 95%CI", "RMSEA lower 95%CI", "SRMR", 
+                    "CSF", "MI", "SEPC")
+
+#display fit indices for the first 20 iterations of automatic model 
+myframe %>% 
+  head(25) %>% 
+  kable(booktab = T,
+        linesep = "",
+        caption = 
+          "Fit indices for the first 20 iterations of automatic model 
+        modification (other 80 not shown)") %>%
+  kable_styling(latex_options = "striped") %>% 
+  footnote(general = "CSF: Chi-squre sclaing factor; SEPC: standardized expected 
+                      parameter change") %>% 
+  landscape()
+
+#fine-tune the table aesthetics and dispaly it
+myframe %>% pivot_longer(cols = 'Chi square':'SEPC', names_to = "indicator", values_to = "value") %>% 
+  ggplot(aes(x = Iteration, y = value))+
+  geom_line()+
+  facet_wrap(~factor(indicator, levels = names(myframe)), 
+             scales = "free") +
+  theme(axis.title = element_text(size = 15),
+        panel.background = element_rect(fill = "white",
+                                        color = "black"),
+        panel.grid = element_blank(),
+        strip.background = element_rect(color = "black",
+                                        fill = "#9999CC"),
+        strip.text = element_text(color = "white",
+                                  face = "bold",
+                                  size =  10),
+        plot.title = element_text(size = 15,
+                                  face = "bold"))+
+  labs(title = "Fig 6 Trends of fit indices throughout 100 MI-based automatic
+       model modifications")
 ```
+Some comments on the graph:
+
+(1)Over the progression of 100 model modifications, the chi square value kept decreasing from 400 to almost 0.
+
+(2)I used 100 degrees of freedom during this trial. Note that p-value for chi square statistics might be influence by it.
+
+(3)At around the 20th~25th modification, p-value of chi square increased over 0.50, achieving statistical significance (if multiple comparison was not a concern). The increasing trend was clear and consistent and at around the 25th modification, the p value had hit the ceiling of 1 and stayed there throughout the trial.
+
+(4)for CFI, the increasing tread was much in line with the change of p value, with its ceiling hit at roughly 24th modification.
+
+(5)TLI could be over 1 and hence the trend of increasing is more linear. Still, the growing trend is clear and consistent throughout the progression of modifications.
+
+(6)RMSEA and its 95%CI dropped dramatically in the beginning 23~25 modifications. Then it remained at 0 throughout the trial.
+
+(7)SRMA showed a consistent and clear decreasing trend throughout the trial.
+
+(8)CSF (Chi square scaling factor) fluctuated continuously with its value always being over 1, showing MLM had been a proper estimator all the way.
+
+(9)SPEC (standardized expected parameter change) was equivalent to the correlation coefficient. Its value kept going up and down around value of 0 throughout the modification However, the strength of correlation was all the way decreasing.
+
+The conclusion is if we followed what the data had told us, it would always result in a better fit in all the above indicators. However, this does not mean we should do that. Instead, it highlights the importance of making all the decisions on MI-based model modifications with as much domain knowledge as possible, since it is the only referee for our optimal practice. 
+
+
 
