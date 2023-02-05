@@ -1,0 +1,179 @@
+---
+title: "COS-D419 Factor Analysis and Structural Equation Models 2023, Assignment 2"
+author: "Ita Puusepp"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# CFA & self-concept (SC)
+
+## Exercise 2.1
+
+Specify and test the hypothesis given on the page 1 of the lecture material.
+
+Draw conclusions based on the $\chi^2$ statistic and the CFI, TLI, RMSEA, and SRMR indices.
+
+What can you say about the parameter estimates?
+
+Visualize the model.
+
+### Read in the data set:
+
+Start by downloading the data file from Moodle to your Project folder!
+
+```{r}
+library(tidyverse)
+library(readr)
+
+orig_data <- read_csv("ASC7INDM.CSV", show_col_types = FALSE) 
+
+# we will only use a subset of the data here:
+SCdata <- orig_data %>% dplyr::select(starts_with("SDQ2N"))
+glimpse(SCdata)
+```
+
+### Explore the data (always do that!):
+
+```{r}
+library(psych)
+library(dplyr)
+library(knitr)
+library(tidyr)
+library(corrplot)
+
+# these are just examples - you can well do other things, too!
+
+# basic statistics:
+SCdata %>% describe() %>% 
+  as.data.frame() %>%
+  select(mean, sd, min, max) %>%
+  kable(digits = 2)
+
+# histograms:
+SCdata %>% pivot_longer(cols = everything()) %>%
+  ggplot(aes(x = value)) + 
+  geom_histogram(binwidth = 1) +
+  facet_wrap(~name, nrow = 4, ncol = 4)
+
+# correlation matrix:
+SCdata %>% cor() %>% round(digits = 2)
+
+# correlation plot:
+SCdata %>% cor() %>% corrplot()
+
+```
+The descriptives indicate that for each item the whole scale of the response options has been used (from min 1 to max 6). As visible from the means and histograms, some items seem to have almost a ceiling effect (e.g., SDQ2N22, SDQ2N46). The correlation plot indicates that the MSC items are especially highly correlated with each other, but also items of other scales can be seen to correlate more strongly with each other.
+
+### Define and estimate a CFA model:
+
+```{r}
+library(lavaan) # install.packages("lavaan")
+
+# Define a CFA model using the lavaan package:
+# NOTE: with the model definitions in lavaan syntax you have to
+# SELECT all the code up to ' and then press Ctrl+Enter / Cmd+Enter
+# when activating operations individually.
+
+model1 <- '# CFA model of self-concept (SC):
+           GSC =~ SDQ2N01 + SDQ2N13 + SDQ2N25 + SDQ2N37
+           ASC =~ SDQ2N04 + SDQ2N16 + SDQ2N28 + SDQ2N40
+           ESC =~ SDQ2N10 + SDQ2N22 + SDQ2N34 + SDQ2N46
+           MSC =~ SDQ2N07 + SDQ2N19 + SDQ2N31 + SDQ2N43
+          '
+
+# Estimate the model using the data defined earlier:
+cfa1 <- cfa(model1, data = SCdata)
+
+# Numerical summary of the model:
+summary(cfa1, fit.measures = TRUE, standardized = TRUE)
+
+```
+Model fit indices indicate a a very good fit, $\chi^2$(98) = 159.11, p < .001, CFI = .96, TLI = .95, RMSEA = .05, and SRMR = .05. Although the p-value $\chi^2$ test is < .05, this might result from a large sample size, and all the other indices show a very good fit. Additionally, all of the factor loadings are significant at level p < .001 and the standardized loadings range from .53 to .92, except for item SDQ2N34 that has a quite low loading of .32 (significant though). The same item also has quite a high residual variance, while otherwise the residual variances seem fine. Now looking back at the correlation plot, it is visible from there already that SDQ2N34 does not correlate as strongly with other items. So basically, the correlation plot can already give some insight regarding the results of the FA?
+
+### Visualize the CFA model:
+
+```{r}
+library(semPlot) # install.packages("semPlot")
+
+# Path model based on the model object (TRY AND MODIFY!)
+semPaths(cfa1) # default options
+
+# LISREL style (introduced by K. Jöreskog in the 1970s - still the standard):
+semPaths(cfa1, style = "lisrel")
+
+# "some" more options added:
+semPaths(cfa1, style = "lisrel", layout = "tree2", what = "path", whatLabels = "name",
+    intercepts = FALSE, residuals = TRUE, thresholds = FALSE, reorder = FALSE,
+    rotation = 2, 
+    latents = c("MSC","ESC", "ASC" ,"GSC"),
+    sizeLat = 10, sizeLat2 = 5,
+    manifests = rev(colnames(SCdata)),
+    sizeMan = 10, sizeMan2 = 2
+    )
+
+```
+
+## Exercise 2.2
+
+Specify and test these two additional hypotheses (again draw conclusions based on the $\chi^2$ statistic and the CFI, TLI, RMSEA, and SRMR indices):
+
+- *Hypothesis 2:* SC is a two-factor structure consisting of GSC and ASC (so that the four GSC measures load onto the GSC and all other onto the ASC).
+```{r}
+model2 <- '# two-factor solution:
+           GSC =~ SDQ2N01 + SDQ2N13 + SDQ2N25 + SDQ2N37
+           ASC =~ SDQ2N04 + SDQ2N16 + SDQ2N28 + SDQ2N40 + SDQ2N10 + SDQ2N22 + SDQ2N34 + SDQ2N46 + SDQ2N07 + SDQ2N19 + SDQ2N31 + SDQ2N43
+          '
+
+# Estimate the model using the data defined earlier:
+cfa2 <- cfa(model2, data = SCdata)
+
+# Numerical summary of the model:
+summary(cfa2, fit.measures = TRUE, standardized = TRUE)
+```
+First, model fit indices show a poor fit, $\chi^2$(103) = 457.65, p < .001, CFI and TLI are unacceptably low (< .80), RMSEA and SRMR are greater than .10. Also, the factor loadings of multiple items in ASC show very low and even insignificant loadings. And these numerous items with lower loadings also demonstrate very high (nearly 1.00!!) residual variances (especially the items SDQ2N10, N22, N34, N46 that are intended to assess ESC). Also, from the previous 4-factor model we saw that ASC and MSC latent factors correlate rather highly with each other, while ESC and MSC correlate rather weakly with each other).
+
+- *Hypothesis 3:* SC is a one-factor structure.
+
+```{r}
+model3 <- '# single-factor solution:
+           SC =~ SDQ2N01 + SDQ2N13 + SDQ2N25 + SDQ2N37 + SDQ2N04 + SDQ2N16 + SDQ2N28 + SDQ2N40 + SDQ2N10 + SDQ2N22 + SDQ2N34 + SDQ2N46 + SDQ2N07 + SDQ2N19 + SDQ2N31 + SDQ2N43
+          '
+
+# Estimate the model using the data defined earlier:
+cfa3 <- cfa(model3, data = SCdata)
+
+# Numerical summary of the model:
+summary(cfa3, fit.measures = TRUE, standardized = TRUE)
+```
+And the fit of this model is even poorer than that of the previous model. CFI and TLI are even lower and RMSEA and SRMR even higher. Although the $\chi^2$ test was significant even in the first well-fitting 4-factor model (probably resultsing from a large sample size), we can see that the worse the model fit gets, the greater also the ratio between the $\chi^2$ test statistic and the degrees of freedom (4-factor model: 159/98, 2-factor model: 458/103, 1-factor model: 532/104).
+
+As to parameter estimates, the items intended to measure GSC and ESC have especially high residual variance and low or even insignificant factor loadings. There seems to be something more mutual in the items intended to assess ASC and MSC - it is plausible that participants consider math skills as an important indicator of academic skills and therefore also ASC and MSC items have greater variance in common when compared to GSC and ESC items.
+
+Visualize the models and compare them with the four-factor model analyzed in Exercise 2.1.
+
+```{r}
+
+semPaths(cfa2, style = "lisrel", layout = "tree2", what = "path", whatLabels = "name",
+    intercepts = FALSE, residuals = TRUE, thresholds = FALSE, reorder = FALSE,
+    rotation = 2, 
+    latents = c("GSC","ASC"),
+    sizeLat = 10, sizeLat2 = 5,
+    manifests = rev(colnames(SCdata)),
+    sizeMan = 10, sizeMan2 = 2
+    )
+
+semPaths(cfa3, style = "lisrel", layout = "tree2", what = "path", whatLabels = "name",
+    intercepts = FALSE, residuals = TRUE, thresholds = FALSE, reorder = FALSE,
+    rotation = 2, 
+    latents = c("SC"),
+    sizeLat = 10, sizeLat2 = 5,
+    manifests = rev(colnames(SCdata)),
+    sizeMan = 10, sizeMan2 = 2
+    )
+
+```
+

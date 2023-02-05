@@ -1019,14 +1019,14 @@ names(myframe) <- c("Iteration", "Chi square", "df", "p-value", "CFI", "TLI",
                     "RMSEA", "RMSEA upper 95%CI", "RMSEA lower 95%CI", "SRMR", 
                     "CSF", "MI", "SEPC")
 
-#display fit indices for the first 20 iterations of automatic model 
+#display fit indices for the first 30 iterations of automatic model 
 myframe %>% 
-  head(25) %>% 
+  head(30) %>% 
   kable(booktab = T,
         linesep = "",
         caption = 
-          "Fit indices for the first 20 iterations of automatic model 
-        modification (other 80 not shown)") %>%
+          "Fit indices for the first 30 iterations of automatic model 
+        modification (other 70 not shown)") %>%
   kable_styling(latex_options = "striped") %>% 
   footnote(general = "CSF: Chi-squre sclaing factor; SEPC: standardized expected 
                       parameter change") %>% 

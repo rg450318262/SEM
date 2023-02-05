@@ -1,4 +1,4 @@
-This is LuaHBTeX, Version 1.15.0 (TeX Live 2022)  (format=lualatex 2023.2.3)  3 FEB 2023 22:13
+This is LuaHBTeX, Version 1.15.0 (TeX Live 2022)  (format=lualatex 2023.2.3)  3 FEB 2023 22:18
  restricted system commands enabled.
 **Assignment3_RongGuang.tex
 (./Assignment3_RongGuang.tex
@@ -1014,7 +1014,7 @@ File: Assignment3_RongGuang_files/figure-latex/unnamed-chunk-35-1.pdf Graphic fi
 Package luatex.def Info: Assignment3_RongGuang_files/figure-latex/unnamed-chunk-35-1.pdf  used on input line 1508.
 (luatex.def)             Requested size: 469.76265pt x 603.98058pt.
 [25] [26<./Assignment3_RongGuang_files/figure-latex/unnamed-chunk-35-1.pdf>] [27] [28]
-Overfull \hbox (18.00996pt too wide) in paragraph at lines 1607--1640
+Overfull \hbox (18.00996pt too wide) in paragraph at lines 1607--1645
  [][] 
  []
 
@@ -1022,7 +1022,7 @@ Overfull \hbox (18.00996pt too wide) in paragraph at lines 1607--1640
 <Assignment3_RongGuang_files/figure-latex/unnamed-chunk-37-1.pdf, id=327, 722.7pt x 578.16pt>
 File: Assignment3_RongGuang_files/figure-latex/unnamed-chunk-37-1.pdf Graphic file (type pdf)
 <use Assignment3_RongGuang_files/figure-latex/unnamed-chunk-37-1.pdf>
-Package luatex.def Info: Assignment3_RongGuang_files/figure-latex/unnamed-chunk-37-1.pdf  used on input line 1667.
+Package luatex.def Info: Assignment3_RongGuang_files/figure-latex/unnamed-chunk-37-1.pdf  used on input line 1672.
 (luatex.def)             Requested size: 469.76045pt x 375.80836pt.
 [30
 
@@ -1037,15 +1037,15 @@ Package rerunfilecheck Info: File `Assignment3_RongGuang.out' has not changed.
 
 Here is how much of LuaTeX's memory you used:
  20442 strings out of 478331
- 100000,1977958 words of node,token memory allocated
+ 125007,1977958 words of node,token memory allocated
  574 words of node memory still in use:
    7 hlist, 2 vlist, 3 rule, 2 glue, 4 kern, 1 glyph, 8 attribute, 64 glue_spec, 8 attribute_list, 1 write, 1 user_defined nodes
-   avail lists: 2:2280,3:825,4:692,5:1406,6:99,7:7496,8:75,9:1934,10:10,11:284
+   avail lists: 2:2280,3:826,4:796,5:1640,6:100,7:8659,8:75,9:2266,10:10,11:284
  39671 multiletter control sequences out of 65536+600000
- 67 fonts using 19599743 bytes
+ 67 fonts using 19599667 bytes
  86i,15n,121p,953b,537s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmroman7-regular.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmmono10-italic.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmroman10-italic.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmmonolt10-bold.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmmono10-regular.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmroman10-regular.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmroman10-bold.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmroman12-bold.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmroman12-regular.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmroman17-regular.otf>
-Output written on Assignment3_RongGuang.pdf (31 pages, 383354 bytes).
+Output written on Assignment3_RongGuang.pdf (31 pages, 383888 bytes).
 
 PDF statistics: 413 PDF objects out of 1000 (max. 8388607)
  334 compressed objects within 4 object streams
