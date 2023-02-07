@@ -1,0 +1,254 @@
+---
+title: "backup codes"
+author: "Rong Guang"
+date: "2023-01-31"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r}
+
+```
+
+
+residual matrix
+
+```{r}
+cor_table_1 <- residuals(cfa1, type = "cor")$cov %>% round(2)
+ggcorr(cor_table_1, 
+       geom = "blank", 
+       cor_matrix = cor_table_1,
+       label = TRUE, 
+       hjust = 0.9, 
+       color = "red", 
+       face = "bold", 
+       method = c("pairwise","pearson"),
+       digits = 2,
+       size= 2,
+       label_size = 2.5,
+       label_round = 2,
+       layout.exp =1) +
+  geom_point(size = 9, 
+             aes(color = "red", 
+                 alpha = abs(coefficient) > 0.1)) +
+  scale_alpha_manual(values = c("TRUE" = 0.1, "FALSE" = 0)) +
+    geom_point(size = 10, 
+               aes(color = "green", alpha = abs(coefficient) > 0.15)) +
+  scale_alpha_manual(values = c("TRUE" = 0.35, "FALSE" = 0)) +
+  guides(color = FALSE, 
+         alpha = FALSE) +
+  labs(title = "Figure 5. Resisual correlation matrix of fitted model",
+       caption = 
+         " Red circles indicates correlation coefficient >= 0.15 
+        green circle indicates >= 0.1")+
+  theme(plot.title = element_text(size = 9))
+as.matrix(cor_table_1)
+
+```
+
+
+
+```{r}
+library(EnvStats)
+res1 <- residuals(cfa1, type = "cor")$cov 
+res1[upper.tri(res1,diag=T)] <- NA
+res1 <- as.vector(res1)
+res1 <- res1[!is.na(res1)]
+qqPlot(res1, add.line = T, dis ="norm")
+```
+
+
+#sc.ds %>%
+#  tab_df(digits = 2, 
+#        alternate.rows = T,
+#        title = "Table 1. Descriptive dtatistics of selected variables",
+#        CSS = list(css.centralign='text-align: right;'))
+
+
+```{r}
+
+#diag(cor_table_1) <- ""
+#cor_table_1[upper.tri(cor_table_1)] <- ""
+#cor_table_1 %>% 
+#  kable(digits = 2, booktabs = T, linesep = "") %>% 
+#  kable_styling(latex_options = c("striped", "scale_down")) %>% 
+#  landscape()
+```
+
+```{r}
+cfa.name <- c("χ2", "df", "𝑝 value", "CFI", "TLI", "RMSEA", "RMSEA 𝑝", "SRMR", "Scaling correct factor")
+cfa.name
+```
+```{r}
+tibble(name = cfa.name, ss = cfa.name)
+```
+
+```{r}
+
+estimation.comparison <- estimation.comparison %>% 
+  t() %>% 
+  data.frame()
+Indicator <- estimation.comparison["Indicator",]
+names(estimation.comparison) <- Indicator
+estimation.comparison <- estimation.comparison[-c(1),] 
+
+estimation.comparison <- estimation.comparison %>% 
+  mutate('RMSEA(p)' = paste(RMSEA, "(", 'RMSEA p value',")"),
+         'Chi-square(df, p)' = paste('chi square', "(", df, ",", 'p value', ")"))%>%
+  select('Chi-square(df, p)', CFI, TLI, 'RMSEA(p)', SRMR, 'Scaling correct factor') 
+```
+
+
+
+```{r}
+options(scipen = 999)
+#obtain measures from ML estimation
+  cfa.measure.ml <- fitMeasures(cfa1,    #obtain specified measured.
+                            c("chisq", 
+                              "df", 
+                              "pvalue", 
+                              "cfi", 
+                              "tli",
+                              "rmsea",
+                              "rmsea.pvalue",
+                              "srmr")) 
+  names(cfa.measure.ml) <- c("chi square", 
+                             "df", 
+                             "p value", 
+                             "CFI", 
+                             "TLI", 
+                             "RMSEA", 
+                             "RMSEA p value", 
+                             "SRMR")
+
+cfa.measure.ml <- cfa.measure.ml %>%
+  tibble(Indicator = names(cfa.measure.ml), "By ML" = round(cfa.measure.ml, 3)) %>% 
+  select(Indicator, "By ML") 
+
+
+
+
+#obtain measures from MLM estimation
+    cfa.measure.mlm <- fitMeasures(cfa2,    #obtain specified measured.
+                            c("chisq.scaled", 
+                              "df.scaled", 
+                              "pvalue.scaled", 
+                              "cfi.scaled", 
+                              "tli.scaled",
+                              "rmsea.scaled",
+                              "rmsea.pvalue.scaled",
+                              "srmr_bentler",
+                              "chisq.scaling.factor")) 
+
+  names(cfa.measure.mlm) <- c("chi square", 
+                              "df", 
+                              "p value", 
+                              "CFI", 
+                              "TLI", 
+                              "RMSEA", 
+                              "RMSEA p value", 
+                              "SRMR", 
+                              "Scaling correct factor")
+  
+#combine the indicators from both estimations  
+cfa.measure.mlm <- cfa.measure.mlm %>%
+  tibble(Indicator = names(cfa.measure.mlm), "By MLM" = round(cfa.measure.mlm, 3)) %>% 
+  select(Indicator, "By MLM")
+
+#ordered row
+name.order <- c("chi square", 
+                "df", 
+                "p value", 
+                "CFI", 
+                "TLI", 
+                "RMSEA", 
+                "RMSEA p value", 
+                "SRMR", 
+                "Scaling correct factor")
+
+#generate the table
+estimation.comparison <- merge(cfa.measure.ml, 
+                               cfa.measure.mlm, 
+                               by = "Indicator", 
+                               all.y = T) %>% 
+  arrange(factor(Indicator, levels = name.order)) 
+
+
+estimation.comparison$'Contrast: MLM-ML' <- estimation.comparison$`By MLM`-
+  estimation.comparison$`By ML`
+
+
+
+#display the table
+estimation.comparison %>% 
+  kable(booktabs = T,
+        linesep = "",
+        caption = "Comparing indicators generated by ML vs MLM",
+        digits = 3) %>% 
+  kable_styling() %>% 
+  row_spec(c(1,4,5,6,8,9), background = "#D3D3D3") %>% 
+  footnote(symbol = c("Larger value indicates better fit", 
+                      "Smaller value indicates better fit",
+                      ">1 indicates the data violates normality assumption and MLM is a better estimator")) %>% 
+  column_spec(3, width = "2.5cm") %>% 
+  column_spec(0, width = "3cm")
+
+```
+
+
+```{r}
+m <- matrix(NA, 50, 7)
+m
+m[12, 2] <- "EE"
+m[22, 2] <- "DP"
+m[38, 2] <- "PA"
+m[4,5] <- "ITEM1"
+m[6,5] <-"ITEM3"
+m[8,5] <-"ITEM2"
+m[10,5] <-"ITEM6"
+m[12,5] <-"ITEM8" 
+m[14,5] <-"ITEM13"
+m[16,5] <-"ITEM14"
+m[18,5] <-"ITEM20"
+m[20,5] <-"ITEM16"
+
+m[22,5]<-"ITEM5"
+m[24,5]<-"ITEM10"
+m[26,5]<-"ITEM15" 
+m[28,5]<-"ITEM11"
+m[30,5]<-"ITEM22"
+
+m[32,5]<-"ITEM4"
+m[34,5]<-"ITEM7"
+m[36,5]<-"ITEM9"
+m[38,5]<-"ITEM12"
+m[40,5]<-"ITEM17"
+m[42,5]<-"ITEM18"
+m[44,5]<-"ITEM19"
+m[46,5]<-"ITEM21"
+```
+
+
