@@ -1,0 +1,158 @@
+---
+title: "trial"
+author: "Rong Guang"
+date: "2023-02-07"
+output: 
+  bookdown::pdf_document2:
+    latex_engine: lualatex
+---
+
+```{r setup, include=FALSE, warning = F, message=F}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message=F)
+```
+
+```{r}
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+library("foreign") #install.packages("foreign")
+USHS2021 <- read.spss("daF3616E.sav", to.data.frame=TRUE)
+```
+
+
+
+
+```{r}
+ushs <- USHS2021 |>
+  mutate(Gender = bv2 |> factor() |>
+           fct_recode("Male" = "1", "Female" = "2"),
+         
+         Mental_health = k4 |> factor() |>
+           fct_recode("Good" = "1",
+                      "Fairly good" = "2",
+                      "Average" = "3",
+                      "Fairly poor" = "4",
+                      "Poor" = "5"),
+         
+         Aloneness = k81 |> factor() |>
+           fct_recode("Never" = "1",
+                      "Very rarely" = "2",
+                      "Sometimes" = "3",
+                      "Fairly often" = "4",
+                      "All the time" = "5"),
+         
+#K14 variable:Over the past 4 weeks, for how much of the time have you felt...
+         Very_nervouse = k14_1 |> factor() |>
+           fct_recode("All the time" = "1",
+                      "most of the time" = "2",
+                      "amount of the time" = "3",
+                      "some of the time" = "4",
+                      "not at all" = "5"),
+
+         Low_mood = k14_2 |> factor() |>
+           fct_recode("All the time" = "1",
+                      "most of the time" = "2",
+                      "amount of the time" = "3",
+                      "some of the time" = "4",
+                      "not at all" = "5"),
+
+         Calm_peaceful= k14_3 |> factor() |>
+           fct_recode("All the time" = "1",
+                      "most of the time" = "2",
+                      "amount of the time" = "3",
+                      "some of the time" = "4",
+                      "not at all" = "5"),
+
+         Downhearted_sad = k14_4 |> factor() |>
+           fct_recode("All the time" = "1",
+                      "most of the time" = "2",
+                      "amount of the time" = "3",
+                      "some of the time" = "4",
+                      "not at all" = "5"),
+
+         Happy = k14_5 |> factor() |>
+           fct_recode("All the time" = "1",
+                      "most of the time" = "2",
+                      "amount of the time" = "3",
+                      "some of the time" = "4",
+                      "not at all" = "5"),
+         
+#K67 variable: Internet use and gambling, Do you think you have a problem with any of the following things?
+         Social_media = k67_1 |> factor() |>
+           fct_recode("No" = "0", "Yes" = "1"),
+         Online_gaming = k67_2 |> factor() |>
+           fct_recode("No" = "0", "Yes" = "1"),
+         Online_porn = k67_3 |> factor() |>
+           fct_recode("No" = "0", "Yes" = "1"),
+         Shopping_online = k67_4 |> factor() |>
+           fct_recode("No" = "0", "Yes" = "1"),
+         No_ideas = k67_5 |> factor() |>
+           fct_recode("No" = "0", "Yes" = "1"),
+
+
+        Living_condition = k72 |> factor() |>
+           fct_recode("Live Alone" = "1",
+                      "Live with partner/child" = "2",
+                      "Shared_flat" = "3",
+                      "Shared household, with a joint lease agreement" = "4",
+                      "Shared household, with a separate lease agreement" = "5",
+                      "Live with parents" = "6",
+                      "No ideas" = "7"
+                      )
+          )
+
+```
+
+
+```{r}
+library(DT)
+data14 <- ushs |> 
+  select(Very_nervouse:Happy)
+data14 |> datatable()
+```
+
+
+```{r}
+library(janitor)
+t1 <- data14 |> 
+  pivot_longer(everything(), names_to = "Mood", values_to = "Frequency") |> 
+  tabyl(Mood, Frequency) |> 
+  adorn_percentages("row") |> 
+  adorn_pct_formatting() |> 
+  adorn_ns(position = "front") 
+
+
+t1$Mood <- c("Calm&Peaceful", "Downharted&Sad", "Happy", "Low mood", "Very nervous")
+
+
+t1 |> 
+  select(-NA_,
+         Mood,
+         "Always" = "All the time",
+         "Most time" = "Most of the time",
+         "Often time" = "A good bit of the time",
+         "Some time" = "Some of the time",
+         "Little time" = "A little of the time",
+         "Not at all") |> 
+  kable(booktab = T) |> 
+  kable_classic() |> 
+  landscape()
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+

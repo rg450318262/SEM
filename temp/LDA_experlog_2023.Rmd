@@ -1,0 +1,176 @@
+---
+title: "Apriori association rule mining to expert log "
+author: "Rong Guang"
+date: "2023-02-07"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(haven)
+library(expss)
+library(tidyverse)
+library(janitor)
+library(knitr)
+library(qualtRics)
+```
+
+```{r}
+#read in the data
+elog.ful <- read_survey("expert_log_0702.csv", legacy = T)
+elog.ful <- elog.ful[-1,]
+```
+
+
+```{r}
+#add indices
+elog.ful$id <- 1:nrow(elog.ful)
+
+#remove Progess of filling <= 50% cases
+elog.ful.finished <- elog.ful |>  #Five <50% cases removed
+  filter(as.numeric(Progress)>50)
+
+#remove GPX variables
+elog <- elog.ful.finished |> 
+  select(id,birthy:fae_acc_4,
+         -starts_with("GPX"))
+```
+
+
+```{r}
+#Generate to data frame for number/percent of NAs of each case
+id.na <-  #id.na is for ID and number/percent of NAs
+elog |> 
+  mutate(na = rowSums(is.na(elog)),
+         na.percent = na/ncol(elog)) |> 
+  select(id, na, na.percent)
+
+#case indices with >80% NAs
+remove.index <- id.na |> 
+  filter(na.percent>0.8) |> 
+  select(id) |> 
+  unlist()
+
+#remove the >80% Na cases
+elog <- elog |> 
+  filter(id != remove.index)
+
+elog <- elog |> 
+  select(-name)
+```
+
+```{r}
+#categorize age
+elog <- elog |> 
+  mutate(age = 2023 - as.numeric(birthy)) |> 
+  select (-birthy) |> 
+  mutate(age = age |> cut(breaks = 
+                            c(10,20,40,60,80)
+                          )|> 
+                            fct_recode("10~20 years old" = "(10,20]",
+                                       "20~40 years old" = "(20,40]",
+                                       "40~60 years old" = "(40,60]",
+                                       "60~80 years old" = "(60,80]"
+                                       )
+         )
+```
+
+```{r}
+#categorize bc years
+elog <- elog |> 
+  mutate(bc_years = na_if(bc_years, "-99"),
+         bc_years =  as.numeric(bc_years) |> 
+           cut(breaks = 
+                 c(0,10,20,30,40)
+               ) |> 
+                 fct_recode("<10 years" = "(0,10]",
+                            "10~20 years" = "(10,20]",
+                            "20~30 years" = "(20,30]",
+                            "30~40 years" = "(30,40]")
+  )
+```
+
+```{r}
+#Convert -99 to NAs. 
+elog <- elog %>%
+  mutate(
+    across(where(is.character), 
+           ~na_if(.,"-99")))
+```
+
+
+```{r}
+#add variable names to the values (to fit the data to association rules) 
+df <- data.frame(matrix(ncol =ncol(elog), nrow = nrow(elog)))
+colnames(df) <- colnames(elog)
+df[,1] <- elog[,1]
+
+for (c in 1:ncol(elog)){
+  for (r in 2:95){
+    df[c,r] <- paste0(colnames(df)[r], "~", elog[c,r])
+  }
+}
+elog.b <- elog #elog.b is for elog backup.
+elog <- df
+```
+
+```{r}
+library(arules)
+library(reshape2)
+#to long format
+elog.long <- elog |> 
+  pivot_longer(cols = c(2:ncol(elog)), names_to = "variables", values_to = "values")
+
+#remove NA
+elog.long <- elog.long |> 
+  filter(!str_detect(values, "~NA"))
+```
+
+
+
+
+```{r}
+#turn data into style of transaction items 
+grouping <- elog.long %>% # grouping for the need of split function below
+  group_by(id,values) %>%
+  dplyr::select(id, values, variables) %>%
+  data.frame()
+
+
+elog.ar <- as(split(grouping[,"values"], #elog.ar is for elog for association rules
+                    grouping[,"id"]), "transactions")
+```
+
+
+```{r}
+#run association rules
+rules <- apriori(elog.ar, parameter = list(supp = 0.1, conf = 0.8, maxlen =3)) 
+
+#check the first 50 frequent items.
+inspect(rules[1:50])
+```
+
+
+
+```{r, fig.width=10, fig.height=6}
+library(arulesViz)
+
+arules::itemFrequencyPlot(elog.ar, topN = 10,
+                          main = 'Relative Item Frequency Plot',
+                          type = "relative",
+                          ylab = "Item Frequency (Relative)")
+```
+
+```{r}
+#an example to check the variable labels and value labels
+get_label(elog.b$`f_crit_info#1_1`)
+tabyl(elog.b, `f_crit_info#1_1`)
+```
+
+
+
+
+

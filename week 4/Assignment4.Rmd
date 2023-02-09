@@ -1,0 +1,200 @@
+---
+title: "COS-D419 Factor Analysis and Structural Equation Models 2023, Assignment 4"
+author: "Rong Guang"
+date: "`r Sys.Date()`"
+output: 
+  bookdown::pdf_document2:
+    latex_engine: lualatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+# SEM & teacher burnout
+
+## Exercise 4.1
+
+Draw the graph of the initial, full structural equation model. Make sure that you have included all the specified paths.
+
+Estimate the initial model using the robust MLM estimator *(robust variant of the ML estimator, to be precise!)* and present a brief summary of the model fit.
+
+### Read in the data set:
+
+Start by downloading the data file from Moodle to your Project folder!
+
+```{r}
+library(tidyverse)
+library(readr)
+
+MBIdata <- read_csv("ALLSEC.CSV", show_col_types = FALSE) 
+glimpse(MBIdata)
+```
+
+### Explore the data (always do that!):
+
+```{r}
+
+# Consider proceeding a bit differently than before - see what others have done!
+# Please use colors, and prefer graphical summaries to numerical ones.
+# (This is useful warm-up exercise before starting the actual workout!)
+
+```
+
+### Define the initial, full structural equation model and visualize it:
+
+Here's an example of how to draw the model before estimating it. Feel free to modify the R code!
+
+**OBS!** I have given the model syntax below using *numeric names* for the factors (F1, F2 etc.), thus following Byrne's book. However, that is NOT the best practice, so you might consider changing those names. (It might make your task somewhat easier...)
+
+```{r, fig.height =  16, fig.width = 28}
+library(semPlot)#install.packages("semPlot")
+
+initial_model <- '
+# Factors:
+ F1ROLA =~ ROLEA1 + ROLEA2 + DEC2
+ F2ROLC =~ ROLEC1 + ROLEC2
+ F3WORK =~ WORK1 + WORK2
+ F4CLIM =~ CCLIM1 + CCLIM2 + CCLIM3 + CCLIM4
+ F5DEC =~ DEC1 + DEC2
+ F6SSUP =~ SSUP1 + SSUP2 + DEC2
+ F7PSUP =~ PSUP1 + PSUP2
+ F8SELF =~ SELF1 + SELF2 + SELF3
+ F9ELC =~ ELC1 + ELC2 + ELC3 + ELC4 + ELC5
+ F10EE =~ EE1 + EE2 + EE3
+ F11DP =~ DP1 + DP2
+ F12PA =~ PA1 + PA2 + PA3
+# Regressions:
+ F8SELF ~ F5DEC + F6SSUP + F7PSUP
+ F9ELC ~ F5DEC
+ F10EE ~ F2ROLC + F3WORK + F4CLIM
+ F11DP ~ F2ROLC + F10EE
+ F12PA ~ F1ROLA + F8SELF + F9ELC + F10EE + F11DP
+'
+```
+
+```{r}
+m <- matrix(NA, 60, 72)
+m[12, 68] <- "F1ROLA"
+m[12, 40] <- "F2ROLC"
+m[12, 28] <- "F3WORK"
+m[12,12] <- "F4CLIM"
+m[21,12] <-"F5DEC"
+m[40,12] <-"F6SSUP"
+m[53,9] <-"F7PSUP"
+m[44,24] <-"F8SELF" 
+m[52,40] <-"F9ELC"
+m[37,48] <-"F10EE"
+m[26,60] <-"F11DP"
+m[48,64] <-"F12PA"
+
+m[4, 72] <- "ROLEA1"
+m[4, 64] <- "ROLEA2"
+m[4, 48] <- "ROLEC1"
+m[4, 40] <- "ROLEC2"
+m[4, 32] <- "WORK1"
+m[4, 24] <- "WORK2"
+m[4, 16] <- "CCLIM1"
+m[5, 10] <- "CCLIM2"
+m[10, 4] <- "CCLIM3"
+m[15, 4] <- "CCLIM4"
+m[20, 4] <- "DEC1"
+m[27, 6] <- "DEC2"
+m[36, 4] <- "SSUP1"
+m[40, 4] <- "SSUP2"
+m[59, 6] <- "PSUP1"
+m[59, 13] <- "PSUP2"
+m[48, 32] <- "SELF1"
+m[52, 28] <- "SELF2"
+m[51, 21] <- "SELF3"
+m[56, 50] <- "ELC1"
+m[60, 48] <- "ELC2"
+m[60, 42] <- "ELC3"
+m[60, 35] <- "ELC4"
+m[56, 31] <- "ELC5"
+m[43, 45] <- "EE1"
+m[39, 40] <- "EE2"
+m[35, 38] <- "EE3"
+m[20, 64] <- "DP1"  
+m[20, 58] <- "DP2"
+m[52, 71] <- "PA1"
+m[56, 64] <- "PA2"
+m[53, 57] <- "PA3"
+```
+
+
+```{r, fig.height =  12, fig.width = 20}
+semPaths(semPlotModel(initial_model),
+             style = "lisrel",
+             rotation = 2,
+             sizeLat = 6, 
+             sizeLat2 = 5,
+             sizeMan = 5,
+             sizeMan2 = 2,
+             shapeMan = "rectangle",
+             edge.color = c(rep("black",34),
+                            rep("blue",14),
+                            rep("gray",32),
+                            rep("red",5)),
+         residuals = T,
+         layout = m,
+         nCharNodes=0,
+         optimizeLatRes = T)
+```
+
+```{r}
+colors[rep(seq(1:3),times=4) + rep(0:3, each=3)]
+```
+
+
+### Estimate the SEM model:
+
+*Note:* Here, we will use the sem() function for the estimation, instead of the cfa() function, as we are now working with a full SEM (i.e., CFA + regression paths).
+
+```{r}
+library(lavaan)
+
+model1 <- initial_model # defined above
+
+# Estimate the model with the robust (MLM) estimator:
+sem1 <- sem(model1, data = MBIdata, estimator = "MLM")
+
+# Numerical summary of the model:
+summary(sem1, fit.measures = TRUE, standardized = TRUE)
+
+```
+
+## Exercise 4.2
+
+Proceed **step by step** following the guidelines given in the lecture material, i.e., implement the modifications **one at a time**, testing and studying each step. See (and report) how the fit improves and which parameters are suggested to be modified. Please be careful! There will (always) be a lot of suggestions... Do not list all the MIs (only a few of them are useful!), try to keep your report as concise as possible.
+
+*Note:* A good way to proceed is to collect the necessary information (i.e., which parameter was modified and how, MI, EPC, chi-square, df, CFI, TLI, scaling correction factor, RMSEA, and SRMR) of each modelling step to a **table** (in a way or another). (Some examples in R code were given in Assignment 3, consult also the reports by other students, if you do not know how to proceed.) **Such tables makes it easy to see how the results of the modelling develop through each step.** 
+
+The best practice is to build the tables step by step: In the first table you will have only one row, then two rows, then three rows etc., and in the final version of the table you will have all the steps collected together on *k* rows, representing the *k* steps of the modelling process.
+
+### Calculating the MLM $\chi^2$ difference tests
+
+Calculate the MLM $\chi^2$ difference tests between the consecutive models of the above steps, as advised in the lecture material (p.14-15). Do those calculations in detail at least once or twice so that you get the idea.
+
+*Note:* The formulas are simpler than they are in Byrne's book (p.168-169), where both MLM and ML estimations are needed. For more information, see: https://statmodel.com/chidiff.shtml.
+
+For the calculations, you may use R (of course!) or Excel, or some ready-made calculation forms found on the web, such as https://www.thestatisticalmind.com/calculators/SBChiSquareDifferenceTest.htm.
+
+```{r}
+
+# (copy and modify the R codes given earlier)
+
+```
+
+## Exercise 4.3
+
+Draw the graph of the final model and present its fit indices and the essential, standardized parameter estimates. **Pay attention to the factor correlations.**
+
+Compare the initial and final graphs and make sure that you understand the whole modelling process and the final conclusions.
+
+```{r}
+
+# (copy and modify the R codes given earlier)
+
+```
+

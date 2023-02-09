@@ -1,0 +1,842 @@
+---
+title: "COS-D419 Factor Analysis and Structural Equation Models 2023, Assignment 2"
+author: "Rong Guang"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE, warning = F, message=F}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message=F)
+```
+
+# 1 Exercise 2.1
+
+Specify and test the hypothesis given on the page 1 of the lecture material.
+
+Draw conclusions based on the $\chi^2$ statistic and the CFI, TLI, RMSEA, and SRMR indices.
+
+What can you say about the parameter estimates?
+
+Visualize the model.
+
+## 1.1 Read in the data set
+
+Start by downloading the data file from Moodle to Project folder.
+
+```{r, warning = F, message=F}
+library(tidyverse)#data wrangling 
+library(readr)# read data into r
+orig_data <- read_csv("ASC7INDM.CSV", show_col_types = FALSE) 
+```
+
+## 1.2 Write functions
+
+### 1.2.1 to check unique values
+
+```{r}
+unique.levels <-  function(sc){
+  values <- lapply(sc, function(x)sort(unique(x))) 
+for(x in 1:ncol(sc)){
+  a <- paste(c("Variable ", 
+               names(values)[x], 
+               " has values of ", 
+               paste(values[[x]], 
+                     collapse = ",")), 
+             collapse = "")
+  print(a)
+  }
+}
+```
+
+### 1.2.2 to generate CFA results with improved readability
+
+```{r}
+cfa.summary <- function(fit, fa.num, item.num){
+  options(scipen = 999)
+  cfa.measure <- fitMeasures(fit,    #obtain specified measured.
+                            c("chisq", 
+                              "df", 
+                              "pvalue", 
+                              "cfi", 
+                              "tli",
+                              "rmsea",
+                              "rmsea.pvalue",
+                              "srmr")) 
+  #turn named vector to data frame
+cfa.tab.a <- cfa.measure %>%  
+  tibble(name= names(cfa.measure), value = cfa.measure) %>% # vector to df
+  select(Measure = name, Value = value) %>%  #select and rename columns
+  mutate(Value = round(as.numeric(Value),3)) %>%  # round
+  kable(format = "markdown",   # table aesthetics 
+        booktabs = T, #Latex booktabs
+        caption =  #caption
+          paste("Goodness-of-fit and subjective indices of fit for", fa.num, "factor CFA")) %>%
+  kable_styling(latex_options = "striped") %>% # gray every other row
+  row_spec(0, background = "#9999CC") # color first row
+  print(cfa.tab.a) 
+  #factor loading
+  cfa.tab.b <- parameterEstimates(fit, standardized=TRUE) %>% # obtain estimates
+  filter(op == "=~") %>%  #select "is measured by" rows
+  select('Latent Factor'=lhs, #left hand side column
+         Indicator=rhs, #right hand side column
+         B=est, #estimates
+         SE=se, #standard error
+         Z=z, #z statistics
+         'p-value'=pvalue, #p value
+         Beta=std.all) %>%  
+  kable(digits = 3, #rounded to 3
+        format="markdown", #Latex markdown
+        booktabs=TRUE, #Latex booktabs
+        caption=paste("Factor Loadings for",fa.num,"factor CFA")) %>% #caption
+  kable_styling(latex_options = "striped") %>% #gray every other row
+  row_spec(0, background = "#9999CC") # color the first row
+  print(cfa.tab.b)
+  #Variance
+  type <- rep(c("Residual variance", "Total variance"), 
+            time = c(item.num, fa.num)) #create a new row clarifying types of variance
+
+variance <- parameterEstimates(fit, standardized=TRUE) %>% #obtain estimates
+  filter(op == "~~") #select "is correlated with" rows
+variance <- variance[1:sum(item.num,fa.num),] #subset 1:18 rows (variance row)
+variance <- cbind(type, variance) #add column
+cfa.tab.c <- variance %>%select(Type = type, #select and rename variables
+                   Indicator=rhs, #right hand side column
+                   B=est, #estimates
+                   SE=se,#standard error
+                   Z=z, #z statistics
+                   'p-value'=pvalue, #p value
+                   Beta=std.all) %>% 
+  kable(digits = 3, #rounded
+        format="markdown",  #Latex markdown
+        booktabs=TRUE, #Latex booktabs
+        caption=paste("Variances for", fa.num, "factor CFA")) %>% #caption
+  kable_styling(latex_options = "striped") %>% # gray every other row
+  row_spec(0, background = "#9999CC") # color the variable row
+  print(cfa.tab.c)
+  #covariance
+  variance <- parameterEstimates(fit, standardized=TRUE) %>%
+  filter(op == "~~")
+  covar.num = (fa.num+(fa.num-1))/2
+variance <- variance[sum(item.num,fa.num,1):sum(item.num,fa.num,covar.num),]
+type <- paste(variance$lhs, "with", variance$rhs) 
+variance <- cbind(type, variance)
+rownames(variance) <- NULL
+cfa.tab.d <- variance %>%select(Type=type, 
+                   B=est, 
+                   SE=se,
+                   Z=z, 
+                   'p-value'=pvalue, 
+                   Beta=std.all) %>% 
+  kable(digits = 3, 
+        format="markdown", 
+        booktabs=TRUE, 
+        caption=paste("Covariances for", fa.num, "factor CFA")) %>% 
+  kable_styling(latex_options = "striped") %>% 
+  row_spec(0, background = "#9999CC")
+  print(cfa.tab.d)
+}
+```
+
+## 1.3 Subset the data set
+
+Subset the variables for analysis and name it as sc (Self-concept).
+
+```{r}
+# Select the variables for use
+sc <- orig_data %>% dplyr::select(starts_with("SDQ2N")) # namming logic: sc = self-concept
+```
+
+## 1.4 Inspect the data
+
+Have a quick overview of the data.
+
+```{r}
+glimpse(sc)
+```
+
+The data set includes 16 variables from 265 observations. All the variables are numeric. Next, I examined the unique values of each variables.
+
+```{r}
+unique.levels(sc)
+```
+
+For each variable, the values distribute from 1 to 6. 
+
+# 2 Explore the data
+
+## 2.1 Descriptive statistics
+
+```{r, warning = F, message=F}
+library(kableExtra)#improved table visuals
+library(psych)#for function "describe"
+sc.ds <- sc %>%  #sc.ds = self-concept descriptive statistics
+  describe(IQR = T) %>%
+    as.data.frame() %>% 
+  dplyr::select(mean, median, sd, range, se, IQR)
+#print the descriptive statistics table
+sc.ds %>% 
+  kable(booktabs=T,
+        format = "markdown",
+        longtable=T,
+        digits = 2,
+        caption = "Descriptive dtatistics of selected variables",
+        linesep = "") %>% 
+  add_header_above(c("", "centralized tendency" = 2, "dispersion tendency" = 4)) %>% 
+  kable_styling(latex_options = c("striped","repeat_header")) %>% 
+  column_spec(1, width = "3cm", bold = T) 
+
+```
+
+## 2.2 Visualization
+
+### 2.2.1 Distribution of each item
+
+The distribution was first examined by histogram.
+
+```{r, fig.width = 6, fig.height=5, warning = F, message=F}
+sc %>% 
+  pivot_longer(everything()) %>%  #longer format
+  ggplot(aes(x = value)) + #x axis used variable "value" (a default of pivot)
+  geom_histogram(binwidth = 1, aes(y = ..density..), #match ys of density and histogram plots
+                 color = "black",  fill = "#9999CC")+  # adjust aesthetics for hist
+  geom_density(fill = "pink", alpha = 0.25)+ #adjust aesthetics for density plot
+  facet_wrap(~name, scales = "free") + #wrap by name variable
+  theme(panel.grid.major = element_blank(), #get rid of the  grids
+        panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = "white",#adjust the background
+                                        color = "black"),
+        strip.background = element_rect(color = "black",#adjust the strips aes
+                                        fill = "steelblue"),
+        strip.text = element_text(size =8, color = "white"), #adjust strip text
+        axis.title.x = element_text(size = 3), #adjust the x text
+        axis.title.y = element_text(size = 3), # adjust the y text
+        plot.title = element_text(size = 12, face = "bold"))+ #adjust the title
+  labs(title = "Figure 1 Distribution of selected items") #title it
+```
+
+Most item values skewed to the right, except for SDQ2N34, the values of which were more evenly assigned. 
+
+```{r fig.width=9, fig.height=3}
+
+sc.long <- sc %>% pivot_longer(everything(), names_to = "item", values_to = "score")
+
+sc.long %>% 
+  ggplot(aes(x = item, y = score)) +
+  geom_violin(trim=F, fill = "#9999CC") +
+  theme(legend.position = "none", 
+        axis.text.x = element_text(angle = 45, hjust =1),
+        axis.title = element_text(size = 12),
+        panel.background = element_rect(fill = "white", color = "black"),
+        plot.title = element_text(face="bold"))+
+  labs(x = "Item", 
+       y = "Score",
+       title = "Figure 2. Violin plot of the selected items")+
+  geom_boxplot(width = 0.1, fill = "white")
+  
+```
+
+Distribution displayed by violin plot was consistent with histogram, with a couple of outliers observed in SDQ2N01, SDQ2N10, SDQ2N22, SDQ2N25, SDQ2N40, SDQ2N43, SDQ2N46.
+
+### 2.2.2 Correlation among items
+
+```{r, fig.width = 5, fig.height=5}
+library(GGally)
+ggcorr(sc, 
+       geom = "blank", 
+       label = TRUE, 
+       hjust = 0.9, 
+       color = "red", 
+       face = "bold", 
+       method = c("pairwise","spearman"),
+       digits = 2,
+       size= 2.5,
+       label_size = 2.5,
+       label_round = 2,
+       layout.exp =1) +
+  geom_point(size = 9, 
+             aes(color = "red", 
+                 alpha = abs(coefficient) > 0.3)) +
+  scale_alpha_manual(values = c("TRUE" = 0.3, "FALSE" = 0)) +
+    geom_point(size = 10, 
+               aes(color = "green", alpha = abs(coefficient) > 0.6)) +
+  scale_alpha_manual(values = c("TRUE" = 0.5, "FALSE" = 0)) +
+  guides(color = FALSE, 
+         alpha = FALSE) +
+  labs(title = "Figure 3. Spearman correlation matrix of the selected items",
+       caption = 
+         " Red circles indicates correlation coefficient >= 0.5 
+        green circle indicates >= 0.3")+
+  theme(plot.title = element_text(size = 9))
+```
+
+It is found that each variable correlated with at least one of the other variable with a Spearman correlation coefficient $>=$ 0.3, except for items SDQ2N46, SDQ2N25 and SDQ2N34. 
+
+## 2.3 Tests for normality
+
+### 2.3.1 univariate normality
+
+```{r}
+library(MVN)
+#univariate test
+result <- mvn(sc, mvnTest = "mardia", univariateTest = "SW")
+
+#tabulate the result
+result$univariateNormality %>% 
+  kable(booktabs = TRUE,
+        format = "markdown",
+        digits = 2,
+        caption = "Univariate distribution tests") %>% 
+  kable_styling(latex_options = "striped") %>% 
+  row_spec(0, background = "#9999CC")
+```
+
+The test showed none of the variables had a normal distribution, which was consistent with the subjective impression.
+
+### 2.3.1 multi-variate normality
+
+```{r}
+result$multivariateNormality %>% 
+  kable(booktabs = TRUE,
+        format = "markdown",
+        digits = 2,
+        caption = "Multivariate distribution tests",
+        linesep = "") %>% 
+  kable_styling(latex_options = "striped") %>% 
+  row_spec(0,background = "#9999CC")
+```
+
+The test showed the selected manifest variables did not have multivariate normality.
+
+# 3 Hypothesis testing
+
+## 3.1 Self-concept (SC) is a multi-dimensional construct composed of four factors (GSC, ASC, ESC and MSC)
+
+### 3.1.1 Model estimation
+
+Four factor CFA was performed herein. 
+
+```{r}
+library(lavaan) #SEM
+
+#define model
+model1 <- '# CFA model of self-concept (SC):
+           GSC =~ SDQ2N01 + SDQ2N13 + SDQ2N25 + SDQ2N37
+           ASC =~ SDQ2N04 + SDQ2N16 + SDQ2N28 + SDQ2N40
+           ESC =~ SDQ2N10 + SDQ2N22 + SDQ2N34 + SDQ2N46
+           MSC =~ SDQ2N07 + SDQ2N19 + SDQ2N31 + SDQ2N43
+          '
+
+# Estimate the model using the data defined earlier
+cfa1 <- cfa(model1, data = sc)
+```
+
+Measures of goodness of fit and subjective indices of fit were obtained.
+
+```{r}
+#turn off scientific notion
+options(scipen = 999)
+
+#obtain CFA measures
+cfa1.measure <- fitMeasures(cfa1,  #obtain fit measures
+                            c("chisq",  #specify selected measures
+                              "df", 
+                              "pvalue", 
+                              "cfi", 
+                              "tli",
+                              "rmsea",
+                              "rmsea.pvalue",
+                              "srmr")) 
+
+#turn named vector to data frame
+cfa1.fig.a <- cfa1.measure %>%  
+  tibble(name= names(cfa1.measure), value = cfa1.measure) %>% #vector to df
+  select(Measure = name, Value = value) %>%  #select and rename columns
+  mutate(Value = round(as.numeric(Value),3)) %>%  #round
+  kable(format = "markdown", #table aesthetics
+        booktabs = T, #Latex table with booktabs
+        caption =  #caption
+          "Goodness-of-fit and subjective indices of fit for 4 factor CFA") %>%
+  kable_styling(latex_options = "striped") %>% 
+  row_spec(0, background = "#9999CC") #color first row
+```
+
+Factor loadings were obtained.
+
+```{r}
+cfa1.fig.b <- parameterEstimates(cfa1, standardized=TRUE) %>%
+  filter(op == "=~") %>% 
+  select('Latent Factor'=lhs, #rename left hand side column
+         Indicator=rhs, #rename right hand side column
+         B=est,  #rename estimates
+         SE=se,  #rename standard error
+         Z=z,   # rename z statistics
+         'p-value'=pvalue,  # rename p value
+         Beta=std.all) %>%   
+  kable(digits = 3,   # rounded
+        format="markdown",  #Latex markdown, show in rmd
+        booktabs=TRUE, #Latex booktabs
+        caption="Factor Loadings for 4 factor CFA") %>% #caption
+  kable_styling(latex_options = "striped") %>% #alternate grayed rows
+  row_spec(0, background = "#9999CC") #color first row
+```
+
+Variance were obtained.
+
+```{r}
+#Some notes from tutorial: in the "Variances:" section, there is a dot before 
+#the observed variables names. This is because they are dependent (or endogenous)
+#variables (predicted by the latent variables), and therefore, the value for the 
+#variance that is printed in the output is an estimate of the residual variance: 
+#the left-over variance that is not explained by the predictor(s). By contrast, 
+#there is no dot before the latent variable names, because they are exogenous 
+#variables in this model (there are no single-headed arrows pointing to them). 
+#The values for the variances here are the estimated total variances of the 
+#latent variables.
+
+type <- rep(c("Residual variance", "Total variance"), #generate a new column
+            time = c(ncol(sc), 4))
+
+variance <- parameterEstimates(cfa1, standardized=TRUE) %>% #obtain estimator
+  filter(op == "~~") #select rows with variable "operator" = "~~"
+variance <- variance[1:20,] #after 20th row, no variance any more. (covariance)
+variance <- cbind(type, variance) #add column
+cfa1.fig.c <- variance %>%select(Type = type, #select and rename
+                   Indicator=rhs, #right high side column
+                   B=est, #estimates
+                   SE=se, #standard error
+                   Z=z,  #z statistics
+                   'p-value'=pvalue,# p value
+                   Beta=std.all) %>%  # beta
+  kable(digits = 3, #round
+        format="markdown", #latex
+        booktabs=TRUE, #latex
+        caption="Variances for 4 factor CFA") %>% #caption
+  kable_styling(latex_options = "striped") %>% #grayed every alternate row
+  row_spec(0, background = "#9999CC") #color the first row
+```
+
+Covariance were obtained.
+
+```{r}
+variance <- parameterEstimates(cfa1, standardized=TRUE) %>% #obtain estimates
+  filter(op == "~~") #select rows
+variance <- variance[21:26,] #select rows for covariance instead of variance
+type <- paste(variance$lhs, "with", variance$rhs) #collapse columns
+variance <- cbind(type, variance) #add columns
+rownames(variance) <- NULL #remove row names
+cfa1.fig.d <- variance %>%select(Type=type, #select and rename
+                   B=est, #same idea with last section
+                   SE=se,
+                   Z=z, 
+                   'p-value'=pvalue, 
+                   Beta=std.all) %>% 
+  kable(digits = 3, #same idea with last section
+        format="markdown", 
+        booktabs=TRUE, 
+        caption="Covariances for 4 factor CFA") %>% 
+  kable_styling(latex_options = "striped") %>% 
+  row_spec(0, background = "#9999CC")
+```
+
+```{r}
+cfa1.fig.a;cfa1.fig.b;cfa1.fig.c;cfa1.fig.d
+```
+
+### 3.1.2 Model visualization
+
+The 4 factor model was visualized.
+
+```{r, fig.width=8, fig.height = 10}
+library(semPlot)
+library(wesanderson)#a handful of color palettes from Wes anderson movies
+mycols <- wes_palette(name = "Zissou1", n = 4, type = "discrete")
+colorlist <- list(man = mycols[2], lat = mycols[3])
+
+semPaths(cfa1, 
+         "par", 
+         weighted = FALSE, #no weight
+         curvature = 1,  #curvature strength
+         shapeMan = "rectangle", #manifest variable's shape
+         sizeMan = 8, # manifest variable's font size
+         sizeMan2 = 4, # manifest variable's tile size
+         rotation = 2, # turn vertical
+         color = colorlist, #specify color by calling colorlist defined above
+         edge.color = "steelblue", #specify line color
+         edge.label.cex = 0.7,
+         title = T) #specify line label font size
+title("Figure 4. Four factor self-concept CFA model diagram")
+```
+
+## 3.2 Alternative hypotheses 1: SC has two fctors (GSC, ASC)
+
+### 3.2.1 Model estimation
+
+ Two factor reduced model was estimated herein.
+
+```{r}
+#define model
+model2 <- '# CFA model of self-concept (SC):
+           GSC =~ SDQ2N01 + SDQ2N13 + SDQ2N25 + SDQ2N37
+           ASC =~ SDQ2N04 + SDQ2N16 + SDQ2N28 + SDQ2N40 +
+                  SDQ2N10 + SDQ2N22 + SDQ2N34 + SDQ2N46 +
+                  SDQ2N07 + SDQ2N19 + SDQ2N31 + SDQ2N43
+          '
+# Estimate the model using the data defined earlier
+cfa2 <- cfa(model2, data = sc)
+```
+
+Measures of goodness of fit and subjective indices of fit were obtained.
+
+```{r}
+#turn off scientific notion
+options(scipen = 999)
+
+#obtain CFA measures
+cfa2.measure <- fitMeasures(cfa2,    #obtain specified measured.
+                            c("chisq", 
+                              "df", 
+                              "pvalue", 
+                              "cfi", 
+                              "tli",
+                              "rmsea",
+                              "rmsea.pvalue",
+                              "srmr")) 
+
+#turn named vector to data frame
+cfa2.fig.a <- cfa2.measure %>%  
+  tibble(name= names(cfa2.measure), value = cfa2.measure) %>% # vector to df
+  select(Measure = name, Value = value) %>%  #select and rename columns
+  mutate(Value = round(as.numeric(Value),3)) %>%  # round
+  kable(format = "markdown",   # table aesthetics 
+        booktabs = T, #Latex booktabs
+        caption =  #caption
+          "Goodness-of-fit and subjective indices of fit for 2 factor CFA") %>%
+  kable_styling(latex_options = "striped") %>% # gray every other row
+  row_spec(0, background = "#9999CC") # color first row
+```
+
+Factor loadings were obtained.
+
+```{r}
+cfa2.fig.b <- parameterEstimates(cfa2, standardized=TRUE) %>% # obtain estimates
+  filter(op == "=~") %>%  #select "is measured by" rows
+  select('Latent Factor'=lhs, #left hand side column
+         Indicator=rhs, #right hand side column
+         B=est, #estimates
+         SE=se, #standard error
+         Z=z, #z statistics
+         'p-value'=pvalue, #p value
+         Beta=std.all) %>%  
+  kable(digits = 3, #rounded to 3
+        format="markdown", #Latex markdown
+        booktabs=TRUE, #Latex booktabs
+        caption="Factor Loadings for 2 factor CFA") %>% #caption
+  kable_styling(latex_options = "striped") %>% #gray every other row
+  row_spec(0, background = "#9999CC") # color the first row
+```
+
+Variance were obtained.
+
+```{r}
+type <- rep(c("Residual variance", "Total variance"), 
+            time = c(ncol(sc), 2)) #create a new row clarifying types of variance
+
+variance <- parameterEstimates(cfa2, standardized=TRUE) %>% #obtain estimates
+  filter(op == "~~") #select "is correlated with" rows
+variance <- variance[1:18,] #subset 1:18 rows (variance row)
+variance <- cbind(type, variance) #add column
+cfa2.fig.c <- variance %>%select(Type = type, #select and rename variables
+                   Indicator=rhs, #right hand side column
+                   B=est, #estimates
+                   SE=se,#standard error
+                   Z=z, #z statistics
+                   'p-value'=pvalue, #p value
+                   Beta=std.all) %>% 
+  kable(digits = 3, #rounded
+        format="markdown",  #Latex markdown
+        booktabs=TRUE, #Latex booktabs
+        caption="Variances for 2 factor CFA") %>% #caption
+  kable_styling(latex_options = "striped") %>% # gray every other row
+  row_spec(0, background = "#9999CC") # color the variable row
+```
+
+Covariance were obtained.
+
+```{r}
+variance <- parameterEstimates(cfa2, standardized=TRUE) %>%
+  filter(op == "~~")
+variance <- variance[19,]
+type <- paste(variance$lhs, "with", variance$rhs) 
+variance <- cbind(type, variance)
+rownames(variance) <- NULL
+cfa2.fig.d <- variance %>%select(Type=type, 
+                   B=est, 
+                   SE=se,
+                   Z=z, 
+                   'p-value'=pvalue, 
+                   Beta=std.all) %>% 
+  kable(digits = 3, 
+        format="markdown", 
+        booktabs=TRUE, 
+        caption="Covariances for 2 factor CFA") %>% 
+  kable_styling(latex_options = "striped") %>% 
+  row_spec(0, background = "#9999CC")
+```
+
+
+
+```{r}
+cfa2.fig.a;cfa2.fig.b;cfa2.fig.c;cfa2.fig.d
+```
+
+### 3.2.2 Model visualization
+
+Two factor model was visualized.
+
+```{r, fig.width=8, fig.height = 10}
+semPaths(cfa2, 
+         "par", #estimates showed
+         weighted = FALSE, 
+         curvature = 1, #residual variance curvature
+         shapeMan = "rectangle", #manifest variable shape
+         sizeMan = 8, #manifest variable font size
+         sizeMan2 = 4, #manifest variable square size
+         rotation = 2, #literally
+         color = colorlist, #color the shapes
+         edge.color = "steelblue", #color edges
+         edge.label.cex = 0.7) # edge label font size
+title("Figure 5. Tow factor self-concept CFA model diagram")
+```
+
+## 3.3 Alternative hypotheses 2: SC is unidimensional (only one SC factor)
+
+### 3.3.1 Modeal estimation
+
+The redued modeal was estimated.
+
+```{r}
+#define model
+model3 <- '# CFA model of self-concept (SC):
+           SC =~ SDQ2N01 + SDQ2N13 + SDQ2N25 + SDQ2N37 +
+                 SDQ2N04 + SDQ2N16 + SDQ2N28 + SDQ2N40 +
+                 SDQ2N10 + SDQ2N22 + SDQ2N34 + SDQ2N46 +
+                 SDQ2N07 + SDQ2N19 + SDQ2N31 + SDQ2N43
+          '
+
+# Estimate the model using the data defined earlier
+cfa3 <- cfa(model3, data = sc)
+```
+
+Measures of goodness of fit and subjective indices of fit were obtained.
+
+```{r}
+#turn off scientific notion
+options(scipen = 999)
+
+#obtain CFA measures
+cfa3.measure <- fitMeasures(cfa3,    #obtain specified measured.
+                            c("chisq", 
+                              "df", 
+                              "pvalue", 
+                              "cfi", 
+                              "tli",
+                              "rmsea",
+                              "rmsea.pvalue",
+                              "srmr")) 
+#turn named vector to data frame
+cfa3.fig.a <- cfa3.measure %>%  
+  tibble(name= names(cfa3.measure), value = cfa3.measure) %>% # vector to df
+  select(Measure = name, Value = value) %>%  #select and rename columns
+  mutate(Value = round(as.numeric(Value),3)) %>%  # round
+  kable(format = "markdown",   # table aesthetics 
+        booktabs = T, #Latex booktabs
+        caption =  #caption
+          "Goodness-of-fit and subjective indices of fit for uni-factor CFA") %>%
+  kable_styling(latex_options = "striped") %>% # gray every other row
+  row_spec(0, background = "#9999CC") # color first row
+```
+
+Factor loadings were obtained.
+
+```{r}
+cfa3.fig.b <- parameterEstimates(cfa3, standardized=TRUE) %>% # obtain estimates
+  filter(op == "=~") %>%  #select "is measured by" rows
+  select('Latent Factor'=lhs, #left hand side column
+         Indicator=rhs, #right hand side column
+         B=est, #estimates
+         SE=se, #standard error
+         Z=z, #z statistics
+         'p-value'=pvalue, #p value
+         Beta=std.all) %>%  
+  kable(digits = 3, #rounded to 3
+        format="markdown", #Latex markdown
+        booktabs=TRUE, #Latex booktabs
+        caption="Factor Loadings for uni-factor CFA") %>% #caption
+  kable_styling(latex_options = "striped") %>% #gray every other row
+  row_spec(0, background = "#9999CC") # color the first row
+```
+
+Variance were obtained.
+
+```{r}
+type <- rep(c("Residual variance", "Total variance"), 
+            time = c(ncol(sc), 1)) #create a new row clarifying types of variance
+
+variance <- parameterEstimates(cfa3, standardized=TRUE) %>% #obtain estimates
+  filter(op == "~~") #select "is correlated with" rows
+variance <- variance[1:17,] #subset 1:18 rows (variance row)
+variance <- cbind(type, variance) #add column
+cfa3.fig.c <- variance %>%select(Type = type, #select and rename variables
+                   Indicator=rhs, #right hand side column
+                   B=est, #estimates
+                   SE=se,#standard error
+                   Z=z, #z statistics
+                   'p-value'=pvalue, #p value
+                   Beta=std.all) %>% 
+  kable(digits = 3, #rounded
+        format="markdown",  #Latex markdown
+        booktabs=TRUE, #Latex booktabs
+        caption="Variances for 2 factor CFA") %>% #caption
+  kable_styling(latex_options = "striped") %>% # gray every other row
+  row_spec(0, background = "#9999CC") # color the variable row
+```
+
+```{r}
+cfa3.fig.a;cfa3.fig.b;cfa3.fig.c
+```
+
+### 3.3.2 Model visualization
+
+The uni-factor model was visualzied.
+
+```{r, fig.width=8, fig.height = 10}
+semPaths(cfa3, 
+         "par", #estimates
+         weighted = FALSE,  
+         curvature = 1, 
+         shapeMan = "rectangle",#Man for manifest variable
+         sizeMan = 8, 
+         sizeMan2 = 4, #color the squares
+         rotation = 2, #turn vertical
+         color = colorlist, #color the shapes
+         edge.color = "steelblue", #color the edge
+         edge.label.cex = 0.7)# resize the edge label font
+title("Figure 6. Uni-factor self-concept CFA model diagram")
+```
+
+# 3.3 Model comparison 
+
+```{r}
+#combine measures from three models
+comparison.tab <- rbind(cfa1.measure, cfa2.measure, cfa3.measure) %>% round(2)
+#turn row name into a a new column (model)
+model <- rownames(comparison.tab)
+rownames(comparison.tab) <- NULL
+comparison.tab <- cbind(model, comparison.tab) %>% data.frame()
+
+turn.tab <- comparison.tab %>% t() %>% data.frame
+
+#calculate model comparison indicators
+turn.tab <- turn.tab %>% 
+  filter(!rownames(turn.tab) == "model")%>% 
+  mutate(X1 = as.numeric(X1),
+         X2 = as.numeric(X2),
+         X3 = as.numeric(X3)) %>% 
+  mutate(a = X2 - X1, 
+         b = X3 - X1,
+         c = X3 - X2)
+
+comparison.tab <- t(turn.tab) %>% data.frame
+
+names <- c("Model1 
+           (4 factor)", 
+           "Model2 
+           (2 factor)", 
+           "Model3 
+           (uni-factor)",
+           "Model Contrast: 1-2§",
+           "Model Contrast: 1-3§",
+           "Model Contrast: 2-3§")
+
+#collapse columns for parsimony
+comparison.tab <- comparison.tab %>% 
+  mutate(rmseap = paste(rmsea, "(", rmsea.pvalue,")"),
+         chisq.df.p = paste(chisq, "(", df, ",", pvalue, ")"))
+
+rownames(comparison.tab) <- names
+model <- rownames(comparison.tab)
+rownames(comparison.tab) <- NULL
+comparison.tab <- cbind(model, comparison.tab) %>% data.frame()
+
+#select and rename columns
+comparison.tab <- comparison.tab %>% 
+  select(Model = model, 'Chi-square 
+                         (df, p)' = chisq.df.p,
+         'CFI*' = cfi,
+         'TLI†' = tli,
+         'RMSEA
+         (p)‡' = rmseap,
+         'SRMR‡' = srmr)
+
+#display the table
+comparison.tab %>% 
+  kable(booktabs = T, 
+        linesep = "", 
+        align = c("l",rep("r",5)),
+        caption = "Model comparison",
+        ) %>% 
+  kable_styling(full_width = T) %>% 
+  column_spec(1, width = "3.5cm") %>% 
+  column_spec(2, width = "3cm") %>% 
+  column_spec(5, width = "2.5cm") %>% 
+  footnote(symbol = c("CFI>0.95 indicates well fitting", 
+                      "TLI close to 1 indicates well fitting",
+                      "<0.05 indicates good fit",
+                      "Constrast of models rather than direct model values")) %>% 
+  row_spec(4:6, background = "grey") 
+```
+
+Chi-square Test of Model fit is a traditional likelihood ratio test statistics. It tests the null hypothesis that the model is adequate. $chi^2$ is sensitive to sample size and non-normal data. For each of the three models, the null hypothesis was rejected, indicating the model was not adequate. However, according to the normality test, our data did not follow normal distribution, which might distort the results. Moreover, it is still important in model comparisons. Smaller chi-square values reflect that the estimated model is able to adequately reproduce the observed sample statistics whereas larger values reflect that some aspect of the hypothesized model is inconsistent with characteristics of the observed sample. Four-factor model had $chi^2$ value much smaller than the other two models, indicating it fitted better.
+
+CFI is an incremental index measuring the proportionate improvement in fit with nested models. CFI > 0.95 indicates well-fitting and larger CFI means better fit. Our four factor model had a CFI=0.96, while CFIs of other two model all fell below 0.95 by around 0.20.
+
+TLI is quite similar as CFI but non-normed. TLI closer to 1 indicates well-fitting. The four-, two- and uni-factor had TLI 0.95, 0.74 and 0.69, respectively. No doubt, four factor model is most close to 1.
+
+RMSEA is an absolute index. It describes how well the model fits the data. RMSEA<0.05 indicate good fit. Four factor model had a RMSEA = 0.05 and RMSEA of the other two models had values more than doubled it. Four-factor model fitted the data better again with regard to this indicator.
+
+SRMR represents the average residual value of the fit. In well-fitting models, it will be small, less than 0.05. Our nested four-factor model had an SRMR of 0.05, much smaller than those of the other two, indicating well fit.
+
+In summary, the four-factor model meet the standard of good fit in all indexes including CFI, TLI, RMSE and SRMR. And compared to other two models, it had values indicating better fit. We should adopt this model before better solution has been found.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
