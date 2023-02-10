@@ -468,7 +468,7 @@ mbi |>  select(starts_with("ROL")|starts_with("WOR")|starts_with("DEC")|contains
 
 ## Initial full structural equation model (hypothesized model modified according to CFA)
 
-This full structural equation model was a hypothesized model. I have established causal structure linking several stressor variables considered to contribute to the presence of burnout (Fig. 4). These postulated causal relations linking variables were supported in theory and/or empirical research. I wanted to test the hypothesis that the causal pattern was true. The findings would contribute to the understanding of key determinants of teacher burnout.
+This full structural equation model was a hypothesized model. I have established causal structure linking several stressor variables considered to contribute to the presence of burnout (Fig. 4). These postulated causal relations linking variables were supported in theory and/or empirical research. I wanted to test the hypothesis that the causal pattern was true. The findings would contribute to the understanding of key determinants of teacher burnout. Since the hypothesis was proven not true, I performed post-hoc analysis to improve the causal structure step by step, until best fitting, albeit most parsimonious, model of any set of tested models had been achieved. 
 
 Note that *"an important preliminary step in the analysis of full latent variable models is to test first for the validity of the measurement model before making any attempt to evaluate the structural model. Accordingly, CFA procedures are used in testing the validity of the indicator variables. Once it is known that the measurement model is operating adequately, one can then have more confidence in findings related to assessment of the hypothesized structural model."* The current analysis started at the point where CFA had already been done. As described by Byrne, the analysis produced fit indices showing exceptionally good fit to the data; nonetheless, CFA model for the TSS was re-specified to include two additional parameters, both about allowing for cross-loading terms (DEC2 cross-loads onto Factor 1; DEC2 cross-loads onto Factor 5). These parameters set free were incorporated into the initial hypothesized model (Fig. 4).  
 ### Define the initial model
@@ -577,36 +577,31 @@ semPaths(semPlotModel(initial_model),
          nCharNodes=0,
          optimizeLatRes = T,
          exoVar = F)
-title(main = list("Figure 1. Hypothesized model of teacher burnout", cex = 1.5, font =1),
-     outer = F, line = -2)
+title(main = list("Figure 5. Hypothesized model of teacher burnout", 
+                  cex = 1.5, font =1),
+     outer = F, line = -1)
 title(sub = "Notes: Red arrow indicates factor residuals; gray arrow indicates error residuals; 
-     blue arrow indicates regression path; black arrow indicates factor loading", line = 0, adj = 0.7)
+     blue arrow indicates regression path; black arrow indicates factor loading", 
+     line = 0, adj = 0.7)
 ```
 
-## Estimate the SEM model
+### Estimate the SEM model (initial)
 
 ```{r}
 library(lavaan)
 model1 <- initial_model # defined above
 
 # Estimate the model with the robust (MLM) estimator:
-sem1 <- sem(model1, data = mbi, estimator = "MLM")
+sem1 <- sem(model1, data = mbi, estimator = "MLM", mimic = "Mplus")
 
 # Numerical summary of the model:
 sem.summary.mlm.a(sem1, 12, 32, "mlm", "Model fit indices for initial model")
 #summary(sem1, fit.measures = TRUE, standardized = TRUE)
 ```
 
-## Comments on the result
-
-Here we see that the rescaled χ2 value (i.e., the MLM χ2) is 1541.844 with 427 degrees of freedom. The reported chi square scaling factor value for the MLM estimator indicates that if the MLM χ2 were multiplied by 1.127, it would approximate the uncorrected ML χ2 value (1737.658).
 
 ```{r}
-sem.summary.c(sem1, 12, 32, "mlm")
-```
-
-```{r}
-  options(scipen = 999)
+options(scipen = 999)
 #regression path estimates
 sem.parameter <- parameterEstimates(sem1, standardized=TRUE) |>  # obtain estimates
   filter(op == "~") |>   #select "is measured by" rows
@@ -642,17 +637,14 @@ sem.parameter |>
   footnote(general = "Rows in bold have insignificant parameters.",
            symbol = c("DV: dependent variable; IV: independent variable",
                       "Crude estimates",
-                      "Standardized estimates")) |>
-  row_spec(5, bold = T) |> 
-  row_spec(6, bold = T) |> 
-  row_spec(7, bold = T) 
+                      "Standardized estimates"))
 ```
 
 
 ```{r}
 #Variance
 type <- "Total variance" #create a new row clarifying types of variance
-#write a function for minus calcuation
+#write a function for minus calculation
 minus <- function(x,y) {x - y}
 
 variance <- parameterEstimates(sem1, standardized=TRUE)  |>  #obtain estimates
@@ -661,20 +653,23 @@ variance <- variance[minus(sum(32,12), 5):sum(32,12),] #subset needed rows (vari
 variance <- cbind(type, variance) #add column
 sem.tab.variance <- variance %>%select(Type = type, #select and rename variables
                    Factor=rhs, #right hand side column
-                   B=est, #estimates
+                   'B*'=est, #estimates
+                   'Beta†'=std.all, #standardized estimates
                    SE=se,#standard error
                    Z=z, #z statistics
-                   'p-value'=pvalue, #p value
-                   Beta=std.all)  
+                   'p-value'=pvalue #p value
+                   )  
+#remove the row names
+rownames(sem.tab.variance) <- NULL
 
 #round the p-value column
-sem.tab.variance$B <- sem.tab.variance$B |> 
+sem.tab.variance$`B*` <- sem.tab.variance$`B*` |> 
   round(3)
 
 #add a conditional logic to the p-value column that >0.05 cell shows in red
-sem.tab.variance$B <- cell_spec(sem.tab.variance$B, 
+sem.tab.variance$`B*` <- cell_spec(sem.tab.variance$`B*`, 
                                      color = ifelse(
-                                       sem.tab.variance$`p-value` < 0, 
+                                       sem.tab.variance$`B*` < 0, 
                                        "red", 
                                        "black")
                                      )
@@ -683,15 +678,451 @@ sem.tab.variance |>
   kable(digits = 3, #rounded
         #format="markdown",  #Latex markdown
         booktabs=TRUE, #Latex booktabs
-        caption="") |>  #caption
-  kable_styling(latex_options = "striped")  |>  # gray every other row
-  row_spec(0, background = "#9999CC") # color the variable row
+        caption=
+          "Residual variance of the dependent variables for initial model",
+        escape = F) |>  #caption
+  kable_styling(latex_options = "striped") |>    # gray every other row
+  footnote(general = 
+             "Negative crude residual variance will be highlighted in red",
+           symbol = c("Crude estimates",
+                      "Standardized estimates"))
+```
 
+### Comments on the result (initial model)
+
+Here we see that the rescaled χ2 value (i.e., the MLM χ2) is 1541.844 with 427 degrees of freedom. The reported chi square scaling factor value for the MLM estimator indicates that if the MLM χ2 were multiplied by 1.127, it would approximate the uncorrected ML χ2 value (1737.658).
+
+Given the large number of parameters estimated in this model, the reported results are understandably lengthy. Thus, in the interest of space, I report findings pertinent to only the structural parameters, as well as a few residual variances. These results are presented in Table 3 and 4.
+
+Examination of estimated parameters in the model revealed all to be statistically significant except for those highlighted in red in Figure 3. These non-significant parameters the following structural regression paths: (a) F10 on F2 (Role Conflict → Emotional Exhaustion), F10 on F3 (Work Overload → Emotional Exhaustion), F10 on F4 (Classroom Climate → Emotional Exhaustion), and (b) F12 on F1 (Role Ambiguity → Personal Accomplishment). 
+
+For the negative variance for the residual associated with Factor 10 (highlighted in red in table 4), I left it as it was for the time being.
+
+### Model mis-specification
+
+A review of the MIs reveals some evidence of misfit in the model. Because we are interested solely in the causal paths of the model at this point, only MIs related to these parameters are included in
+
+```{r}
+#extract needed variables
+MI.model1 <- modindices(sem1, 
+                  standardized = TRUE, 
+                  sort. = TRUE, 
+                  maximum.number = 20) |> 
+  filter(op == "~") |> 
+  filter(lhs %in%  #When these factors are predicted variables, it is related
+           c("F8SELF",  # to the topic of this study
+             "F9ELC", 
+             "F10EE", 
+             "F11DP", 
+             "F12PA")) 
+
+#adapt to publication style
+MI.model1 <- MI.model1 |> 
+  mutate(Parameter = paste(rhs, "→", lhs)) |> 
+  select(Parameter, MI = mi, EPC = epc, "std EPC" = sepc.all) |> 
+  filter(MI>10) |> 
+  mutate("Logics" = c("Sensible and meaningful",
+                      "illogical (wrong direction of correlation)",
+                      "Sensibe but not meaningful for this study"))
+
+#add footnote symbol to parameters
+  for (i in 1:nrow(MI.model1)){
+  symbol <- c("*", "†", "‡") 
+  Parameter <- unlist(MI.model1$Parameter)
+  MI.model1$Parameter[i] <-  paste0(Parameter[i], symbol[i])
+  }
+
+#Visualize the table
+MI.model1 |> 
+  kable(digits = 3,
+        booktab = T,
+        linesep = "",
+        caption = "Select modification indices for initial model") |> 
+  kable_styling(latex_options = "striped") |> 
+  row_spec(1, color = "red") |> 
+  footnote(general = 
+             "Parameter highlighted in red is selected for modification",
+    symbol = c("Poorer Classroom climate leads to worsening depersonalization",
+             "Less workload leads to worsening depersonalization",
+             "Higher accomplishment results in increased self-esteem"))
+```
+
+
+
+## Post hos analysis (Model 2)
+
+### Compare SEM model 2 with initial model
+
+I defined model 2 as per the conclusion from last section: set the regression path leading from F4 to F11 (Poorer Classroom climate leads to worsening depersonalization) free to estimate (Fig 6). The model fit indice comparison between the current model (model2) and the initial model was tabulated in table . 
+
+```{r}
+model2 <- paste(initial_model, "F11DP ~ F4CLIM")
+
+# Estimate the model with the robust (MLM) estimator:
+sem2 <- sem(model2, data = mbi, estimator = "MLM", mimic = "Mplus")
+
+# Numerical summary of the model:
+sem.summary.mlm.a(sem2, 12, 32, "mlm", "Model fit indices for model 2") |> 
+  unlist()
+
+```
+
+A function for calculating χ2 difference was defined. 
+
+```{r}
+chi.diff <- function(sem1, sem2){
+  measure0 <- fitMeasures(sem1, 
+                          c("df.scaled", 
+                            "chisq.scaling.factor", 
+                            "chisq.scaled")) |> 
+    as.vector()
+  measure1 <- fitMeasures(sem2, 
+                          c("df.scaled", 
+                            "chisq.scaling.factor", 
+                            "chisq.scaled")) |>
+    as.vector()
+  cd <- 
+    (measure0[1]*measure0[2]-measure1[1]*measure1[2])/(measure0[1]-measure1[1])
+  TRd <-
+    (measure0[3]*measure0[2]-measure1[3]*measure1[2])/cd 
+  TRd <- TRd |> round(3)
+  print(TRd)
+}
 
 ```
 
 
-### Estimate the SEM model:
+```{r}
+#extract needed fit indices in model1
+sem.measure1 <- fitMeasures(sem1,    #obtain specified measured.
+                            c("chisq.scaled", 
+                              "df.scaled", 
+                              "pvalue.scaled", 
+                              "cfi.scaled", 
+                              "tli.scaled",
+                              "rmsea.scaled",
+                              "srmr_bentler",
+                              "chisq.scaling.factor")) |> 
+  t() |> 
+  round(3)
+#extract needed fit indices in model2
+sem.measure2 <- fitMeasures(sem2,    #obtain specified measured.
+                            c("chisq.scaled", 
+                              "df.scaled", 
+                              "pvalue.scaled", 
+                              "cfi.scaled", 
+                              "tli.scaled",
+                              "rmsea.scaled",
+                              "srmr_bentler",
+                              "chisq.scaling.factor")) |> 
+  t() |> 
+  round(3)
+#combine the 2 sets of indices 
+sem.compare2 <- rbind(sem.measure1, sem.measure2) |> data.frame()
+
+#add column names
+colnames(sem.compare2) <- c("χ2", "DF", "p value", "CFI", "TLI", 
+                            "RMSEA", "SRMR", "CSF")
+#turn named vector to data frame
+sem.compare2.tab<- sem.compare2 %>% 
+  mutate("Δχ2" = chi.diff(sem1, sem2)) |> 
+  select("χ2", "DF", "p value", "Δχ2", "CFI", "TLI", "RMSEA", "SRMR", "CSF") 
+
+sem.compare2.tab[1,4] <- "--"
+rownames(sem.compare2.tab) <- c("model1", "model2*")  
+
+sem.compare2.tab |> 
+  kable(booktab =T,
+        #format = "markdown",
+        caption = "Comparison of new and preceding models",
+        align = "r") |> 
+  kable_styling() |> 
+  footnote(symbol = "Model1 + parameter 'F4→F11' set free to estimate")
+```
+
+
+```{r, fig.height =  10, fig.width = 14}
+semPaths(semPlotModel(model2),
+             style = "lisrel",
+             rotation = 2,
+             sizeLat = 6, 
+             sizeLat2 = 5,
+             sizeMan = 5,
+             sizeMan2 = 2,
+             residScale = 4,
+             shapeMan = "rectangle",
+             edge.color = c(rep("black",34),
+                            rep("blue",14),
+                            "orange",
+                            rep("gray",32),
+                            rep("red",5)),
+         residuals = T,
+         layout = m,
+         nCharNodes=0,
+         optimizeLatRes = T,
+         exoVar = F)
+title(main = list("Figure 6. Modified model (Model 2) of teacher burnout",
+                  cex = 1.5, font =1),
+     outer = F, line = -1)
+title(sub = 
+        "Notes: Orange arrow is the regression path set free to estimate in the current model", 
+      line = 0, adj = 0.7)
+```
+
+### Estimate SEM model 2
+
+```{r}
+#regression path estimates
+sem.parameter <- parameterEstimates(sem2, standardized=TRUE) |>  # obtain estimates
+  filter(op == "~") |>   #select "is measured by" rows
+  select('DV*'=lhs, #left hand side column
+         'IV*'=rhs, #right hand side column
+         'B†'=est, #estimates
+         'Beta‡'=std.all,#estimates standardized
+         SE=se, #standard error
+         Z=z, #z statistics
+         'p-value'=pvalue #p value
+         )
+
+#round the p-value column
+sem.parameter$`p-value` <- sem.parameter$`p-value` |> 
+  round(3)
+
+#add a conditional logic to the p-value column that >0.05 cell shows in red
+sem.parameter$`p-value` <- cell_spec(sem.parameter$`p-value`, 
+                                     color = ifelse(
+                                       sem.parameter$`p-value` > 0.05, 
+                                       "red", 
+                                       "black")
+                                     )
+#furhter aesthetics 
+sem.parameter |> 
+  kable(digits = 3, #rounded to 3
+        #format="latex", #Latex markdown
+        booktabs=TRUE, #Latex booktabs
+        linesep = "",
+        caption= "Structural regression path and residual variance estimates.",
+        escape = F) %>% #caption
+  kable_styling(latex_options = "striped") %>% #gray every other row
+  footnote(general = "Rows in bold have insignificant parameters.",
+           symbol = c("DV: dependent variable; IV: independent variable",
+                      "Crude estimates",
+                      "Standardized estimates"))
+```
+
+
+```{r}
+#Variance
+type <- "Total variance" #create a new row clarifying types of variance
+
+variance <- parameterEstimates(sem2, standardized=TRUE)  |>  #obtain estimates
+  filter(op == "~~") #select "is correlated with" rows
+variance <- variance[minus(sum(32,12), 5):sum(32,12),] #subset needed rows (variance row)
+variance <- cbind(type, variance) #add column
+sem.tab.variance <- variance %>%select(Type = type, #select and rename variables
+                   Factor=rhs, #right hand side column
+                   'B*'=est, #estimates
+                   'Beta†'=std.all, #standardized estimates
+                   SE=se,#standard error
+                   Z=z, #z statistics
+                   'p-value'=pvalue #p value
+                   )  
+#remove the row names
+rownames(sem.tab.variance) <- NULL
+
+#round the p-value column
+sem.tab.variance$`B*` <- sem.tab.variance$`B*` |> 
+  round(3)
+
+#add a conditional logic to the p-value column that >0.05 cell shows in red
+sem.tab.variance$`B*` <- cell_spec(sem.tab.variance$`B*`, 
+                                     color = ifelse(
+                                       sem.tab.variance$`B*` < 0, 
+                                       "red", 
+                                       "black")
+                                     )
+#display the logics 
+sem.tab.variance |> 
+  kable(digits = 3, #rounded
+        #format="markdown",  #Latex markdown
+        booktabs=TRUE, #Latex booktabs
+        caption=
+          "Residual variance of the dependent variables for initial model",
+        escape = F) |>  #caption
+  kable_styling(latex_options = "striped") |>    # gray every other row
+  footnote(general = 
+             "Negative crude residual variance will be highlighted in red",
+           symbol = c("Crude estimates",
+                      "Standardized estimates"))
+```
+
+### Comment on the result (model 2)
+
+The estimation of Model 2 yielded an overall MLM χ2(426) value of 1450.985 (scaling correction factor = 1.117); CFI and TLI values of 0.950 and 0.945, respectively; a RMSEA value of 0.041; and a SRMR value of 0.046 (Table 7). Although improvement in model fit for Model 2, compared with the originally hypothesized model, would appear to be somewhat minimal on the basis of the CFI, TLI, RMSEA, and SRMR values, the corrected chi-square difference test was found to be significant (MLM Δχ2[1] = 91.67), which finalized the decision (Table 7).
+
+_*Notes from Byrne's book: "the thrust of these post-hoc analyses is to fine-tune our hypothesized structure such that it includes all viable and statistically significant structural paths, and, at the same time, eliminates all non-significant paths. Consequently, as long as the ∆χ2-difference test is statistically significant, and the newly added parameters are substantively meaningful, I consider the post-hoc analyses to be appropriate."*_
+
+The anomaly of negative residual variance remained in the output for Model 2 (Table 9). The estimated structural regression paths for the three factors hypothesized to influence Factor 10 (Factors 2, 3, and 4) and F1 to influence Factor 12 remained statistically non-significant (Table 8).
+
+### Model mis-specification (model 2)
+
+```{r}
+#extract needed variables
+MI.model2 <- modindices(sem2, 
+                  standardized = TRUE, 
+                  sort. = TRUE, 
+                  maximum.number = 25) |> 
+  filter(op == "~") |> 
+  filter(lhs %in%  #When these factors are predicted variables, it is related
+           c("F8SELF",  # to the topic of this study
+             "F9ELC", 
+             "F10EE", 
+             "F11DP", 
+             "F12PA")) 
+
+#adapt to publication style
+MI.model2 <- MI.model2 |> 
+  mutate(Parameter = paste(rhs, "→", lhs)) |> 
+  select(Parameter, MI = mi, EPC = epc, "std EPC" = sepc.all) |> 
+  filter(MI>10) |> 
+  mutate("Logics" = c("Sensible but not meaningful for this study",
+                      "Sensible and meaningful",
+                      "Sensibe and meaningful, but MI is lower than F5→F12"))
+
+MI.model2
+#add footnote symbol to parameters
+  for (i in 1:nrow(MI.model2)){
+  symbol <- c("*", "†", "‡") 
+  Parameter <- unlist(MI.model2$Parameter)
+  MI.model2$Parameter[i] <-  paste0(Parameter[i], symbol[i])
+  }
+
+#Visualize the table
+MI.model2 |> 
+  kable(digits = 3,
+        booktab = T,
+        linesep = "",
+        caption = "Select modification indices for initial model") |> 
+  kable_styling(latex_options = "striped") |> 
+  row_spec(2, color = "red") |> 
+  footnote(general = 
+             "Parameter highlighted in red is selected for modification",
+    symbol = c("Higher accomplishment leads to increased self-esteem",
+             "Invovlement of more decision making gives sense of accomplishment",
+             "People with high esteem will less likely get emotionally exhausted"))
+```
+
+## Post hos analysis (Model 3)
+
+### Compare SEM model 3 with preceding models
+
+I defined model 2 as per the conclusion from last section: set the regression path leading from F4 to F11 (Poorer Classroom climate leads to worsening depersonalization) free to estimate (Fig 6). The model fit indice comparison between the current model (model2) and the initial model was tabulated in table . 
+
+```{r}
+model3 <- paste(model2, "\nF12PA ~ F5DEC")
+
+# Estimate the model with the robust (MLM) estimator:
+sem3 <- sem(model3, data = mbi, estimator = "MLM", mimic = "Mplus")
+
+# Numerical summary of the model:
+sem.summary.mlm.a(sem3, 12, 32, "mlm", "Model fit indices for model 2") |> 
+  unlist()
+
+```
+
+```{r}
+sem.measure3 <- fitMeasures(sem3,    #obtain specified measured.
+                            c("chisq.scaled", 
+                              "df.scaled", 
+                              "pvalue.scaled", 
+                              "cfi.scaled", 
+                              "tli.scaled",
+                              "rmsea.scaled",
+                              "srmr_bentler",
+                              "chisq.scaling.factor")) |> 
+  t() |> 
+  round(3)
+#combine the 2 sets of indices 
+sem.compare3 <- rbind(sem.measure1, sem.measure2, sem.measure3) |> data.frame()
+
+sem.compare3.tab <- sem.compare3
+sem.compare3.tab$"Δχ2" <- rep(NA, 3)
+sem.compare3.tab$"Δχ2"[2] <- chi.diff(sem1, sem2)
+sem.compare3.tab$"Δχ2"[3] <- chi.diff(sem2, sem3)
+
+#turn named vector to data frame
+sem.compare3.tab<- sem.compare3.tab %>% 
+  select("χ2" = chisq.scaled, "DF"=df.scaled, 
+         "p value"=pvalue.scaled, "Δχ2", "CFI"= cfi.scaled,
+         "TLI"= tli.scaled, "RMSEA"= rmsea.scaled, 
+         "SRMR"=srmr_bentler, "CSF"=chisq.scaling.factor) 
+
+sem.compare3.tab[1,4] <- "--"
+rownames(sem.compare3.tab) <- c("model1", "model2*", "Model3")  
+
+sem.compare3.tab |> 
+  kable(booktab =T,
+        #format = "markdown",
+        caption = "Comparison of new and preceding models",
+        align = "r") |> 
+  kable_styling() |> 
+  footnote(symbol = "Model1 + parameter 'F4→F11' set free to estimate")
+```
+
+### Estimate SEM model 3
+
+### Comment on the result (model 3)
+
+### Model mis-specification
+
+
+
+
+
+
+## Post hos analysis (Model 4)
+
+### Compare SEM model 4 with preceding models
+
+### Estimate SEM model 4
+
+### Comment on the result (model 4)
+
+### Model mis-specification
+
+
+
+
+
+
+
+## Post hos analysis (Model 5)
+
+### Compare SEM model 5 with preceding models
+
+### Estimate SEM model 5
+
+### Comment on the result (model 5)
+
+### Model mis-specification
+
+
+
+
+
+
+## Post hos analysis (Model 6)
+
+### Compare SEM model 6 with preceding models
+
+### Estimate SEM model 6
+
+### Comment on the result (model 6)
+
+### Model mis-specification
+
+
+
 
 *Note:* Here, we will use the sem() function for the estimation, instead of the cfa() function, as we are now working with a full SEM (i.e., CFA + regression paths).
 
