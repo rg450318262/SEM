@@ -19,27 +19,445 @@ Draw the graph of the initial, full structural equation model. Make sure that yo
 
 Estimate the initial model using the robust MLM estimator *(robust variant of the ML estimator, to be precise!)* and present a brief summary of the model fit.
 
-### Read in the data set:
+# Preparation
 
-Start by downloading the data file from Moodle to your Project folder!
+## Read in the data set
+
+Start by downloading the data file from Moodle to Project folder.
 
 ```{r}
 library(tidyverse)
 library(readr)
+library(here)
 
-MBIdata <- read_csv("ALLSEC.CSV", show_col_types = FALSE) 
-glimpse(MBIdata)
+#This week's file name
+latest.name <- "ALLSEC.CSV"
+
+#read in the data
+mbi <- read_csv(file.path(here(), 
+                'data',
+                latest.name))
 ```
 
-### Explore the data (always do that!):
+## Write functions
+
+To control length of reports, codes already shown in the previous homework were not showing in the current report. Yet they are available in .rmd report.
+
+### to check unique values
+
+```{r, echo = F}
+unique.levels <-  function(sc){
+  values <- lapply(sc, function(x)sort(unique(x))) 
+for(x in 1:ncol(sc)){
+  a <- paste(c("Variable ", 
+               names(values)[x], 
+               " has values of ", 
+               paste(values[[x]], 
+                     collapse = ",")), 
+             collapse = "")
+  print(a)
+  }
+}
+```
+
+### to generate CFA results with improved readability
+
+```{r, echo = F}
+#goodness of fit indicators for ml
+cfa.summary.ml.a <- function(fit, fa.num, item.num, estimator){
+  options(scipen = 999)
+  cfa.measure <- fitMeasures(fit,    #obtain specified measured.
+                            c("chisq", 
+                              "df", 
+                              "pvalue", 
+                              "cfi", 
+                              "tli",
+                              "rmsea",
+                              "rmsea.pvalue",
+                              "srmr",
+                              "chisq.scaling.factor")) 
+  names(cfa.measure) <- c("chi square", "df", "p value", "CFI", "TLI", "RMSEA", "RMSEA p value", "SRMR")
+  #turn named vector to data frame
+cfa.tab.a <- cfa.measure %>%  
+  tibble(name= names(cfa.measure), value = cfa.measure) %>% # vector to df
+  select(Measure = name, Value = value) %>%  #select and rename columns
+  mutate(Value = round(as.numeric(Value),3)) %>%  # round
+  kable(format = "markdown",   # table aesthetics 
+        booktabs = T, #Latex booktabs
+        caption =  #caption
+          paste("Goodness-of-fit and subjective indices of fit for", fa.num, "factor model ", estimator)) %>%
+  kable_styling(latex_options = "striped") %>% # gray every other row
+  row_spec(0, background = "#9999CC")
+ cfa.tab.a
+}
+
+#goodness of fit indicators for mlm
+cfa.summary.mlm.a <- function(fit, fa.num, item.num, estimator){
+  options(scipen = 999)
+  cfa.measure <- fitMeasures(fit,    #obtain specified measured.
+                            c("chisq.scaled", 
+                              "df.scaled", 
+                              "pvalue.scaled", 
+                              "cfi.scaled", 
+                              "tli.scaled",
+                              "rmsea.scaled",
+                              "rmsea.pvalue.scaled",
+                              "srmr_bentler",
+                              "chisq.scaling.factor")) 
+  names(cfa.measure) <- c("chi square", "df", "p value", "CFI", "TLI", "RMSEA", "RMSEA p value", "SRMR", "CSF")
+  #turn named vector to data frame
+cfa.tab.a <- cfa.measure %>%  
+  tibble(name= names(cfa.measure), value = cfa.measure) %>% # vector to df
+  select(Measure = name, Value = value) %>%  #select and rename columns
+  mutate(Value = round(as.numeric(Value),3)) %>%  # round
+  kable(format = "markdown",   # table aesthetics 
+        booktabs = T, #Latex booktabs
+        caption =  #caption
+          paste("Goodness-of-fit and subjective indices of fit for", fa.num, "factor model ", estimator)) %>%
+  kable_styling(latex_options = "striped") %>% # gray every other row
+  row_spec(0, background = "#9999CC")
+ cfa.tab.a
+}
+
+#factor loading
+cfa.summary.b <- function(fit, fa.num, item.num, estimator){
+  options(scipen = 999)
+  #factor loading
+  cfa.tab.b <- parameterEstimates(fit, standardized=TRUE) %>% # obtain estimates
+  filter(op == "=~") %>%  #select "is measured by" rows
+  select('Latent Factor'=lhs, #left hand side column
+         Indicator=rhs, #right hand side column
+         B=est, #estimates
+         SE=se, #standard error
+         Z=z, #z statistics
+         'p-value'=pvalue, #p value
+         Beta=std.all) %>%  
+  kable(digits = 3, #rounded to 3
+        format="markdown", #Latex markdown
+        booktabs=TRUE, #Latex booktabs
+        caption=paste("Factor Loadings for",fa.num,"factor CFA model estimated by ", estimator)) %>% #caption
+  kable_styling(latex_options = "striped") %>% #gray every other row
+  row_spec(0, background = "#9999CC") # color the first row
+  cfa.tab.b
+  }
+
+#Variance
+cfa.summary.c <- function(fit, fa.num, item.num, estimator){
+  options(scipen = 999)
+  #Variance
+  type <- rep(c("Residual variance", "Total variance"), 
+            time = c(item.num, fa.num)) #create a new row clarifying types of variance
+
+variance <- parameterEstimates(fit, standardized=TRUE) %>% #obtain estimates
+  filter(op == "~~") #select "is correlated with" rows
+variance <- variance[1:sum(item.num,fa.num),] #subset 1:18 rows (variance row)
+variance <- cbind(type, variance) #add column
+cfa.tab.c <- variance %>%select(Type = type, #select and rename variables
+                   Indicator=rhs, #right hand side column
+                   B=est, #estimates
+                   SE=se,#standard error
+                   Z=z, #z statistics
+                   'p-value'=pvalue, #p value
+                   Beta=std.all) %>% 
+  kable(digits = 3, #rounded
+        format="markdown",  #Latex markdown
+        booktabs=TRUE, #Latex booktabs
+        caption=paste("Variances for", fa.num, "factor model estimated by ", estimator)) %>% #caption
+  kable_styling(latex_options = "striped") %>% # gray every other row
+  row_spec(0, background = "#9999CC") # color the variable row
+  cfa.tab.c
+}
+
+#Covariance
+cfa.summary.d <- function(fit, fa.num, item.num, estimator){
+  options(scipen = 999)
+  #covariance
+  variance <- parameterEstimates(fit, standardized=TRUE) %>%
+  filter(op == "~~")
+  covar.num = (fa.num+(fa.num-1))/2
+variance <- variance[sum(item.num,fa.num,1):sum(item.num,fa.num,covar.num),]
+type <- paste(variance$lhs, "with", variance$rhs) 
+variance <- cbind(type, variance)
+rownames(variance) <- NULL
+cfa.tab.d <- variance %>%select(Type=type, 
+                   B=est, 
+                   SE=se,
+                   Z=z, 
+                   'p-value'=pvalue, 
+                   Beta=std.all) %>% 
+  kable(digits = 3, 
+        format="markdown", 
+        booktabs=TRUE, 
+        caption=paste("Covariances for", fa.num, 
+                      "factor model estimated by ", 
+                      estimator)) %>% 
+  kable_styling(latex_options = "striped") %>% 
+  row_spec(0, background = "#9999CC")
+  cfa.tab.d
+}
+
+```
+
+### to generate functions for improving aethetics of correlation matrix 
+
+```{r, echo = F}
+library(GGally)
+my.fun.density <- function(data, mapping, ...) { #notes are roughly same with above
+
+    ggplot(data = data, mapping = mapping) +
+       geom_histogram(aes(y=..density..),
+                      color = "black", 
+                      fill = "white")+
+       geom_density(fill = "#FF6666", alpha = 0.25) +
+       theme(panel.grid.major = element_blank(), 
+             panel.grid.minor = element_blank(),
+             panel.background = element_rect(fill = "#9999CC",
+                                             color = "black"))
+} 
+
+#define a function that allows me to fine-tune the matrix
+my.fun.smooth <- function(data,    #my function needs 3 arguments
+                          mapping,
+                          method = "loess"){
+  ggplot(data = data, #data is passed from ggpairs' arguments
+         mapping = mapping)+#aes is passed from ggpairs' arguments
+           geom_point(size = 0.3,  #draw points
+                      color = "blue")+
+           geom_smooth(method = method,  #fit a linear regression
+                       size = 0.3, 
+                       color = "red")+
+           theme(panel.grid.major = element_blank(), #get rid of the grids
+                 panel.grid.minor = element_blank(),
+                 panel.background = element_rect(fill = "#F0E442", #adjust background
+                                                 color = "black"))
+} 
+
+```
+
+### to generate a function for histogram overlapping with density plot
+
+```{r, echo = F}
+corr.density <- function(data, fig.num = 1){
+  data %>% 
+  pivot_longer(everything()) %>%  #longer format
+  ggplot(aes(x = value)) + #x axis used variable "value" (a default of pivot)
+  geom_histogram(binwidth = 1, aes(y = ..density..), #match ys of density and histogram plots
+                 color = "black",  fill = "#9999CC")+  # adjust aesthetics for hist
+  geom_density(fill = "pink", alpha = 0.25)+ #adjust aesthetics for density plot
+  facet_wrap(~name, scales = "free", ncol =4) + #wrap by name variable
+  theme(panel.grid.major = element_blank(), #get rid of the  grids
+        panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = "white",#adjust the background
+                                        color = "black"),
+        strip.background = element_rect(color = "black",#adjust the strips aes
+                                        fill = "steelblue"),
+        strip.text = element_text(size =8, color = "white"), #adjust strip text
+        axis.title.x = element_text(size = 3), #adjust the x text
+        axis.title.y = element_text(size = 3), # adjust the y text
+        plot.title = element_text(size = 12, 
+                                  face = "bold",
+                                  hjust = 0.5))+ #adjust the title
+  labs(title = paste("Figure", fig.num," Distribution of selected items")) #title it
+  }
+
+```
+
+### to generate a function for violin overlapping with box plot
+
+```{r, echo = F}
+violin.box <- function(data, fig.num = 2){
+  mbi.long <- data %>% pivot_longer(everything(), names_to = "item", values_to = "score")
+
+mbi.long %>% 
+  ggplot(aes(x = item, y = score)) +
+  geom_violin(trim=F, fill = "#9999CC") +
+  theme(legend.position = "none", 
+        axis.text.x = element_text(angle = 45, hjust =1),
+        axis.title = element_text(size = 12),
+        panel.background = element_rect(fill = "white", color = "black"),
+        plot.title = element_text(face="bold",
+                                  hjust = 0.5),
+        axis.title.x = element_blank())+
+  labs(x = "Item", 
+       y = "Score",
+       title = paste("Figureou", fig.num, " Violin plot of the selected items"))+
+  geom_boxplot(width = 0.1, fill = "white")
+}
+```
+
+### To generate a function describing continuous data set
+
+```{r, echo=F}
+descriptive <- function(data){
+  library(finalfit)
+library(kableExtra)
+inspect.table <- ff_glimpse(data)$Continuous
+inspect.table$label <- NULL
+inspect.table %>% 
+  mutate('Q1Q3' = paste(quartile_25, 
+                        quartile_75, 
+                        sep = " ~ ")) %>% 
+  select(n, 
+         'n of NA' = missing_n, 
+         'Mean' = mean, 
+         'Median' = median,
+         'SD' = sd, 
+         'Min' = min, 
+         'Max' = max,
+         'Q1~Q3' = Q1Q3) %>%
+  kable(booktabs = T,  
+        align = "r",
+        longtable = T,
+        linesep = "",
+        caption = "Descriptive statistics for measurements") %>% 
+  add_header_above(c(" ", 
+                     " " = 2,
+                     "Central tendency" = 2, 
+                     "Dispersion tendency" = 4)) %>% 
+  kable_styling(latex_options = c("striped", 
+                                  "repeat_header")) %>% 
+  column_spec(1, width = "3cm")
+}
+```
+
+## Inspect the data
+
+### Data structure
+
+Have a quick overview of the data structure
 
 ```{r}
-
-# Consider proceeding a bit differently than before - see what others have done!
-# Please use colors, and prefer graphical summaries to numerical ones.
-# (This is useful warm-up exercise before starting the actual workout!)
-
+library(knitr)
+library(broom)
+dim(mbi);mbi %>% apply(2, function(x)class(x));
 ```
+
+The data set contains 22 numeric variables of 372 obs. Their values appear to follow a consistent pattern covering the integer from 1 to 7, except for Items 4, 7, 17 and 21, which did not include a value of 1. 
+
+### Descriptive statistics of measured variables
+
+```{r}
+library(finalfit);library(kableExtra);
+
+descriptive(mbi) |> 
+  pack_rows(index = 
+              c("Factor 1*: Role Ambiguity \n(high score means negative)" = 2, 
+                "Factor 2*: Role conflict \n(high score means negative)" = 2, 
+                "Factor 3*: Work overload \n(high score means negative)" = 2,
+                "Factor 4‡: classroom climate" = 4,
+                "Factor 5*: Decision-making" = 2, 
+                "Factor 6*: Superior support" =  2, 
+                "Factor 7*: Peer support" = 2,
+                "Factor 8‡: Self-esteem" = 3, 
+                "Factor 9‡: External locus of control" = 5,
+                "Factor 10†: Emotional Exhaustion \n(high score means negative)" = 3, 
+                "Factor 11†: Depersonalization \n(high score means negative)" = 2, 
+                "Factor 12†: Personal Accomplishment" = 3)) |> 
+  footnote(general = 
+             "Indicators variables were formulated through item parcels.",
+    symbol = c("These indicators are parcels from Teacher Stress Scale instrument",
+               "These indicators are parcels from BMI instrument",
+               "These parcels consist of items from single unidimensional scales")
+           )
+```
+
+### Visualization
+
+(1) Histogram
+
+Distribution of the data was examined via Histogram
+
+```{r, fig.width = 7, fig.height=10, warning = F, message=F}
+corr.density(mbi, fig.num = 1)
+```
+
+```{r, fig.height = 7, fig.width=8, warning = F, message=F}
+library(ggridges)
+library(viridis)
+library(hrbrthemes)
+library(patchwork)
+a <- mbi |> 
+  select(
+    starts_with("EE")|starts_with("DP")|starts_with("PA")
+    ) |> 
+  pivot_longer(everything(), names_to = "variable", values_to = "value") |> 
+  ggplot(aes(x = value, y = variable, fill = ..x..)) +
+  geom_density_ridges_gradient(scale = 3, rel_min_height = 0.01) +
+  scale_fill_viridis(name = "parcelled score", option = "C") +
+  labs(title = 
+         'fig2 (a). Distribution of parcelled scores from BMI instrument') +
+  labs(x = "Parcelled scores", y = "Parcelled items") +
+  theme_ipsum() +
+    theme(
+      legend.position="none",
+      panel.spacing = unit(0.1, "lines"),
+      plot.title = element_text(size = 12))
+
+b <- mbi |> 
+  select(
+    starts_with("ROL")|starts_with("WOR")|starts_with("DEC")|contains("SUP")
+    ) |> 
+  pivot_longer(everything(), names_to = "variable", values_to = "value") |> 
+  ggplot(aes(x = value, y = variable, fill = ..x..)) +
+  geom_density_ridges_gradient(scale = 3, rel_min_height = 0.01) +
+  scale_fill_viridis(name = "parcelled score", option = "C") +
+  labs(title = 
+         'fig2 (b). Distribution of parcelled scores from TSS instrument') +
+  labs(x = "Parcelled scores", y = "Parcelled items")+
+  theme_ipsum() +
+    theme(
+      legend.position="none",
+      panel.spacing = unit(0.1, "lines"),
+      plot.title = element_text(size = 12)
+    )
+
+a/b
+```
+
+(2) Violin plot
+
+Violin plot also provides information on distribution, plus ideas on out-liers.
+
+```{r fig.width=10, fig.height=6}
+a <- mbi |> 
+  select(1:16) |> 
+  violin.box(fig.num = "3(a)")
+
+b <- mbi |> 
+  select(17:32) |> 
+  violin.box(fig.num = "3(b)")
+library(patchwork)
+a/b
+```
+
+(3) Correlation among items
+
+```{r, fig.width = 7, fig.height=7}
+#draw it
+mbi |>  select(starts_with("EE")|starts_with("DP")|starts_with("PA")) |> 
+  ggpairs(lower = 
+          list(continuous = my.fun.smooth), #lower half show points with fitted line
+        diag =
+          list(continuous = my.fun.density), #diagonal grids show density plots
+        title = "Fig4(a). Relationships among parcels of MBI instrument") + #title
+  theme (plot.title = element_text(size = 12,  #adjust title visuals
+                                   face = "bold")) 
+```
+
+```{r, fig.width = 9, fig.height=9}
+mbi |>  select(starts_with("ROL")|starts_with("WOR")|starts_with("DEC")|contains("SUP")) |> 
+  ggpairs(lower = 
+          list(continuous = my.fun.smooth), #lower half show points with fitted line
+        diag =
+          list(continuous = my.fun.density), #diagonal grids show density plots
+        title = "Fig4(b). Relationships among parcels of TSS instrument") + #title
+  theme (plot.title = element_text(size = 14,  #adjust title visuals
+                                   face = "bold")) 
+```
+
+
+
+
 
 ### Define the initial, full structural equation model and visualize it:
 
@@ -123,7 +541,7 @@ m[53, 57] <- "PA3"
 ```
 
 
-```{r, fig.height =  12, fig.width = 20}
+```{r, fig.height =  10, fig.width = 14}
 semPaths(semPlotModel(initial_model),
              style = "lisrel",
              rotation = 2,
@@ -131,6 +549,7 @@ semPaths(semPlotModel(initial_model),
              sizeLat2 = 5,
              sizeMan = 5,
              sizeMan2 = 2,
+             residScale = 4,
              shapeMan = "rectangle",
              edge.color = c(rep("black",34),
                             rep("blue",14),
@@ -139,7 +558,12 @@ semPaths(semPlotModel(initial_model),
          residuals = T,
          layout = m,
          nCharNodes=0,
-         optimizeLatRes = T)
+         optimizeLatRes = T,
+         exoVar = F)
+title(main = list("Figure 1. Hypothesized model of teacher burnout", cex = 1.5, font =1),
+     outer = F, line = -2)
+title(sub = "Notes: Red arrow indicates factor residuals; gray arrow indicates error residuals; 
+     blue arrow indicates regression path; black arrow indicates factor loading", line = 0, adj = 0.7)
 ```
 
 
@@ -155,7 +579,7 @@ library(lavaan)
 model1 <- initial_model # defined above
 
 # Estimate the model with the robust (MLM) estimator:
-sem1 <- sem(model1, data = MBIdata, estimator = "MLM")
+sem1 <- sem(model1, data = mbi, estimator = "MLM")
 
 # Numerical summary of the model:
 summary(sem1, fit.measures = TRUE, standardized = TRUE)
