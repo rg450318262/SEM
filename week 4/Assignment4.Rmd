@@ -8,7 +8,7 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = F, message = F, cache = T)
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F, cache = F)
 ```
 
 # SEM & teacher burnout
@@ -1381,7 +1381,7 @@ sem6 <- sem(model6, data = mbi, estimator = "MLM", mimic = "Mplus")
 ```
 
 ```{r, fig.width=14, fig.height=10}
-full.sem.diagram(model6, 19, "9", "model6")
+full.sem.diagram(model6, 19, "10", "model6")
 ```
 
 ```{r}
@@ -1450,11 +1450,9 @@ concern.table(sem6, 19, "model6")
 
 ### Comment on the result (model 6)
 
-The estimation of Model 6 yielded a MLM χ2(422) value of 1297.489 (scaling correction factor = 1.116), with the remaining fit indices as follows: CFI = 0.957, TLI = 0.949, RMSEA = 0.038, and SRMR = 0.039. As might be expected given the newly specified path involving Factor 10, the difference in fit between this model (Model 6) and its predecessor (Model 5) was found to be statistically significant (MLM∆χ2[1] = 23.358).
+The estimation of Model 6 yielded a MLM χ2(422) value of 1297.489 (scaling correction factor = 1.116), with the remaining fit indices as follows: CFI = 0.957, TLI = 0.949, RMSEA = 0.038, and SRMR = 0.039. As might be expected given the newly specified path involving Factor 10, the difference in fit between this model (Model 6) and its predecessor (Model 5) was found to be statistically significant (MLM∆χ2[1] = 23.358). See tab 17.
 
-An important finding here is that the alarming negative residual variance of Factor 10 finally disappeared. The estimated value for the newly specified path (F10 on F8) was statistically significant (Estimate = −0.884; Est/SE = −8.116). Furthermore, one of the previously determined non-significant paths loading from F4 onto F10 turned significant. Nonetheless, the regression path leading from F10 to F12, which has been consistently non-significant, remained so. In addition, however, the parameter, F8 on F7 (Peer Support → Self-Esteem), was found to be statistically non-significant.
-
-*Note:* Here, we will use the sem() function for the estimation, instead of the cfa() function, as we are now working with a full SEM (i.e., CFA + regression paths).
+An important finding here is that the alarming negative residual variance of Factor 10 finally disappeared. The estimated value for the newly specified path (F10 on F8) was statistically significant (Estimate = −0.884; Est/SE = −8.116). Furthermore, one of the previously determined non-significant paths loading from F4 onto F10 turned significant. Nonetheless, the regression path leading from F10 to F12, which has been consistently non-significant, remained so. In addition, however, the parameter, F8 on F7 (Peer Support → Self-Esteem), was found to be statistically non-significant. See tab 18.
 
 ### Model mis-specification
 
@@ -1469,30 +1467,345 @@ MI.model6 <- modindices(sem6,
 #adapt to publication style
 MI.model6 <- MI.model6 |>
   mutate(Parameter = paste(rhs, "→", lhs)) |>
-  select(Parameter, MI = mi, EPC = epc, "std EPC" = sepc.all) |>
-  head(2) |>
+  select(Parameter, MI = mi, EPC = epc, "std EPC" = sepc.all) |> 
   mutate("Logics" = c("Sensible but not meaningfulfor the study",
-                      "Sensible but not meaningful for the study"))
-MI.model6
+                      "Not sensible",
+                      "Sensible and meaningful"))
+
 #add footnote symbol to parameters
-  for (i in 1:nrow(MI.model5)){
+  for (i in 1:nrow(MI.model6)){
   symbol <- c("*", "†", "‡")
-  Parameter <- unlist(MI.model5$Parameter)
-  MI.model5$Parameter[i] <-  paste0(Parameter[i], symbol[i])
+  Parameter <- unlist(MI.model6$Parameter)
+  MI.model6$Parameter[i] <-  paste0(Parameter[i], symbol[i])
   }
 
 #Visualize the table
-MI.model5 |>
+MI.model6 |>
   kable(digits = 3,
         booktab = T,
         linesep = "",
         caption = "Selected modification indices for initial model") |>
   kable_styling(latex_options = "striped") |>
-  row_spec(1, color = "red") |>
+  row_spec(3, color = "red") |>
   footnote(general =
              "Parameter highlighted in red is selected for modification",
-    symbol = c("Higher depersonalization causes lower esteem",
-             "Higher role conflict improves personal accomplishment"))
+    symbol = c("Higher depersonalization causes lower self-esteem",
+               "Higher role conflict improves personal accomplishment",
+               "Higher self-esteem causes lower depersonalization"
+             ))
+```
+
+Interestingly, Byrne's comments on F8→F11 is that _"the parameter represents a causal path flowing from F8 (Self-Esteem) to F11 (Depersonalization), and the fact that the EPC statistic has a negative sign makes interpretation of this path illogical as it conveys the notion that high self-esteem leads to low levels of depersonalization."_ However, I was not able to make sense out of it since it seems to me that Higher self-esteem (a positive perception) lowers depersonalization (a negative perception) is a plausible and meaningful relation. People with strong confidence in themselves would less likely to feel being detached and numbness. Futhermore, Byrne believed F2→F12 (Higher role conflict improves personal accomplishment) "makes sense substantively", which I was not able to grasp the idea. Actually, I believed this regression path is the most appropriate candidate for modification in current model, given the one with highest MI (F11→F8, Higher depersonalization causes lower self-esteem) was sensible but not digging into the problem under scope of the present study (We want it opposite). As such, at the point I decided to go for a different track than Byrne by modifying F8→F11 instead of F2→F12. See tab 19.
+
+## Post hos analysis (Model 7)
+
+### Compare SEM model 7 with preceding models
+
+I defined model 7 as per the conclusion from last section: on the basis of model 6, I set the regression path leading from F8 to F11 (Higher role conflict improves personal accomplishment) free to estimate (Fig 11). The model fit indices and their comparison with the preceding models were tabulated in table 20.
+
+```{r}
+#add new freely estimated parameter to the preceding model
+model7 <- paste(model6, "\nF11DP ~ F8SELF")
+
+# Estimate the model with the robust (MLM) estimator:
+sem7 <- sem(model7, data = mbi, estimator = "MLM", mimic = "Mplus")
+```
+
+```{r, fig.width=14, fig.height=10}
+full.sem.diagram(model7, 20, "11", "model7")
+```
+
+```{r}
+sem.measure7 <- fitMeasures(sem7,    #obtain specified measured.
+                            c("chisq.scaled",
+                              "df.scaled",
+                              "pvalue.scaled",
+                              "cfi.scaled",
+                              "tli.scaled",
+                              "rmsea.scaled",
+                              "srmr_bentler",
+                              "chisq.scaling.factor")) |>
+  t() |>
+  round(3)
+#combine the 2 sets of indices and save into a new object
+sem.compare7 <- rbind(sem.measure1, sem.measure2,
+                      sem.measure3, sem.measure4, 
+                      sem.measure5, sem.measure6,
+                      sem.measure7) |>
+  data.frame()
+sem.compare7.tab <- sem.compare7
+
+#add column "chi square" and place values into it
+sem.compare7.tab$"ΔChi-square" <- rep(NA, 7)
+sem.compare7.tab$"ΔChi-square"[2] <- chi.diff(sem1, sem2)#calculate chisq difference
+sem.compare7.tab$"ΔChi-square"[3] <- chi.diff(sem2, sem3)
+sem.compare7.tab$"ΔChi-square"[4] <- chi.diff(sem3, sem4)
+sem.compare7.tab$"ΔChi-square"[5] <- chi.diff(sem4, sem5)
+sem.compare7.tab$"ΔChi-square"[6] <- chi.diff(sem5, sem6)
+sem.compare7.tab$"ΔChi-square"[7] <- chi.diff(sem6, sem7)
+
+#turn named vector to data frame
+sem.compare7.tab<- sem.compare7.tab %>%
+  select("Chi-square" = chisq.scaled, "DF"=df.scaled,
+         "p value"=pvalue.scaled, "ΔChi-square", "CFI"= cfi.scaled,
+         "TLI"= tli.scaled, "RMSEA"= rmsea.scaled,
+         "SRMR"=srmr_bentler, "CSF"=chisq.scaling.factor)
+
+#There is no chisq-diff value for the first model, so place a "--" in the cell
+sem.compare7.tab[1,4] <- "--"
+
+#add row names
+rownames(sem.compare7.tab) <- c("model1", "model2*",
+                                "Model3†", "Model4‡",
+                                "Model5§", "Model6¶",
+                                "Model7**")
+
+#table aesthetics fine-tune and print table
+sem.compare7.tab |>
+  kable(booktab =T,
+        #format = "markdown",
+        caption = "Comparison of new  (model 7) and preceding models",
+        align = "r",
+        linesep ="") |>
+  kable_styling() |>
+  footnote(symbol = c("Model1 + structural path 'F4→F11' set free to estimate",
+                      "Model2 + structural path 'F5→F12' set free to estimate",
+                      "Model3 + structural path 'F2→F9' set free to estimate",
+                      "Model5 + structural path 'F8→F9' set free to estimate",
+                      "Model6 + structural path 'F8→F10' set free to estimate",
+                      "Model7 + structural path 'F2→F12' set free to estimate")
+           )
+```
+
+### Examine the parameters of concern for model 6
+
+```{r}
+concern.table(sem7, 20, "model7")
+```
+
+### Comments on the results(model 7)
+
+The estimation of Model 7 yielded a MLM χ2(421) value of 1267.208 (scaling correction factor = 1.116), with the remaining fit indices as follows: CFI = 0.958, TLI = 0.951, RMSEA = 0.038, and SRMR = 0.038. Again, the difference in fit between this model (Model 7) and its predecessor (Model 6) was found to be statistically significant (MLM∆χ2[1] = 23.057).
+
+Here again, the new parameter added to the model (F11 on F8) was found to be statistically significant (Estimate = -0.42; Z-statistics = -4.688). However, the structural regression paths F8 (Self-Esteem) on F7 (Peer Support) and F12 (Personal Accomplishment) on F10 (Emotional exhaustion) remained non-signification.
+
+At this point, I believed that we had exhausted the search for a better fitting model that best represents the data for secondary teachers. Thus, I started to delete regression path that were originally specified in the hypothesized model but remain statistically non-significant as per the results for Model 7. Accordingly, Model 8 was specified in which the two non-significant parameters noted above (F7 → F8; F10 → F12) are not included. Note that one of the excluded paths was different from Byrne's decision, where she deleted F12 on F1 instead of F12 on F10. See next section.
+
+## Final Model
+
+### Estimate the final model (model 8)
+
+I established the final model (model 8) by deleting two paths (F7 → F8; F10 → F12) from model 7. See picture 12
+
+```{r}
+#add new freely estimated parameter to the preceding model
+model8 <- '
+    F1ROLA =~ ROLEA1 + ROLEA2 + DEC2
+    F2ROLC =~ ROLEC1 + ROLEC2
+    F3WORK =~ WORK1 + WORK2
+    F4CLIM =~ CCLIM1 + CCLIM2 + CCLIM3 + CCLIM4
+    F5DEC =~ DEC1 + DEC2
+    F6SSUP =~ SSUP1 + SSUP2 + DEC2
+    F8SELF =~ SELF1 + SELF2 + SELF3
+    F9ELC =~ ELC1 + ELC2 + ELC3 + ELC4 + ELC5
+    F10EE =~ EE1 + EE2 + EE3
+    F11DP =~ DP1 + DP2
+    F12PA =~ PA1 + PA2 + PA3
+    F8SELF ~ F5DEC + F6SSUP 
+    F9ELC ~ F5DEC
+    F10EE ~ F2ROLC + F3WORK + F4CLIM
+    F11DP ~ F2ROLC + F10EE
+    F12PA ~ F1ROLA + F8SELF + F9ELC + F11DP
+    F11DP ~ F4CLIM
+    F12PA ~ F5DEC
+    F9ELC ~ F2ROLC
+    F9ELC ~ F8SELF
+    F10EE ~ F8SELF
+    F12PA ~ F2ROLC
+    '
+
+# Estimate the model with the robust (MLM) estimator:
+sem8 <- sem(model8, data = mbi, estimator = "MLM", mimic = "Mplus")
+```
+
+
+### Visualize the final model
+
+```{r}
+#generate a matrix
+m <- matrix(NA, 60, 72)
+
+#define positions of the factors
+m[12, 68] <- "F1ROLA"
+m[12, 40] <- "F2ROLC"
+m[12, 28] <- "F3WORK"
+m[12,12] <- "F4CLIM"
+m[21,12] <-"F5DEC"
+m[40,12] <-"F6SSUP"
+m[44,24] <-"F8SELF"
+m[52,40] <-"F9ELC"
+m[37,48] <-"F10EE"
+m[26,60] <-"F11DP"
+m[48,64] <-"F12PA"
+
+#define the posiitions of the indicators (parcelled items)
+m[4, 72] <- "ROLEA1"
+m[4, 64] <- "ROLEA2"
+m[4, 48] <- "ROLEC1"
+m[4, 40] <- "ROLEC2"
+m[4, 32] <- "WORK1"
+m[4, 24] <- "WORK2"
+m[4, 16] <- "CCLIM1"
+m[5, 10] <- "CCLIM2"
+m[10, 4] <- "CCLIM3"
+m[15, 4] <- "CCLIM4"
+m[20, 4] <- "DEC1"
+m[27, 6] <- "DEC2"
+m[36, 4] <- "SSUP1"
+m[40, 4] <- "SSUP2"
+m[48, 32] <- "SELF1"
+m[52, 28] <- "SELF2"
+m[51, 21] <- "SELF3"
+m[56, 50] <- "ELC1"
+m[60, 48] <- "ELC2"
+m[60, 42] <- "ELC3"
+m[60, 35] <- "ELC4"
+m[56, 31] <- "ELC5"
+m[43, 45] <- "EE1"
+m[39, 40] <- "EE2"
+m[35, 38] <- "EE3"
+m[20, 64] <- "DP1"
+m[20, 58] <- "DP2"
+m[52, 71] <- "PA1"
+m[56, 64] <- "PA2"
+m[53, 57] <- "PA3"
+```
+
+```{r, fig.width=14, fig.height=10}
+semPaths(semPlotModel(model8),
+             style = "lisrel",
+             rotation = 2,
+             sizeLat = 6,
+             sizeLat2 = 5,
+             sizeMan = 5,
+             sizeMan2 = 2,
+             residScale = 4,
+             shapeMan = "rectangle",
+             edge.color = c(rep("black",32),
+                            rep("blue",18),
+                            rep("gray",32),
+                            rep("red",5)),
+         residuals = T,
+         layout = m,
+         nCharNodes=0,
+         optimizeLatRes = T,
+         exoVar = F)
+title(main = list("Figure 12. Final model of teacher burnout",
+                  cex = 1.5, font =1),
+     outer = F, line = -1)
+title(sub = "Notes: Red arrow indicates factor residuals; gray arrow indicates error residuals;
+     blue arrow indicates regression path; black arrow indicates factor loading",
+     line = 0, adj = 0.7)
+```
+
+
+```{r}
+sem.measure8 <- fitMeasures(sem8,    #obtain specified measured.
+                            c("chisq.scaled",
+                              "df.scaled",
+                              "pvalue.scaled",
+                              "cfi.scaled",
+                              "tli.scaled",
+                              "rmsea.scaled",
+                              "srmr_bentler",
+                              "chisq.scaling.factor")) |>
+  t() |>
+  round(3)
+#combine the 2 sets of indices and save into a new object
+sem.compare8 <- rbind(sem.measure1, sem.measure2,
+                      sem.measure3, sem.measure4, 
+                      sem.measure5, sem.measure6,
+                      sem.measure7, sem.measure8) |>
+  data.frame()
+sem.compare8.tab <- sem.compare8
+
+#add column "chi square" and place values into it
+sem.compare8.tab$"ΔChi-square" <- rep(NA, 8)
+sem.compare8.tab$"ΔChi-square"[2] <- chi.diff(sem1, sem2)#calculate chisq difference
+sem.compare8.tab$"ΔChi-square"[3] <- chi.diff(sem2, sem3)
+sem.compare8.tab$"ΔChi-square"[4] <- chi.diff(sem3, sem4)
+sem.compare8.tab$"ΔChi-square"[5] <- chi.diff(sem4, sem5)
+sem.compare8.tab$"ΔChi-square"[6] <- chi.diff(sem5, sem6)
+sem.compare8.tab$"ΔChi-square"[7] <- chi.diff(sem6, sem7)
+sem.compare8.tab$"ΔChi-square"[8] <- chi.diff(sem7, sem8)
+
+#turn named vector to data frame
+sem.compare8.tab<- sem.compare8.tab %>%
+  select("Chi-square" = chisq.scaled, "DF"=df.scaled,
+         "p value"=pvalue.scaled, "ΔChi-square", "CFI"= cfi.scaled,
+         "TLI"= tli.scaled, "RMSEA"= rmsea.scaled,
+         "SRMR"=srmr_bentler, "CSF"=chisq.scaling.factor)
+
+#There is no chisq-diff value for the first model, so place a "--" in the cell
+sem.compare8.tab[1,4] <- "--"
+
+#add row names
+rownames(sem.compare8.tab) <- c("model1", "model2*",
+                                "Model3†", "Model4‡",
+                                "Model5§", "Model6¶",
+                                "Model7**", "Model8")
+
+#table aesthetics fine-tune and print table
+sem.compare8.tab |>
+  kable(booktab =T,
+        #format = "markdown",
+        caption = "Comparison of new  (model 7) and preceding models",
+        align = "r",
+        linesep ="") |>
+  kable_styling() |>
+  footnote(symbol = c("Model1 + structural path 'F4→F11' set free to estimate",
+                      "Model2 + structural path 'F5→F12' set free to estimate",
+                      "Model3 + structural path 'F2→F9' set free to estimate",
+                      "Model5 + structural path 'F8→F9' set free to estimate",
+                      "Model6 + structural path 'F8→F10' set free to estimate",
+                      "Model7 + structural path 'F2→F12' set free to estimate",
+                      "Model8 - structural path with F7 → F8 and F10 → F12 set fixed")
+           )
+```
+
+```{r, fig.width=14, fig.height=10}
+semPaths(sem8,
+         style = "lisrel",
+         "path",
+         #"std",
+         whatLabels = "invisible",
+             rotation = 2,
+             sizeLat = 10,
+             sizeLat2 = 5,
+             sizeMan = 5,
+             sizeMan2 = 2,
+             residScale = 4,
+             shapeMan = "rectangle",
+             edge.color = c(rep("black",32),
+                            rep("blue",18),
+                            rep("gray",32),
+                            rep("red",5)),
+         residuals = F,
+         layout = m,
+         nCharNodes=0,
+         optimizeLatRes = T,
+         exoVar = F,
+         covAtResiduals = F,
+         intercepts = F,
+         exoCov = F,
+         structural = T)
+title(main = list("Figure 12. Final model of teacher burnout",
+                  cex = 1.5, font =1),
+     outer = F, line = -1)
+title(sub = "Notes: Red arrow indicates factor residuals; gray arrow indicates error residuals;
+     blue arrow indicates regression path; black arrow indicates factor loading",
+     line = 0, adj = 0.7)
+
 ```
 
 ## Exercise 4.2
