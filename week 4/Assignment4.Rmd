@@ -432,7 +432,7 @@ concern.table |>
 }
 ```
 
-### To generate a function for calculating χ2 difference was defined.
+### To generate a function for calculating chi square difference was defined.
 
 ```{r, cache=T}
 chi.diff <- function(sem1, sem2){ #2 augments input: the 1st is the nested model
@@ -492,6 +492,80 @@ title(sub =
         "Notes: Orange arrow is the regression path set free to estimate in the current model",
       line = 0, adj = 0.7)
 
+}
+```
+
+### To generate model comparison tables.
+
+```{r}
+###function start here
+
+model.comparison.table <- function(sem, mycaption, newpathstext){
+  sem.compare <- matrix(NA, ncol =8, nrow = length(sem))
+  
+  for (i in 1:length(sem)){
+    
+    sem.compare[i,] <- fitMeasures(eval(parse(text=sem[i])),#obtain specified measured.
+                            c("chisq.scaled",
+                              "df.scaled",
+                              "pvalue.scaled",
+                              "cfi.scaled",
+                              "tli.scaled",
+                              "rmsea.scaled",
+                              "srmr_bentler",
+                              "chisq.scaling.factor")) |>
+  round(3)
+}
+
+  colnames(sem.compare) <- c("chisq.scaled",
+                              "df.scaled",
+                              "pvalue.scaled",
+                              "cfi.scaled",
+                              "tli.scaled",
+                              "rmsea.scaled",
+                              "srmr_bentler",
+                              "chisq.scaling.factor")
+  
+  sem.compare <- sem.compare |> data.frame()
+  
+#add column "chi square" and place values into it
+    sem.compare$"ΔChi-square" <- rep(NA, length(sem))
+    for (j in 2:length(sem)){ #calculate chisq difference
+      sem.compare$"ΔChi-square"[j] <- chi.diff(eval(parse(text=sem[j-1])),
+                                               eval(parse(text=sem[j])
+                                                    )
+                                               )
+                                               
+      }
+   
+
+#turn named vector to data frame
+sem.compare<- sem.compare |> 
+  select("Chi-square" = chisq.scaled, "DF"=df.scaled,
+         "p value"=pvalue.scaled, "ΔChi-square", "CFI"= cfi.scaled,
+         "TLI"= tli.scaled, "RMSEA"= rmsea.scaled,
+         "SRMR"=srmr_bentler, "CSF"=chisq.scaling.factor)
+
+#There is no chisq-diff value for the first model, so place a "--" in the cell
+sem.compare[1,4] <- "--"
+
+#add row names
+    symbols <- c("1", "2*", "3†", "4‡", "5§", "6¶", "7**", "8††")
+    for (x in 1:length(sem)){
+      rownames(sem.compare)[x] <- paste0("Model", symbols[x]) 
+      
+    }
+
+#table aesthetics fine-tune and print table
+    
+sem.compare |>
+  kable(booktab =T,
+        #format = "markdown",
+        caption = mycaption,
+        align = "r",
+        linesep = "") |>
+  kable_styling() |>
+  footnote(symbol = newpathstext)
 }
 ```
 
@@ -643,9 +717,10 @@ mbi |>  select(starts_with("ROL")|starts_with("WOR")|starts_with("DEC")|contains
 
 ## Initial full structural equation model (hypothesized model modified according to CFA)
 
-This full structural equation model was a hypothesized model. I have established causal structure linking several stressor variables considered to contribute to the presence of burnout (Fig. 4). These postulated causal relations linking variables were supported in theory and/or empirical research. I wanted to test the hypothesis that the causal pattern was true. The findings would contribute to the understanding of key determinants of teacher burnout. Since the hypothesis was proven not true, I performed post-hoc analysis to improve the causal structure step by step, until best fitting, albeit most parsimonious, model of any set of tested models had been achieved.
+This full structural equation model was a hypothesized model. I have established causal structure linking several stressor variables considered to contribute to the presence of burnout (Fig. 5). These postulated causal relations linking variables were supported in theory and/or empirical research. I wanted to test the hypothesis that the causal pattern was true. The findings would contribute to the understanding of key determinants of teacher burnout. Since the hypothesis was proven not true, I performed post-hoc analysis to improve the causal structure step by step, until best fitting, albeit most parsimonious, model of any set of tested models had been achieved.
 
-Note that *"an important preliminary step in the analysis of full latent variable models is to test first for the validity of the measurement model before making any attempt to evaluate the structural model. Accordingly, CFA procedures are used in testing the validity of the indicator variables. Once it is known that the measurement model is operating adequately, one can then have more confidence in findings related to assessment of the hypothesized structural model."* The current analysis started at the point where CFA had already been done. As described by Byrne, the analysis produced fit indices showing exceptionally good fit to the data; nonetheless, CFA model for the TSS was re-specified to include two additional parameters, both about allowing for cross-loading terms (DEC2 cross-loads onto Factor 1; DEC2 cross-loads onto Factor 5). These parameters set free were incorporated into the initial hypothesized model (Fig. 4).
+Note that *"an important preliminary step in the analysis of full latent variable models is to test first for the validity of the measurement model before making any attempt to evaluate the structural model. Accordingly, CFA procedures are used in testing the validity of the indicator variables. Once it is known that the measurement model is operating adequately, one can then have more confidence in findings related to assessment of the hypothesized structural model."* The current analysis started at the point where CFA had already been done. As described by Byrne, the analysis produced fit indices showing exceptionally good fit to the data; nonetheless, CFA model for the TSS was re-specified to include two additional parameters, both about allowing for cross-loading terms (DEC2 cross-loads onto Factor 1; DEC2 cross-loads onto Factor 5). These parameters set free were incorporated into the initial hypothesized model (Fig. 5).
+
 ### Define the initial model
 
 ```{r, fig.height =  16, fig.width = 28}
@@ -782,17 +857,19 @@ concern.table(sem1, 14, "model1")
 
 ### Comments on the result (initial model)
 
-Here we see that the re-scaled χ2 value (i.e., the MLM χ2) is 1541.844 with 427 degrees of freedom. The reported chi square scaling factor value for the MLM estimator indicates that if the MLM χ2 were multiplied by 1.127, it would approximate the uncorrected ML χ2 value (1737.658).
+Here we see in tabel 2 that the re-scaled chi square value (i.e., the MLM chi square) is 1541.844 with 427 degrees of freedom. The reported chi square scaling factor value for the MLM estimator indicates that if the MLM chi square were multiplied by 1.127, it would approximate the uncorrected ML chi square value (1737.658).
 
-Given the large number of parameters estimated in this model, the reported results are understandably lengthy. Thus, in the interest of space, I report findings pertinent to only the structural parameters, as well as a few residual variances. These results are presented in Table 3..
+Given the large number of parameters estimated in this model, the reported results are understandably lengthy. Thus, in the interest of space, I report findings pertinent to only the structural parameters, as well as a few residual variances. These results are presented in table 3.
 
-Examination of estimated parameters in the model revealed all to be statistically significant except for those highlighted in red in Figure 3. These non-significant parameters the following structural regression paths: (a) F10 on F2 (Role Conflict → Emotional Exhaustion), F10 on F3 (Work Overload → Emotional Exhaustion), F10 on F4 (Classroom Climate → Emotional Exhaustion), and (b) F12 on F1 (Role Ambiguity → Personal Accomplishment).
+Examination of estimated parameters in the model revealed all to be statistically significant except for those highlighted in red in table 3. These non-significant parameters the following structural regression paths: (a) F10 on F2 (Role Conflict → Emotional Exhaustion), F10 on F3 (Work Overload → Emotional Exhaustion), F10 on F4 (Classroom Climate → Emotional Exhaustion), and (b) F12 on F1 (Role Ambiguity → Personal Accomplishment).
 
-For the negative variance for the residual associated with Factor 10 (highlighted in red in table 3), I left it as it was for the time being.
+For the negative variance for the residual associated with Factor 10 (highlighted in red in table 3), I left it as it was for the time being. The plan is over the progression of the addition of new regression path, the anamolies would disappear on itself.
 
 ### Model mis-specification
 
-A review of the MIs reveals some evidence of misfit in the model. Because we are interested solely in the causal paths of the model at this point, only MIs related to these parameters are included in table 5. The sense-making for the choice of parameter to set free was also placed in the table.
+The sense-making for the choice of parameter to set free was placed in the table 4. The path regression to be set free in next model was highlighted in red, with the logics behind selecting it listing in the last column. 
+
+A review of the MIs reveals some evidence of misfit in the model. Because we are interested solely in the causal paths of the model at this point, only MIs related to these parameters are included in table 5. 
 
 ```{r}
 #extract needed variables
@@ -853,54 +930,14 @@ model2 <- paste(initial_model, "F11DP ~ F4CLIM")
 sem2 <- sem(model2, data = mbi, estimator = "MLM", mimic = "Mplus")
 ```
 
+
 ```{r}
-#extract needed fit indices in model1
-sem.measure1 <- fitMeasures(sem1,    #obtain specified measured.
-                            c("chisq.scaled",
-                              "df.scaled",
-                              "pvalue.scaled",
-                              "cfi.scaled",
-                              "tli.scaled",
-                              "rmsea.scaled",
-                              "srmr_bentler",
-                              "chisq.scaling.factor")) |>
-  t() |>
-  round(3)
-#extract needed fit indices in model2
-sem.measure2 <- fitMeasures(sem2,    #obtain specified measured.
-                            c("chisq.scaled",
-                              "df.scaled",
-                              "pvalue.scaled",
-                              "cfi.scaled",
-                              "tli.scaled",
-                              "rmsea.scaled",
-                              "srmr_bentler",
-                              "chisq.scaling.factor")) |>
-  t() |>
-  round(3)
-#combine the 2 sets of indices
-sem.compare2 <- rbind(sem.measure1, sem.measure2) |> data.frame()
+sem <- c("sem1", "sem2")
+newpathstext <-  " Model1 + structural path 'F4→F11' set free to estimate"
 
-#add column names
-colnames(sem.compare2) <- c("Chi square", "DF", "p value", "CFI", "TLI",
-                            "RMSEA", "SRMR", "CSF")
-#turn named vector to data frame and pass into a new object
-sem.compare2.tab<- sem.compare2 %>%
-  mutate("ΔChi square" = chi.diff(sem1, sem2)) |>
-  select("Chi square", "DF", "p value", "ΔChi square", "CFI", "TLI", "RMSEA", "SRMR", "CSF")
-
-#the first model does not have chisq diff value, so place a "--" in the cell
-sem.compare2.tab[1,4] <- "--"
-rownames(sem.compare2.tab) <- c("model1", "model2*")
-
-#aesthetics fine-tune and print the table
-sem.compare2.tab |>
-  kable(booktab =T,
-        #format = "markdown",
-        caption = "Comparison of new and preceding models",
-        align = "r") |>
-  kable_styling() |>
-  footnote(symbol = "Model1 + structural path 'F4→F11' set free to estimate")
+model.comparison.table (sem, 
+                        mycaption = "Comparison of new and preceding models",
+                        newpathstext = newpathstext)
 ```
 
 
@@ -918,13 +955,13 @@ concern.table(sem2, 15, "model2")
 
 ### Comment on the result (model 2)
 
-The estimation of Model 2 yielded an overall MLM χ2(426) value of 1450.985 (scaling correction factor = 1.117); CFI and TLI values of 0.950 and 0.945, respectively; a RMSEA value of 0.041; and a SRMR value of 0.046 (Table 5). Although improvement in model fit for Model 2, compared with the originally hypothesized model, would appear to be somewhat minimal on the basis of the CFI, TLI, RMSEA, and SRMR values, the corrected chi-square difference test was found to be significant (MLM Δχ2[1] = 91.67), which finalized the decision (Table 5).
+The estimation of Model 2 yielded an overall MLM chi square(426) value of 1450.985 (scaling correction factor = 1.117); CFI and TLI values of 0.950 and 0.945, respectively; a RMSEA value of 0.041; and a SRMR value of 0.046 (Table 5). Although improvement in model fit for Model 2, compared with the originally hypothesized model, would appear to be somewhat minimal on the basis of the CFI, TLI, RMSEA, and SRMR values, the corrected chi-square difference test was found to be significant (MLM Δchi square[1] = 91.67), which finalized the decision (Table 5).
 
-_*Notes from Byrne's book: "the thrust of these post-hoc analyses is to fine-tune our hypothesized structure such that it includes all viable and statistically significant structural paths, and, at the same time, eliminates all non-significant paths. Consequently, as long as the ∆χ2-difference test is statistically significant, and the newly added parameters are substantively meaningful, I consider the post-hoc analyses to be appropriate."*_
+_*Notes from Byrne's book: "the thrust of these post-hoc analyses is to fine-tune our hypothesized structure such that it includes all viable and statistically significant structural paths, and, at the same time, eliminates all non-significant paths. Consequently, as long as the ∆chi square-difference test is statistically significant, and the newly added parameters are substantively meaningful, I consider the post-hoc analyses to be appropriate."*_
 
-The anomaly of negative residual variance remained in the output for Model 2 (Table 6). The estimated structural regression paths for the three factors hypothesized to influence Factor 10 (Factors 2, 3, and 4) and F1 to influence Factor 12 remained statistically non-significant (Table 8).
+The anomaly of negative residual variance remained in the output for Model 2 (table 6). The estimated structural regression paths for the three factors hypothesized to influence Factor 10 (Factors 2, 3, and 4) and F1 to influence Factor 12 remained statistically non-significant (table 6).
 
-Besides, The negative residual variance of F10 remained as it was in model 2.
+Besides, The negative residual variance of F10 remained as it was in model 2 (table 6).
 
 ### Model mis-specification (model 2)
 
@@ -993,49 +1030,13 @@ full.sem.diagram(model3, 16, "7", "model3")
 ```
 
 ```{r}
-sem.measure3 <- fitMeasures(sem3,    #obtain specified measured.
-                            c("chisq.scaled",
-                              "df.scaled",
-                              "pvalue.scaled",
-                              "cfi.scaled",
-                              "tli.scaled",
-                              "rmsea.scaled",
-                              "srmr_bentler",
-                              "chisq.scaling.factor")) |>
-  t() |>
-  round(3)
-#combine the 2 sets of indices and save into a new object
-sem.compare3 <- rbind(sem.measure1, sem.measure2, sem.measure3) |> data.frame()
-sem.compare3.tab <- sem.compare3
+sem <- c("sem1", "sem2", "sem3")
+newpathstext <-  c(" Model1 + structural path 'F4→F11' set free to estimate",
+                      " Model2 + structural path 'F5→F12' set free to estimate")
 
-#add column "chi square" and place values into it
-sem.compare3.tab$"ΔChi-square" <- rep(NA, 3)
-sem.compare3.tab$"ΔChi-square"[2] <- chi.diff(sem1, sem2)#calculate chisq difference
-sem.compare3.tab$"ΔChi-square"[3] <- chi.diff(sem2, sem3)
-
-#turn named vector to data frame
-sem.compare3.tab<- sem.compare3.tab %>%
-  select("Chi-square" = chisq.scaled, "DF"=df.scaled,
-         "p value"=pvalue.scaled, "ΔChi-square", "CFI"= cfi.scaled,
-         "TLI"= tli.scaled, "RMSEA"= rmsea.scaled,
-         "SRMR"=srmr_bentler, "CSF"=chisq.scaling.factor)
-
-#There is no chisq-diff value for the first model, so place a "--" in the cell
-sem.compare3.tab[1,4] <- "--"
-
-#add row names
-rownames(sem.compare3.tab) <- c("model1", "model2*", "Model3†")
-
-#table aesthetics finetune and print table
-sem.compare3.tab |>
-  kable(booktab =T,
-        #format = "markdown",
-        caption = "Comparison of new and preceding models",
-        align = "r") |>
-  kable_styling() |>
-  footnote(symbol = c("Model1 + structural path 'F4→F11' set free to estimate",
-                      "Model2 + structural path 'F5→F12' set free to estimate")
-           )
+model.comparison.table (sem, 
+                        mycaption = "Comparison of new (model3) and preceding models",
+                        newpathstext = newpathstext)
 ```
 
 ### Examine the parameters of concern for model 3
@@ -1047,9 +1048,9 @@ concern.table(sem3, 16, "model3")
 
 ### Comment on the result (model 3)
 
-Model 3 yielded an overall MLM χ2(425) value of 1406.517 (scaling correction factor = 1.117), with CFI = 0.952, TLI = 0.944, RMSEA = 0.040, and SRMR = 0.044. Again, the MLM χ2 difference between Models 2 and 3 is statistically significant (∆MLM χ2[1] = 46.866), albeit differences in the other fit indices across Models 2 and 3 were once again minimal. See Tab 8.
+Model 3 yielded an overall MLM chi square(425) value of 1406.517 (scaling correction factor = 1.117), with CFI = 0.952, TLI = 0.944, RMSEA = 0.040, and SRMR = 0.044. Again, the MLM chi square difference between Models 2 and 3 is statistically significant (∆MLM chi square[1] = 46.866), albeit differences in the other fit indices across Models 2 and 3 were once again minimal. See table 8.
 
-As expected, the estimate for the newly incorporated path from Decision Making to Personal Accomplishment (F5 → F12) was found to be statistically significant. However, the three previous non-significant path remained p values>0.05 (two leading to F12; one leading to F10). Besides, The negative residual variance of F10 remained as it was in model 3 (see tab 9, estimate highlighted in red).
+As expected, the estimate for the newly incorporated path from Decision Making to Personal Accomplishment (F12 on F5) was found to be statistically significant. However, the three previous non-significant path remained p values>0.05 (two leading to F12; one leading to F10). Besides, The negative residual variance of F10 remained as it was in model 3 (see tab 9, estimate highlighted in red).
 
 ### Model mis-specification (model 3)
 
@@ -1100,8 +1101,7 @@ MI.model3 |>
              "Lower self-esteem leads to higher external locus of control"))
 ```
 
-Quoted from Byrne, "Again, I believe it is worthwhile to note why two alternate MI values, close in value to the one chosen here, are considered to be inappropriate. I refer to results related to the structural paths of F10 on F8 (MI = 38.868) and of F9 on F8 (MI = 35.670). In both cases, the flow of causal direction is incorrect." I don't agree with her comments on wrong causal direction. To me, it is fairly logical, though not perfectly straightforward, that Lower self-esteem will cause higher emotional exhaustion (F8→F10, negative sign of EPC), and that Lower self-esteem leads to higher external locus of control (F8→F9, negative sign of EPC). See table 10. However, I agree with Bynre's decision on most appropriate parameter F2→F9 (Higher role conflict increases external locus of control). The causal effect for this parameter is most intuitive --role conflict is a type of external factors that have negative influence. Considering its MI (41.343) is so close to the  highest seen in this model (43.412), substantive meaningfulness, in my opinion, should have the final say when statistics disagrees moderately. As such, I will continue with setting F2 → F9 free to estimate in model 4. See next section.
-
+Quoted from Byrne, "Again, I believe it is worthwhile to note why two alternate MI values, close in value to the one chosen here, are considered to be inappropriate. I refer to results related to the structural paths of F10 on F8 (MI = 38.868) and of F9 on F8 (MI = 35.670). In both cases, the flow of causal direction is incorrect." I don't agree with her comments on this wrong causal direction. To me, it is fairly logical, though not perfectly straightforward, that Lower self-esteem will cause higher emotional exhaustion (F8→F10, negative sign of EPC), and that lower self-esteem leads to higher external locus of control (F8→F9, negative sign of EPC). See table 10. However, I agree with Bynre's decision on most appropriate parameter F2→F9 (Higher role conflict increases external locus of control). The causal effect for this parameter is most intuitive --role conflict is a type of external factors that has negative influence. Considering its MI (41.343) is so close to the highest seen in this model (43.412), substantive meaningfulness, in my opinion, should have the final say when statistics disagrees moderately. As such, I will continue with setting F2 → F9 free to estimate in model 4. See next section.
 
 ## Post hos analysis (Model 4)
 
@@ -1122,52 +1122,14 @@ full.sem.diagram(model4, 17, "8", "model4")
 ```
 
 ```{r}
-sem.measure4 <- fitMeasures(sem4,    #obtain specified measured.
-                            c("chisq.scaled",
-                              "df.scaled",
-                              "pvalue.scaled",
-                              "cfi.scaled",
-                              "tli.scaled",
-                              "rmsea.scaled",
-                              "srmr_bentler",
-                              "chisq.scaling.factor")) |>
-  t() |>
-  round(3)
-#combine the 2 sets of indices and save into a new object
-sem.compare4 <- rbind(sem.measure1, sem.measure2, sem.measure3, sem.measure4) |>
-  data.frame()
-sem.compare4.tab <- sem.compare4
+sem <- c("sem1", "sem2", "sem3", "sem4")
+newpathstext <-  c(" Model1 + structural path 'F4→F11' set free to estimate",
+                      " Model2 + structural path 'F5→F12' set free to estimate",
+                      " Model3 + structural path 'F2→F9' set free to estimate")
 
-#add column "chi square" and place values into it
-sem.compare4.tab$"ΔChi-square" <- rep(NA, 4)
-sem.compare4.tab$"ΔChi-square"[2] <- chi.diff(sem1, sem2)#calculate chisq difference
-sem.compare4.tab$"ΔChi-square"[3] <- chi.diff(sem2, sem3)
-sem.compare4.tab$"ΔChi-square"[4] <- chi.diff(sem3, sem4)
-
-#turn named vector to data frame
-sem.compare4.tab<- sem.compare4.tab %>%
-  select("Chi-square" = chisq.scaled, "DF"=df.scaled,
-         "p value"=pvalue.scaled, "ΔChi-square", "CFI"= cfi.scaled,
-         "TLI"= tli.scaled, "RMSEA"= rmsea.scaled,
-         "SRMR"=srmr_bentler, "CSF"=chisq.scaling.factor)
-
-#There is no chisq-diff value for the first model, so place a "--" in the cell
-sem.compare4.tab[1,4] <- "--"
-
-#add row names
-rownames(sem.compare4.tab) <- c("model1", "model2*", "Model3†", "Model4‡")
-
-#table aesthetics finetune and print table
-sem.compare4.tab |>
-  kable(booktab =T,
-        #format = "markdown",
-        caption = "Comparison of new  (model 4) and preceding models",
-        align = "r") |>
-  kable_styling() |>
-  footnote(symbol = c("Model1 + structural path 'F4→F11' set free to estimate",
-                      "Model2 + structural path 'F5→F12' set free to estimate",
-                      "Model3 + structural path 'F2→F9' set free to estimate")
-           )
+model.comparison.table (sem, 
+                        mycaption = "Comparison of new (model 4) and preceding models",
+                        newpathstext = newpathstext)
 ```
 
 
@@ -1179,9 +1141,9 @@ concern.table(sem4, 17, "model4")
 
 ### Comment on the result (model 4)
 
-The estimation of Model 4 yielded a MLM χ2 value of 1366.129 (scaling correction factor = 1.118) with 424 degrees of freedom. Values related to the CFI, TLI, RMSEA, and SRMR were .954, .946, 0.039, and 0.041, respectively. Again, the difference in fit between this model (Model 4) and its predecessor (Model 3) was statistically significant (MLM∆χ2[1] = 52.949). See table 11.
+The estimation of Model 4 yielded a MLM chi square value of 1366.129 (scaling correction factor = 1.118) with 424 degrees of freedom. Values related to the CFI, TLI, RMSEA, and SRMR were .954, .946, 0.039, and 0.041, respectively. Again, the difference in fit between this model (Model 4) and its predecessor (Model 3) was statistically significant (MLM∆chi square[1] = 52.949). See table 11.
 
-As expected, the newly specified parameter (F9 on F2) was found to be statistically significant (Estimate = 0.189; Z-statistics = 7.157). However, once again the three paths leading from F2, F3, and F4 to F10, and from F10 to F12 were all found to be non-significant. Finally, once again, the negative residual associated with Factor 10 appeared.
+As expected, the newly specified parameter (F9 on F2) was found to be statistically significant (Estimate = 0.189; Z-statistics = 7.157). However, once again the three paths leading from F2, F3, and F4 to F10, and from F10 to F12 were all found to be non-significant. Finally, once again, the negative residual associated with Factor 10 appeared. See table 12. 
 
 ### Model mis-specification
 
@@ -1232,7 +1194,7 @@ MI.model4 |>
              "Higher personal accomplishment decreases external locus of control"))
 ```
 
-The parameter F8→F9 shows up again but this time it has the highest MI among its peers. See tab 13. In the preceding model (model 3) I did not adopt it only because its relatively lower MI albeit good sensibility and meaningfulness. Given that other two competitor parameters in the current model were bad in meaningfulness (because they regress risk factors on the outcome of interest, but we want the opposite), we could decide on adopting F8→F9 (Lower self-esteem causes severer external locus of control) without much ado.
+The regression path F8→F9 shows up again but this time it has the highest MI among its peers. See table 13. In the preceding model (model 3) I did not adopt it only because its relatively lower MI albeit good sensibility and meaningfulness. Given that other two competitor parameters in the current model were bad in meaningfulness (because they regress risk factors on the outcome of interest, but we want the opposite), we could decide on adopting the path of F8→F9 (Lower self-esteem causes severer external locus of control) without much ado.
 
 
 ## Post hos analysis (Model 5)
@@ -1254,58 +1216,18 @@ full.sem.diagram(model5, 18, "9", "model5")
 ```
 
 ```{r}
-sem.measure5 <- fitMeasures(sem5,    #obtain specified measured.
-                            c("chisq.scaled",
-                              "df.scaled",
-                              "pvalue.scaled",
-                              "cfi.scaled",
-                              "tli.scaled",
-                              "rmsea.scaled",
-                              "srmr_bentler",
-                              "chisq.scaling.factor")) |>
-  t() |>
-  round(3)
-#combine the 2 sets of indices and save into a new object
-sem.compare5 <- rbind(sem.measure1, sem.measure2,
-                      sem.measure3, sem.measure4, sem.measure5) |>
-  data.frame()
-sem.compare5.tab <- sem.compare5
+sem <- c("sem1", "sem2", "sem3", "sem4", "sem5")
+newpathstext <-  c(" Model1 + structural path 'F4→F11' set free to estimate",
+                      " Model2 + structural path 'F5→F12' set free to estimate",
+                      " Model3 + structural path 'F2→F9' set free to estimate",
+                      " Model5 + structural path 'F8→F9' set free to estimate")
 
-#add column "chi square" and place values into it
-sem.compare5.tab$"ΔChi-square" <- rep(NA, 5)
-sem.compare5.tab$"ΔChi-square"[2] <- chi.diff(sem1, sem2)#calculate chisq difference
-sem.compare5.tab$"ΔChi-square"[3] <- chi.diff(sem2, sem3)
-sem.compare5.tab$"ΔChi-square"[4] <- chi.diff(sem3, sem4)
-sem.compare5.tab$"ΔChi-square"[5] <- chi.diff(sem4, sem5)
-
-#turn named vector to data frame
-sem.compare5.tab<- sem.compare5.tab %>%
-  select("Chi-square" = chisq.scaled, "DF"=df.scaled,
-         "p value"=pvalue.scaled, "ΔChi-square", "CFI"= cfi.scaled,
-         "TLI"= tli.scaled, "RMSEA"= rmsea.scaled,
-         "SRMR"=srmr_bentler, "CSF"=chisq.scaling.factor)
-
-#There is no chisq-diff value for the first model, so place a "--" in the cell
-sem.compare5.tab[1,4] <- "--"
-
-#add row names
-rownames(sem.compare5.tab) <- c("model1", "model2*",
-                                "Model3†", "Model4‡",
-                                "Model5§")
-
-#table aesthetics fine-tune and print table
-sem.compare5.tab |>
-  kable(booktab =T,
-        #format = "markdown",
-        caption = "Comparison of new  (model 5) and preceding models",
-        align = "r") |>
-  kable_styling() |>
-  footnote(symbol = c("Model1 + structural path 'F4→F11' set free to estimate",
-                      "Model2 + structural path 'F5→F12' set free to estimate",
-                      "Model3 + structural path 'F2→F9' set free to estimate",
-                      "Model5 + structural path 'F8→F9' set free to estimate")
-           )
+model.comparison.table (sem, 
+                        mycaption = 
+                          "Comparison of new  (model 5) and preceding models",
+                        newpathstext = newpathstext)
 ```
+
 
 ### Examine the parameters of concern for model 5
 
@@ -1315,9 +1237,9 @@ concern.table(sem5, 18, "model5")
 
 ### Comment on the result (model 5)
 
-The estimation of Model 5 yielded a MLM χ2(423) value of 1331.636 (scaling correction factor = 1.117), with other fit indices as follows: CFI = 0.955, TLI = 0.948, RMSEA = 0.039, and SRMR = 0.039. Again, the difference in fit between this model (Model 5) and its predecessor (Model 4) was found to be statistically significant (MLM ∆χ2[1] = 29.877). See table 14. 
+The estimation of Model 5 yielded a MLM chi square(423) value of 1331.636 (scaling correction factor = 1.117), with other fit indices as follows: CFI = 0.955, TLI = 0.948, RMSEA = 0.039, and SRMR = 0.039. Again, the difference in fit between this model (Model 5) and its predecessor (Model 4) was found to be statistically significant (MLM ∆chi square[1] = 29.877). See table 14. 
 
-Once again, the newly specified parameter (F9 on F8) was found to be statistically significant and accompanied by the correct sign (Estimate = -0.257; Z-statistics = -5.337). However, as with Model 4, again two of the three paths leading to F10 (F2 → F10; F4 → F10), and one leading from F10 to F12 remained statistically non-significant. Besides, the negative residual associated with Factor 10 remained unchanged. See tab 15.
+Once again, the newly specified parameter (F9 on F8) was found to be statistically significant and accompanied by the correct sign (Estimate = -0.257; Z-statistics = -5.337). However, as with Model 4, again two of the three paths leading to F10 (regressions of F2 → F10; F4 → F10), and one leading from F10 to F12 remained statistically non-significant. Besides, the negative residual associated with Factor 10 remained unchanged. See table 15.
 
 ### Model mis-specification
 
@@ -1370,7 +1292,7 @@ This output reveals the structural path leading from Self-Esteem to Emotional Ex
 
 ### Compare SEM model 6 with preceding models
 
-I defined model 6 as per the conclusion from last section: on the basis of model 5, I set the regression path leading from F8 to F9 (Lower self-esteem causes severer emotional exhaustion) free to estimate (Fig 10). The model fit indices and their comparison with the preceding models were tabulated in table 16.
+I defined model 6 as per the conclusion from last section: on the basis of model 5, I set the regression path leading from F8 to F9 (Lower self-esteem causes severer emotional exhaustion) free to estimate (Fig 10). The model fit indices and their comparison with the preceding models were tabulated in table 17.
 
 ```{r}
 #add new freely estimated parameter to the preceding model
@@ -1385,61 +1307,17 @@ full.sem.diagram(model6, 19, "10", "model6")
 ```
 
 ```{r}
-sem.measure6 <- fitMeasures(sem6,    #obtain specified measured.
-                            c("chisq.scaled",
-                              "df.scaled",
-                              "pvalue.scaled",
-                              "cfi.scaled",
-                              "tli.scaled",
-                              "rmsea.scaled",
-                              "srmr_bentler",
-                              "chisq.scaling.factor")) |>
-  t() |>
-  round(3)
-#combine the 2 sets of indices and save into a new object
-sem.compare6 <- rbind(sem.measure1, sem.measure2,
-                      sem.measure3, sem.measure4, 
-                      sem.measure5, sem.measure6) |>
-  data.frame()
-sem.compare6.tab <- sem.compare6
+sem <- c("sem1", "sem2", "sem3", "sem4", "sem5", "sem6")
+newpathstext <-  c(" Model1 + structural path 'F4→F11' set free to estimate",
+                      " Model2 + structural path 'F5→F12' set free to estimate",
+                      " Model3 + structural path 'F2→F9' set free to estimate",
+                      " Model5 + structural path 'F8→F9' set free to estimate",
+                      " Model6 + structural path 'F8→F10' set free to estimate")
 
-#add column "chi square" and place values into it
-sem.compare6.tab$"ΔChi-square" <- rep(NA, 6)
-sem.compare6.tab$"ΔChi-square"[2] <- chi.diff(sem1, sem2)#calculate chisq difference
-sem.compare6.tab$"ΔChi-square"[3] <- chi.diff(sem2, sem3)
-sem.compare6.tab$"ΔChi-square"[4] <- chi.diff(sem3, sem4)
-sem.compare6.tab$"ΔChi-square"[5] <- chi.diff(sem4, sem5)
-sem.compare6.tab$"ΔChi-square"[6] <- chi.diff(sem5, sem6)
-
-#turn named vector to data frame
-sem.compare6.tab<- sem.compare6.tab %>%
-  select("Chi-square" = chisq.scaled, "DF"=df.scaled,
-         "p value"=pvalue.scaled, "ΔChi-square", "CFI"= cfi.scaled,
-         "TLI"= tli.scaled, "RMSEA"= rmsea.scaled,
-         "SRMR"=srmr_bentler, "CSF"=chisq.scaling.factor)
-
-#There is no chisq-diff value for the first model, so place a "--" in the cell
-sem.compare6.tab[1,4] <- "--"
-
-#add row names
-rownames(sem.compare6.tab) <- c("model1", "model2*",
-                                "Model3†", "Model4‡",
-                                "Model5§", "Model6¶")
-
-#table aesthetics fine-tune and print table
-sem.compare6.tab |>
-  kable(booktab =T,
-        #format = "markdown",
-        caption = "Comparison of new  (model 6) and preceding models",
-        align = "r",
-        linesep ="") |>
-  kable_styling() |>
-  footnote(symbol = c("Model1 + structural path 'F4→F11' set free to estimate",
-                      "Model2 + structural path 'F5→F12' set free to estimate",
-                      "Model3 + structural path 'F2→F9' set free to estimate",
-                      "Model5 + structural path 'F8→F9' set free to estimate",
-                      "Model6 + structural path 'F8→F10' set free to estimate")
-           )
+model.comparison.table (sem, 
+                        mycaption = 
+                          "Comparison of new  (model 6) and preceding models",
+                        newpathstext = newpathstext)
 ```
 
 ### Examine the parameters of concern for model 6
@@ -1450,7 +1328,7 @@ concern.table(sem6, 19, "model6")
 
 ### Comment on the result (model 6)
 
-The estimation of Model 6 yielded a MLM χ2(422) value of 1297.489 (scaling correction factor = 1.116), with the remaining fit indices as follows: CFI = 0.957, TLI = 0.949, RMSEA = 0.038, and SRMR = 0.039. As might be expected given the newly specified path involving Factor 10, the difference in fit between this model (Model 6) and its predecessor (Model 5) was found to be statistically significant (MLM∆χ2[1] = 23.358). See tab 17.
+The estimation of Model 6 yielded a MLM chi square(422) value of 1297.489 (scaling correction factor = 1.116), with the remaining fit indices as follows: CFI = 0.957, TLI = 0.949, RMSEA = 0.038, and SRMR = 0.039. As might be expected given the newly specified path involving Factor 10, the difference in fit between this model (Model 6) and its predecessor (Model 5) was found to be statistically significant (MLM∆chi square[1] = 23.358). See tab 17.
 
 An important finding here is that the alarming negative residual variance of Factor 10 finally disappeared. The estimated value for the newly specified path (F10 on F8) was statistically significant (Estimate = −0.884; Est/SE = −8.116). Furthermore, one of the previously determined non-significant paths loading from F4 onto F10 turned significant. Nonetheless, the regression path leading from F10 to F12, which has been consistently non-significant, remained so. In addition, however, the parameter, F8 on F7 (Peer Support → Self-Esteem), was found to be statistically non-significant. See tab 18.
 
@@ -1516,68 +1394,21 @@ full.sem.diagram(model7, 20, "11", "model7")
 ```
 
 ```{r}
-sem.measure7 <- fitMeasures(sem7,    #obtain specified measured.
-                            c("chisq.scaled",
-                              "df.scaled",
-                              "pvalue.scaled",
-                              "cfi.scaled",
-                              "tli.scaled",
-                              "rmsea.scaled",
-                              "srmr_bentler",
-                              "chisq.scaling.factor")) |>
-  t() |>
-  round(3)
-#combine the 2 sets of indices and save into a new object
-sem.compare7 <- rbind(sem.measure1, sem.measure2,
-                      sem.measure3, sem.measure4, 
-                      sem.measure5, sem.measure6,
-                      sem.measure7) |>
-  data.frame()
-sem.compare7.tab <- sem.compare7
-
-#add column "chi square" and place values into it
-sem.compare7.tab$"ΔChi-square" <- rep(NA, 7)
-sem.compare7.tab$"ΔChi-square"[2] <- chi.diff(sem1, sem2)#calculate chisq difference
-sem.compare7.tab$"ΔChi-square"[3] <- chi.diff(sem2, sem3)
-sem.compare7.tab$"ΔChi-square"[4] <- chi.diff(sem3, sem4)
-sem.compare7.tab$"ΔChi-square"[5] <- chi.diff(sem4, sem5)
-sem.compare7.tab$"ΔChi-square"[6] <- chi.diff(sem5, sem6)
-sem.compare7.tab$"ΔChi-square"[7] <- chi.diff(sem6, sem7)
-
-#turn named vector to data frame
-sem.compare7.tab<- sem.compare7.tab %>%
-  select("Chi-square" = chisq.scaled, "DF"=df.scaled,
-         "p value"=pvalue.scaled, "ΔChi-square", "CFI"= cfi.scaled,
-         "TLI"= tli.scaled, "RMSEA"= rmsea.scaled,
-         "SRMR"=srmr_bentler, "CSF"=chisq.scaling.factor)
-
-#There is no chisq-diff value for the first model, so place a "--" in the cell
-sem.compare7.tab[1,4] <- "--"
-
-#add row names
-rownames(sem.compare7.tab) <- c("model1", "model2*",
-                                "Model3†", "Model4‡",
-                                "Model5§", "Model6¶",
-                                "Model7**")
-
-#table aesthetics fine-tune and print table
-sem.compare7.tab |>
-  kable(booktab =T,
-        #format = "markdown",
-        caption = "Comparison of new  (model 7) and preceding models",
-        align = "r",
-        linesep ="") |>
-  kable_styling() |>
-  footnote(symbol = c("Model1 + structural path 'F4→F11' set free to estimate",
-                      "Model2 + structural path 'F5→F12' set free to estimate",
-                      "Model3 + structural path 'F2→F9' set free to estimate",
-                      "Model5 + structural path 'F8→F9' set free to estimate",
-                      "Model6 + structural path 'F8→F10' set free to estimate",
+sem <- c("sem1", "sem2", "sem3", "sem4", "sem5", "sem6", "sem7")
+newpathstext <-  c("Model1 + structural path 'F4→F11' set free to estimate",
+                      "  Model2 + structural path 'F5→F12' set free to estimate",
+                      "  Model3 + structural path 'F2→F9' set free to estimate",
+                      "  Model5 + structural path 'F8→F9' set free to estimate",
+                      "  Model6 + structural path 'F8→F10' set free to estimate",
                       "Model7 + structural path 'F2→F12' set free to estimate")
-           )
+
+model.comparison.table (sem, 
+                        mycaption = 
+                          "Comparison of new  (model 7) and preceding models",
+                        newpathstext = newpathstext)
 ```
 
-### Examine the parameters of concern for model 6
+### Examine the parameters of concern for model 7
 
 ```{r}
 concern.table(sem7, 20, "model7")
@@ -1585,21 +1416,107 @@ concern.table(sem7, 20, "model7")
 
 ### Comments on the results(model 7)
 
-The estimation of Model 7 yielded a MLM χ2(421) value of 1267.208 (scaling correction factor = 1.116), with the remaining fit indices as follows: CFI = 0.958, TLI = 0.951, RMSEA = 0.038, and SRMR = 0.038. Again, the difference in fit between this model (Model 7) and its predecessor (Model 6) was found to be statistically significant (MLM∆χ2[1] = 23.057).
+The estimation of Model 7 yielded a MLM chi square(421) value of 1267.208 (scaling correction factor = 1.116), with the remaining fit indices as follows: CFI = 0.958, TLI = 0.951, RMSEA = 0.038, and SRMR = 0.038. Again, the difference in fit between this model (Model 7) and its predecessor (Model 6) was found to be statistically significant (MLM∆chi square[1] = 23.057). See tab 20.
 
-Here again, the new parameter added to the model (F11 on F8) was found to be statistically significant (Estimate = -0.42; Z-statistics = -4.688). However, the structural regression paths F8 (Self-Esteem) on F7 (Peer Support) and F12 (Personal Accomplishment) on F10 (Emotional exhaustion) remained non-signification.
+Here again, the new parameter added to the model (F11 on F8) was found to be statistically significant (Estimate = -0.42; Z-statistics = -4.688). However, the structural regression paths F8 (Self-Esteem) on F7 (Peer Support) and F12 (Personal Accomplishment) on F10 (Emotional exhaustion) remained non-signification. See tab 21.
 
-At this point, I believed that we had exhausted the search for a better fitting model that best represents the data for secondary teachers. Thus, I started to delete regression path that were originally specified in the hypothesized model but remain statistically non-significant as per the results for Model 7. Accordingly, Model 8 was specified in which the two non-significant parameters noted above (F7 → F8; F10 → F12) are not included. Note that one of the excluded paths was different from Byrne's decision, where she deleted F12 on F1 instead of F12 on F10. See next section.
+At this point, I believe that I have exhausted the search for a better fitting model that best represents the data for secondary teachers. Thus, I start to delete regression path that are originally specified in the hypothesized model but remain statistically non-significant as per the results for Model 7. Accordingly, Model 8 is specified in which the two non-significant parameters noted above (F7 → F8; F10 → F12) are not included. Note that one of the excluded paths is different from Byrne's decision, where she deleted F12 on F1 instead of F12 on F10. See next section.
 
 ## Final Model
 
 ### Estimate the final model (model 8)
 
-I established the final model (model 8) by deleting two paths (F7 → F8; F10 → F12) from model 7. See picture 12
-
 ```{r}
 #add new freely estimated parameter to the preceding model
 model8 <- '
+    F1ROLA =~ ROLEA1 + ROLEA2 + DEC2
+    F2ROLC =~ ROLEC1 + ROLEC2
+    F3WORK =~ WORK1 + WORK2
+    F4CLIM =~ CCLIM1 + CCLIM2 + CCLIM3 + CCLIM4
+    F5DEC =~ DEC1 + DEC2
+    F6SSUP =~ SSUP1 + SSUP2 + DEC2
+    F7PSUP =~ PSUP1 + PSUP2
+    F8SELF =~ SELF1 + SELF2 + SELF3
+    F9ELC =~ ELC1 + ELC2 + ELC3 + ELC4 + ELC5
+    F10EE =~ EE1 + EE2 + EE3
+    F11DP =~ DP1 + DP2
+    F12PA =~ PA1 + PA2 + PA3
+    F8SELF ~ F5DEC + F6SSUP 
+    F9ELC ~ F5DEC
+    F10EE ~ F2ROLC + F3WORK + F4CLIM
+    F11DP ~ F2ROLC + F10EE
+    F12PA ~ F1ROLA + F8SELF + F9ELC + F11DP
+    F11DP ~ F4CLIM
+    F12PA ~ F5DEC
+    F9ELC ~ F2ROLC
+    F9ELC ~ F8SELF
+    F10EE ~ F8SELF
+    F12PA ~ F2ROLC
+'
+
+# Estimate the model with the robust (MLM) estimator:
+sem8 <- sem(model8, data = mbi, estimator = "MLM", mimic = "Mplus")
+#summary(sem8, fit.measures = T, standardized =T)
+```
+
+I established the final model (model 8) by deleting two paths (F7 → F8; F10 → F12) from model 7. See picture 12
+
+Estimation of this final model (Model 8) yielded an overall MLM chi square(423) value of 1291.217 (scaling correction factor = 1.116). This 423 degrees of freedom seems very suspicious since Byrne's final model also had 423 degrees of freedom. However, my final model deleted one less factor than hers. My intuition is the degree of freedom could be different too. Hence, I tried to manually count of the df of my final model to see if there was anything going wrong. 
+
+*My final number of manifest variable was 32. Hence I had 32*33/2=528 pieces of information*
+
+*I had 95 estimated parameters:*
+
+  *22 factor loadings ;*
+  *44 variances(7 factors, 32 error residual, 5 factor residual);*
+  *21 factor covariances (factor 1-7)*
+  *18 structural regression paths.*
+  
+*So I have 528 - (22+44+21+18) = 423 degrees of freedom.*
+
+So nothing went wrong. 
+
+The final model have a CFI value of 0.957, representing a very good fit to the data for secondary teachers. The remaining TLI, RMSEA, and SRMR values further substantiate these results. In contrast to all previous models, it is also found that the corrected chi-square difference between the present model and Model 7 to be statistically significant (MLM∆chi square[1] = -14.863). See table 22. 
+
+It is also interesting to test the corrected chi-square difference between the final model and initial model:
+
+```{r}
+print(chi.diff(sem1,sem8))
+```
+
+A chi square value of 240.081 indicated significant difference. The final model fit the data significantly better than the initial model.
+
+```{r}
+sem <- c("sem1", "sem2", "sem3", "sem4", "sem5", "sem6", "sem7", "sem8")
+newpathstext <-  c(" Model1 + structural path 'F4→F11' set free to estimate",
+                      "  Model2 + structural path 'F5→F12' set free to estimate",
+                      "  Model3 + structural path 'F2→F9' set free to estimate",
+                      "  Model5 + structural path 'F8→F9' set free to estimate",
+                      "  Model6 + structural path 'F8→F10' set free to estimate",
+                      "Model7 + structural path 'F2→F12' set free to estimate",
+                      "Model8 - structural path with F7 → F8 and F10 → F12 set fixed")
+
+model.comparison.table (sem, 
+                        mycaption = 
+                          "Comparison of final(model 8) and preceding models",
+                        newpathstext = newpathstext)
+```
+
+### Visualize the final model
+
+For the sake of plotting, I deleted the F7 with two of its indicators from the model (which I shouldn't, since they still have a position in the measurement model, but I haven't found a better way to hide a node using semplot). However, this is only for demonstrating the structure of final model. It won't cause any misunderstanding, I think.
+
+Figure 12 displays the final model, which highlights in orange all the regression paths added in addition to the initial model.
+
+```{r}
+#broom cells 
+m[53,9] <- NA
+m[59,6] <- NA
+m[59,13] <- NA
+```
+
+```{r}
+model.plot <- '
     F1ROLA =~ ROLEA1 + ROLEA2 + DEC2
     F2ROLC =~ ROLEC1 + ROLEC2
     F3WORK =~ WORK1 + WORK2
@@ -1622,67 +1539,15 @@ model8 <- '
     F9ELC ~ F8SELF
     F10EE ~ F8SELF
     F12PA ~ F2ROLC
-    '
-
+'
 # Estimate the model with the robust (MLM) estimator:
-sem8 <- sem(model8, data = mbi, estimator = "MLM", mimic = "Mplus")
-```
+sem.plot <- sem(model.plot, data = mbi, estimator = "MLM", mimic = "Mplus")
+#summary(sem8, fit.measures = T, standardized =T)
 
-
-### Visualize the final model
-
-```{r}
-#generate a matrix
-m <- matrix(NA, 60, 72)
-
-#define positions of the factors
-m[12, 68] <- "F1ROLA"
-m[12, 40] <- "F2ROLC"
-m[12, 28] <- "F3WORK"
-m[12,12] <- "F4CLIM"
-m[21,12] <-"F5DEC"
-m[40,12] <-"F6SSUP"
-m[44,24] <-"F8SELF"
-m[52,40] <-"F9ELC"
-m[37,48] <-"F10EE"
-m[26,60] <-"F11DP"
-m[48,64] <-"F12PA"
-
-#define the posiitions of the indicators (parcelled items)
-m[4, 72] <- "ROLEA1"
-m[4, 64] <- "ROLEA2"
-m[4, 48] <- "ROLEC1"
-m[4, 40] <- "ROLEC2"
-m[4, 32] <- "WORK1"
-m[4, 24] <- "WORK2"
-m[4, 16] <- "CCLIM1"
-m[5, 10] <- "CCLIM2"
-m[10, 4] <- "CCLIM3"
-m[15, 4] <- "CCLIM4"
-m[20, 4] <- "DEC1"
-m[27, 6] <- "DEC2"
-m[36, 4] <- "SSUP1"
-m[40, 4] <- "SSUP2"
-m[48, 32] <- "SELF1"
-m[52, 28] <- "SELF2"
-m[51, 21] <- "SELF3"
-m[56, 50] <- "ELC1"
-m[60, 48] <- "ELC2"
-m[60, 42] <- "ELC3"
-m[60, 35] <- "ELC4"
-m[56, 31] <- "ELC5"
-m[43, 45] <- "EE1"
-m[39, 40] <- "EE2"
-m[35, 38] <- "EE3"
-m[20, 64] <- "DP1"
-m[20, 58] <- "DP2"
-m[52, 71] <- "PA1"
-m[56, 64] <- "PA2"
-m[53, 57] <- "PA3"
 ```
 
 ```{r, fig.width=14, fig.height=10}
-semPaths(semPlotModel(model8),
+semPaths(semPlotModel(model.plot),
              style = "lisrel",
              rotation = 2,
              sizeLat = 6,
@@ -1692,7 +1557,8 @@ semPaths(semPlotModel(model8),
              residScale = 4,
              shapeMan = "rectangle",
              edge.color = c(rep("black",32),
-                            rep("blue",18),
+                            rep("blue",14),
+                            rep("orange",4),
                             rep("gray",32),
                             rep("red",5)),
          residuals = T,
@@ -1704,92 +1570,36 @@ title(main = list("Figure 12. Final model of teacher burnout",
                   cex = 1.5, font =1),
      outer = F, line = -1)
 title(sub = "Notes: Red arrow indicates factor residuals; gray arrow indicates error residuals;
-     blue arrow indicates regression path; black arrow indicates factor loading",
+      black arrow indicates factor loading; blue arrow indicates originally hypothesized 
+      regression path; orange arrow indicates regression paths added over pos hoc analysis",
      line = 0, adj = 0.7)
 ```
 
-
-```{r}
-sem.measure8 <- fitMeasures(sem8,    #obtain specified measured.
-                            c("chisq.scaled",
-                              "df.scaled",
-                              "pvalue.scaled",
-                              "cfi.scaled",
-                              "tli.scaled",
-                              "rmsea.scaled",
-                              "srmr_bentler",
-                              "chisq.scaling.factor")) |>
-  t() |>
-  round(3)
-#combine the 2 sets of indices and save into a new object
-sem.compare8 <- rbind(sem.measure1, sem.measure2,
-                      sem.measure3, sem.measure4, 
-                      sem.measure5, sem.measure6,
-                      sem.measure7, sem.measure8) |>
-  data.frame()
-sem.compare8.tab <- sem.compare8
-
-#add column "chi square" and place values into it
-sem.compare8.tab$"ΔChi-square" <- rep(NA, 8)
-sem.compare8.tab$"ΔChi-square"[2] <- chi.diff(sem1, sem2)#calculate chisq difference
-sem.compare8.tab$"ΔChi-square"[3] <- chi.diff(sem2, sem3)
-sem.compare8.tab$"ΔChi-square"[4] <- chi.diff(sem3, sem4)
-sem.compare8.tab$"ΔChi-square"[5] <- chi.diff(sem4, sem5)
-sem.compare8.tab$"ΔChi-square"[6] <- chi.diff(sem5, sem6)
-sem.compare8.tab$"ΔChi-square"[7] <- chi.diff(sem6, sem7)
-sem.compare8.tab$"ΔChi-square"[8] <- chi.diff(sem7, sem8)
-
-#turn named vector to data frame
-sem.compare8.tab<- sem.compare8.tab %>%
-  select("Chi-square" = chisq.scaled, "DF"=df.scaled,
-         "p value"=pvalue.scaled, "ΔChi-square", "CFI"= cfi.scaled,
-         "TLI"= tli.scaled, "RMSEA"= rmsea.scaled,
-         "SRMR"=srmr_bentler, "CSF"=chisq.scaling.factor)
-
-#There is no chisq-diff value for the first model, so place a "--" in the cell
-sem.compare8.tab[1,4] <- "--"
-
-#add row names
-rownames(sem.compare8.tab) <- c("model1", "model2*",
-                                "Model3†", "Model4‡",
-                                "Model5§", "Model6¶",
-                                "Model7**", "Model8")
-
-#table aesthetics fine-tune and print table
-sem.compare8.tab |>
-  kable(booktab =T,
-        #format = "markdown",
-        caption = "Comparison of new  (model 7) and preceding models",
-        align = "r",
-        linesep ="") |>
-  kable_styling() |>
-  footnote(symbol = c("Model1 + structural path 'F4→F11' set free to estimate",
-                      "Model2 + structural path 'F5→F12' set free to estimate",
-                      "Model3 + structural path 'F2→F9' set free to estimate",
-                      "Model5 + structural path 'F8→F9' set free to estimate",
-                      "Model6 + structural path 'F8→F10' set free to estimate",
-                      "Model7 + structural path 'F2→F12' set free to estimate",
-                      "Model8 - structural path with F7 → F8 and F10 → F12 set fixed")
-           )
-```
+Figure 13 displays the theoretical structure of the final model, showing how the psychological determinants influencing teacher's burnout.
 
 ```{r, fig.width=14, fig.height=10}
+
+grps <- list(c("F10EE","F11DP","F12PA"),
+             c("F1ROLA","F2ROLC","F3WORK","F4CLIM","F5DEC","F6SSUP","F8SELF","F9ELC"))
+a <- "Figure 13. Summary of final model structural paths representing determinants 
+      of burnout for teachers"
+m[40,12] <-NA
+m[53,9] <-"F6SSUP"
 semPaths(sem8,
          style = "lisrel",
-         "path",
-         #"std",
-         whatLabels = "invisible",
+         #"path",
+         #"par",
+         "std",
              rotation = 2,
              sizeLat = 10,
-             sizeLat2 = 5,
+             sizeLat2 = 7,
              sizeMan = 5,
              sizeMan2 = 2,
              residScale = 4,
              shapeMan = "rectangle",
-             edge.color = c(rep("black",32),
-                            rep("blue",18),
-                            rep("gray",32),
-                            rep("red",5)),
+             #edge.color = c(rep("black",5),
+              #              rep("blue",5),
+                #            rep("gray",4)),
          residuals = F,
          layout = m,
          nCharNodes=0,
@@ -1798,47 +1608,44 @@ semPaths(sem8,
          covAtResiduals = F,
          intercepts = F,
          exoCov = F,
-         structural = T)
-title(main = list("Figure 12. Final model of teacher burnout",
+         structural = T,
+         posCol = c("red","red"),
+         negCol = c("steelblue","steelblue"),
+         fade = F,
+         edge.label.cex = 0.01,
+         group =grps,
+         color = c("lightblue", "white")
+)
+title(main = list(a,
                   cex = 1.5, font =1),
-     outer = F, line = -1)
-title(sub = "Notes: Red arrow indicates factor residuals; gray arrow indicates error residuals;
-     blue arrow indicates regression path; black arrow indicates factor loading",
+     outer = F)
+title(sub = "Notes: Nodes in light blue are outcome of interest;
+             Red edge indicates positive influence; blue edges indicate negative influence;
+             The thickness of the line indicates strength of influence",
      line = 0, adj = 0.7)
 
-```
-
-## Exercise 4.2
-
-Proceed **step by step** following the guidelines given in the lecture material, i.e., implement the modifications **one at a time**, testing and studying each step. See (and report) how the fit improves and which parameters are suggested to be modified. Please be careful! There will (always) be a lot of suggestions... Do not list all the MIs (only a few of them are useful!), try to keep your report as concise as possible.
-
-*Note:* A good way to proceed is to collect the necessary information (i.e., which parameter was modified and how, MI, EPC, chi-square, df, CFI, TLI, scaling correction factor, RMSEA, and SRMR) of each modelling step to a **table** (in a way or another). (Some examples in R code were given in Assignment 3, consult also the reports by other students, if you do not know how to proceed.) **Such tables makes it easy to see how the results of the modelling develop through each step.**
-
-The best practice is to build the tables step by step: In the first table you will have only one row, then two rows, then three rows etc., and in the final version of the table you will have all the steps collected together on *k* rows, representing the *k* steps of the modelling process.
-
-### Calculating the MLM $\chi^2$ difference tests
-
-Calculate the MLM $\chi^2$ difference tests between the consecutive models of the above steps, as advised in the lecture material (p.14-15). Do those calculations in detail at least once or twice so that you get the idea.
-
-*Note:* The formulas are simpler than they are in Byrne's book (p.168-169), where both MLM and ML estimations are needed. For more information, see: https://statmodel.com/chidiff.shtml.
-
-For the calculations, you may use R (of course!) or Excel, or some ready-made calculation forms found on the web, such as https://www.thestatisticalmind.com/calculators/SBChiSquareDifferenceTest.htm.
-
-```{r}
-
-# (copy and modify the R codes given earlier)
 
 ```
 
-## Exercise 4.3
+# Summary
 
-Draw the graph of the final model and present its fit indices and the essential, standardized parameter estimates. **Pay attention to the factor correlations.**
+In the exercise, I practiced post-hoc analysis of full SEM with teacher burnout data set. Over the process, I established 8 models step by step and compared their model fit indices, regression path estimates, and selected alarming variances;
 
-Compare the initial and final graphs and make sure that you understand the whole modelling process and the final conclusions.
+Over the exercises, I mostly followed the step of the slides and Byrne's book. However, in models 7 and 8, I started to go on a different tract, leading to a different final model. 
 
-```{r}
+I learnt something that I would definitely misunderstand or mistake as I know if I hadn't done this exercise. Like, when removing factors for the final model, we should keep the factor loading (measurement model) of the deleted factors in the model; 
 
-# (copy and modify the R codes given earlier)
+There are some visual effects I want to realize using Semplot that I finally failed to, such as showing the edge as broken arrows. Need to dig more next week. 
 
-```
+Calculating degrees of freedom is very chanlleging. I understand every bit of it when the process is shown to me. However, when I need to calculate without any external aide, I always forgot this or that. 
+
+I found SEM is beautiful blending of statistics and mindful sense-making. Indeed, they always go together. Yet, not often so well balanced as they are in SEM, for the scope of statistics I am familiar with. 
+
+
+
+
+
+
+
+
 

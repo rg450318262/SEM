@@ -1,4 +1,4 @@
-This is LuaHBTeX, Version 1.15.0 (TeX Live 2022)  (format=lualatex 2023.2.10)  11 FEB 2023 17:08
+This is LuaHBTeX, Version 1.15.0 (TeX Live 2022)  (format=lualatex 2023.2.10)  11 FEB 2023 23:33
  restricted system commands enabled.
 **Assignment4.tex
 (./Assignment4.tex
@@ -549,7 +549,10 @@ Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 28
 \Hy@SectionHShift=\skip69
 ) (./Assignment4.aux
 
-LaTeX Warning: Label `tab:unnamed-chunk-12' multiply defined.
+LaTeX Warning: Label `tab:unnamed-chunk-13' multiply defined.
+
+
+LaTeX Warning: Label `tab:unnamed-chunk-13' multiply defined.
 
 )
 \openout1 = Assignment4.aux
@@ -933,155 +936,136 @@ Underfull \vbox (badness 10000) detected at line 310
 Underfull \vbox (badness 10000) detected at line 310
  []
 
-[3] [4
-Missing character: There is no χ (U+03C7) in font [lmroman10-bold]:+tlig;!
-] [5] [6] [7]
-<Assignment4_files/figure-latex/unnamed-chunk-13-1.pdf, id=160, 505.89pt x 722.7pt>
-File: Assignment4_files/figure-latex/unnamed-chunk-13-1.pdf Graphic file (type pdf)
-<use Assignment4_files/figure-latex/unnamed-chunk-13-1.pdf>
-Package luatex.def Info: Assignment4_files/figure-latex/unnamed-chunk-13-1.pdf  used on input line 544.
-(luatex.def)             Requested size: 455.3045pt x 650.43501pt.
-[8] [9<./Assignment4_files/figure-latex/unnamed-chunk-13-1.pdf>]
-<Assignment4_files/figure-latex/unnamed-chunk-14-1.pdf, id=181, 578.16pt x 505.89pt>
+[3] [4] [5] [6] [7] [8]
+<Assignment4_files/figure-latex/unnamed-chunk-14-1.pdf, id=161, 505.89pt x 722.7pt>
 File: Assignment4_files/figure-latex/unnamed-chunk-14-1.pdf Graphic file (type pdf)
 <use Assignment4_files/figure-latex/unnamed-chunk-14-1.pdf>
-Package luatex.def Info: Assignment4_files/figure-latex/unnamed-chunk-14-1.pdf  used on input line 598.
-(luatex.def)             Requested size: 469.75385pt x 411.0346pt.
-[10]
-<Assignment4_files/figure-latex/unnamed-chunk-15-1.pdf, id=186, 722.7pt x 433.62pt>
+Package luatex.def Info: Assignment4_files/figure-latex/unnamed-chunk-14-1.pdf  used on input line 621.
+(luatex.def)             Requested size: 455.3045pt x 650.43501pt.
+[9] [10<./Assignment4_files/figure-latex/unnamed-chunk-14-1.pdf>]
+<Assignment4_files/figure-latex/unnamed-chunk-15-1.pdf, id=182, 578.16pt x 505.89pt>
 File: Assignment4_files/figure-latex/unnamed-chunk-15-1.pdf Graphic file (type pdf)
 <use Assignment4_files/figure-latex/unnamed-chunk-15-1.pdf>
-Package luatex.def Info: Assignment4_files/figure-latex/unnamed-chunk-15-1.pdf  used on input line 626.
-(luatex.def)             Requested size: 469.76045pt x 281.85628pt.
-[11<./Assignment4_files/figure-latex/unnamed-chunk-14-1.pdf>]
-<Assignment4_files/figure-latex/unnamed-chunk-16-1.pdf, id=197, 505.89pt x 505.89pt>
+Package luatex.def Info: Assignment4_files/figure-latex/unnamed-chunk-15-1.pdf  used on input line 675.
+(luatex.def)             Requested size: 469.75385pt x 411.0346pt.
+[11]
+<Assignment4_files/figure-latex/unnamed-chunk-16-1.pdf, id=188, 722.7pt x 433.62pt>
 File: Assignment4_files/figure-latex/unnamed-chunk-16-1.pdf Graphic file (type pdf)
 <use Assignment4_files/figure-latex/unnamed-chunk-16-1.pdf>
-Package luatex.def Info: Assignment4_files/figure-latex/unnamed-chunk-16-1.pdf  used on input line 650.
-(luatex.def)             Requested size: 469.76265pt x 469.76265pt.
+Package luatex.def Info: Assignment4_files/figure-latex/unnamed-chunk-16-1.pdf  used on input line 703.
+(luatex.def)             Requested size: 469.76045pt x 281.85628pt.
 [12<./Assignment4_files/figure-latex/unnamed-chunk-15-1.pdf>]
-<Assignment4_files/figure-latex/unnamed-chunk-17-1.pdf, id=208, 650.43pt x 650.43pt>
+<Assignment4_files/figure-latex/unnamed-chunk-17-1.pdf, id=198, 505.89pt x 505.89pt>
 File: Assignment4_files/figure-latex/unnamed-chunk-17-1.pdf Graphic file (type pdf)
 <use Assignment4_files/figure-latex/unnamed-chunk-17-1.pdf>
-Package luatex.def Info: Assignment4_files/figure-latex/unnamed-chunk-17-1.pdf  used on input line 665.
+Package luatex.def Info: Assignment4_files/figure-latex/unnamed-chunk-17-1.pdf  used on input line 727.
+(luatex.def)             Requested size: 469.76265pt x 469.76265pt.
+[13<./Assignment4_files/figure-latex/unnamed-chunk-16-1.pdf>]
+<Assignment4_files/figure-latex/unnamed-chunk-18-1.pdf, id=209, 650.43pt x 650.43pt>
+File: Assignment4_files/figure-latex/unnamed-chunk-18-1.pdf Graphic file (type pdf)
+<use Assignment4_files/figure-latex/unnamed-chunk-18-1.pdf>
+Package luatex.def Info: Assignment4_files/figure-latex/unnamed-chunk-18-1.pdf  used on input line 742.
 (luatex.def)             Requested size: 469.76817pt x 469.76817pt.
-[13<./Assignment4_files/figure-latex/unnamed-chunk-16-1.pdf>] [14<./Assignment4_files/figure-latex/unnamed-chunk-17-1.pdf>] [15] [16]
-<Assignment4_files/figure-latex/unnamed-chunk-20-1.pdf, id=247, 1011.78pt x 722.7pt>
-File: Assignment4_files/figure-latex/unnamed-chunk-20-1.pdf Graphic file (type pdf)
-<use Assignment4_files/figure-latex/unnamed-chunk-20-1.pdf>
-Package luatex.def Info: Assignment4_files/figure-latex/unnamed-chunk-20-1.pdf  used on input line 797.
+[14<./Assignment4_files/figure-latex/unnamed-chunk-17-1.pdf>] [15<./Assignment4_files/figure-latex/unnamed-chunk-18-1.pdf>] [16] [17]
+<Assignment4_files/figure-latex/unnamed-chunk-21-1.pdf, id=250, 1011.78pt x 722.7pt>
+File: Assignment4_files/figure-latex/unnamed-chunk-21-1.pdf Graphic file (type pdf)
+<use Assignment4_files/figure-latex/unnamed-chunk-21-1.pdf>
+Package luatex.def Info: Assignment4_files/figure-latex/unnamed-chunk-21-1.pdf  used on input line 876.
 (luatex.def)             Requested size: 469.76266pt x 335.54475pt.
-[17<./Assignment4_files/figure-latex/unnamed-chunk-20-1.pdf>] [18] [19
-Missing character: There is no χ (U+03C7) in font [lmroman10-regular]:+tlig;!
-Missing character: There is no χ (U+03C7) in font [lmroman10-regular]:+tlig;!
-Missing character: There is no χ (U+03C7) in font [lmroman10-regular]:+tlig;!
-Missing character: There is no χ (U+03C7) in font [lmroman10-regular]:+tlig;!
-] [20]
-<Assignment4_files/figure-latex/unnamed-chunk-26-1.pdf, id=281, 1011.78pt x 722.7pt>
-File: Assignment4_files/figure-latex/unnamed-chunk-26-1.pdf Graphic file (type pdf)
-<use Assignment4_files/figure-latex/unnamed-chunk-26-1.pdf>
-Package luatex.def Info: Assignment4_files/figure-latex/unnamed-chunk-26-1.pdf  used on input line 1064.
+[18<./Assignment4_files/figure-latex/unnamed-chunk-21-1.pdf>] [19] [20] [21]
+<Assignment4_files/figure-latex/unnamed-chunk-27-1.pdf, id=284, 1011.78pt x 722.7pt>
+File: Assignment4_files/figure-latex/unnamed-chunk-27-1.pdf Graphic file (type pdf)
+<use Assignment4_files/figure-latex/unnamed-chunk-27-1.pdf>
+Package luatex.def Info: Assignment4_files/figure-latex/unnamed-chunk-27-1.pdf  used on input line 1104.
 (luatex.def)             Requested size: 469.76266pt x 335.54475pt.
-[21] [22
-Missing character: There is no χ (U+03C7) in font [lmroman10-regular]:+tlig;!
-Missing character: There is no χ (U+03C7) in font [lmroman10-regular]:+tlig;!
+[22] [23
 Missing character: There is no ∆ (U+2206) in font [lmroman10-regular]:+tlig;!
-Missing character: There is no χ (U+03C7) in font [lmroman10-regular]:+tlig;!
-<./Assignment4_files/figure-latex/unnamed-chunk-26-1.pdf>] [23]
-Overfull \hbox (11.59496pt too wide) in paragraph at lines 1183--1197
+<./Assignment4_files/figure-latex/unnamed-chunk-27-1.pdf>] [24]
+Overfull \hbox (11.59496pt too wide) in paragraph at lines 1223--1237
  [][] 
  []
 
-[24]
-<Assignment4_files/figure-latex/unnamed-chunk-30-1.pdf, id=314, 1011.78pt x 722.7pt>
-File: Assignment4_files/figure-latex/unnamed-chunk-30-1.pdf Graphic file (type pdf)
-<use Assignment4_files/figure-latex/unnamed-chunk-30-1.pdf>
-Package luatex.def Info: Assignment4_files/figure-latex/unnamed-chunk-30-1.pdf  used on input line 1223.
+[25]
+<Assignment4_files/figure-latex/unnamed-chunk-31-1.pdf, id=317, 1011.78pt x 722.7pt>
+File: Assignment4_files/figure-latex/unnamed-chunk-31-1.pdf Graphic file (type pdf)
+<use Assignment4_files/figure-latex/unnamed-chunk-31-1.pdf>
+Package luatex.def Info: Assignment4_files/figure-latex/unnamed-chunk-31-1.pdf  used on input line 1263.
 (luatex.def)             Requested size: 469.76266pt x 335.54475pt.
-[25<./Assignment4_files/figure-latex/unnamed-chunk-30-1.pdf>] [26] [27] [28
-Missing character: There is no χ (U+03C7) in font [lmroman10-regular]:+tlig;!
-Missing character: There is no χ (U+03C7) in font [lmroman10-regular]:+tlig;!
+[26<./Assignment4_files/figure-latex/unnamed-chunk-31-1.pdf>] [27
 Missing character: There is no ∆ (U+2206) in font [lmroman10-regular]:+tlig;!
-Missing character: There is no χ (U+03C7) in font [lmroman10-regular]:+tlig;!
-]
-Overfull \hbox (16.97498pt too wide) in paragraph at lines 1404--1418
+] [28]
+Overfull \hbox (16.97498pt too wide) in paragraph at lines 1408--1422
  [][] 
  []
 
-<Assignment4_files/figure-latex/unnamed-chunk-35-1.pdf, id=344, 1011.78pt x 722.7pt>
-File: Assignment4_files/figure-latex/unnamed-chunk-35-1.pdf Graphic file (type pdf)
-<use Assignment4_files/figure-latex/unnamed-chunk-35-1.pdf>
-Package luatex.def Info: Assignment4_files/figure-latex/unnamed-chunk-35-1.pdf  used on input line 1446.
+[29]
+<Assignment4_files/figure-latex/unnamed-chunk-36-1.pdf, id=348, 1011.78pt x 722.7pt>
+File: Assignment4_files/figure-latex/unnamed-chunk-36-1.pdf Graphic file (type pdf)
+<use Assignment4_files/figure-latex/unnamed-chunk-36-1.pdf>
+Package luatex.def Info: Assignment4_files/figure-latex/unnamed-chunk-36-1.pdf  used on input line 1450.
 (luatex.def)             Requested size: 469.76266pt x 335.54475pt.
-[29] [30<./Assignment4_files/figure-latex/unnamed-chunk-35-1.pdf>] [31
-Missing character: There is no χ (U+03C7) in font [lmroman10-regular]:+tlig;!
+[30<./Assignment4_files/figure-latex/unnamed-chunk-36-1.pdf>] [31
 Missing character: There is no ∆ (U+2206) in font [lmroman10-regular]:+tlig;!
-Missing character: There is no χ (U+03C7) in font [lmroman10-regular]:+tlig;!
 ] [32] [33]
-<Assignment4_files/figure-latex/unnamed-chunk-40-1.pdf, id=383, 1011.78pt x 722.7pt>
-File: Assignment4_files/figure-latex/unnamed-chunk-40-1.pdf Graphic file (type pdf)
-<use Assignment4_files/figure-latex/unnamed-chunk-40-1.pdf>
-Package luatex.def Info: Assignment4_files/figure-latex/unnamed-chunk-40-1.pdf  used on input line 1675.
+<Assignment4_files/figure-latex/unnamed-chunk-41-1.pdf, id=382, 1011.78pt x 722.7pt>
+File: Assignment4_files/figure-latex/unnamed-chunk-41-1.pdf Graphic file (type pdf)
+<use Assignment4_files/figure-latex/unnamed-chunk-41-1.pdf>
+Package luatex.def Info: Assignment4_files/figure-latex/unnamed-chunk-41-1.pdf  used on input line 1641.
 (luatex.def)             Requested size: 469.76266pt x 335.54475pt.
-[34] [35<./Assignment4_files/figure-latex/unnamed-chunk-40-1.pdf>] [36
-Missing character: There is no χ (U+03C7) in font [lmroman10-regular]:+tlig;!
-] [37] [38
+[34<./Assignment4_files/figure-latex/unnamed-chunk-41-1.pdf>] [35
 Missing character: There is no ∆ (U+2206) in font [lmroman10-regular]:+tlig;!
-Missing character: There is no χ (U+03C7) in font [lmroman10-regular]:+tlig;!
-]
-<Assignment4_files/figure-latex/unnamed-chunk-45-1.pdf, id=420, 1011.78pt x 722.7pt>
-File: Assignment4_files/figure-latex/unnamed-chunk-45-1.pdf Graphic file (type pdf)
-<use Assignment4_files/figure-latex/unnamed-chunk-45-1.pdf>
-Package luatex.def Info: Assignment4_files/figure-latex/unnamed-chunk-45-1.pdf  used on input line 1906.
+] [36] [37]
+<Assignment4_files/figure-latex/unnamed-chunk-46-1.pdf, id=416, 1011.78pt x 722.7pt>
+File: Assignment4_files/figure-latex/unnamed-chunk-46-1.pdf Graphic file (type pdf)
+<use Assignment4_files/figure-latex/unnamed-chunk-46-1.pdf>
+Package luatex.def Info: Assignment4_files/figure-latex/unnamed-chunk-46-1.pdf  used on input line 1831.
 (luatex.def)             Requested size: 469.76266pt x 335.54475pt.
-[39] [40<./Assignment4_files/figure-latex/unnamed-chunk-45-1.pdf>] [41] [42
-Missing character: There is no χ (U+03C7) in font [lmroman10-regular]:+tlig;!
+[38<./Assignment4_files/figure-latex/unnamed-chunk-46-1.pdf>] [39
 Missing character: There is no ∆ (U+2206) in font [lmroman10-regular]:+tlig;!
-Missing character: There is no χ (U+03C7) in font [lmroman10-regular]:+tlig;!
-] [43]
-<Assignment4_files/figure-latex/unnamed-chunk-50-1.pdf, id=458, 1011.78pt x 722.7pt>
-File: Assignment4_files/figure-latex/unnamed-chunk-50-1.pdf Graphic file (type pdf)
-<use Assignment4_files/figure-latex/unnamed-chunk-50-1.pdf>
-Package luatex.def Info: Assignment4_files/figure-latex/unnamed-chunk-50-1.pdf  used on input line 2142.
+] [40] [41]
+<Assignment4_files/figure-latex/unnamed-chunk-51-1.pdf, id=450, 1011.78pt x 722.7pt>
+File: Assignment4_files/figure-latex/unnamed-chunk-51-1.pdf Graphic file (type pdf)
+<use Assignment4_files/figure-latex/unnamed-chunk-51-1.pdf>
+Package luatex.def Info: Assignment4_files/figure-latex/unnamed-chunk-51-1.pdf  used on input line 2023.
 (luatex.def)             Requested size: 469.76266pt x 335.54475pt.
-[44] [45<./Assignment4_files/figure-latex/unnamed-chunk-50-1.pdf>] [46
-Missing character: There is no χ (U+03C7) in font [lmroman10-regular]:+tlig;!
+[42] [43<./Assignment4_files/figure-latex/unnamed-chunk-51-1.pdf>] [44
 Missing character: There is no ∆ (U+2206) in font [lmroman10-regular]:+tlig;!
-Missing character: There is no χ (U+03C7) in font [lmroman10-regular]:+tlig;!
-] [47] [48] [49]
-<Assignment4_files/figure-latex/unnamed-chunk-55-1.pdf, id=502, 1011.78pt x 722.7pt>
-File: Assignment4_files/figure-latex/unnamed-chunk-55-1.pdf Graphic file (type pdf)
-<use Assignment4_files/figure-latex/unnamed-chunk-55-1.pdf>
-Package luatex.def Info: Assignment4_files/figure-latex/unnamed-chunk-55-1.pdf  used on input line 2422.
+] [45] [46
+Missing character: There is no ∆ (U+2206) in font [lmroman10-regular]:+tlig;!
+] [47]
+<Assignment4_files/figure-latex/unnamed-chunk-59-1.pdf, id=494, 1011.78pt x 722.7pt>
+File: Assignment4_files/figure-latex/unnamed-chunk-59-1.pdf Graphic file (type pdf)
+<use Assignment4_files/figure-latex/unnamed-chunk-59-1.pdf>
+Package luatex.def Info: Assignment4_files/figure-latex/unnamed-chunk-59-1.pdf  used on input line 2329.
 (luatex.def)             Requested size: 469.76266pt x 335.54475pt.
-[50] [51<./Assignment4_files/figure-latex/unnamed-chunk-55-1.pdf>] [52]
-<Assignment4_files/figure-latex/unnamed-chunk-57-1.pdf, id=521, 1011.78pt x 722.7pt>
-File: Assignment4_files/figure-latex/unnamed-chunk-57-1.pdf Graphic file (type pdf)
-<use Assignment4_files/figure-latex/unnamed-chunk-57-1.pdf>
-Package luatex.def Info: Assignment4_files/figure-latex/unnamed-chunk-57-1.pdf  used on input line 2553.
+[48] [49<./Assignment4_files/figure-latex/unnamed-chunk-59-1.pdf>]
+<Assignment4_files/figure-latex/unnamed-chunk-60-1.pdf, id=507, 1011.78pt x 722.7pt>
+File: Assignment4_files/figure-latex/unnamed-chunk-60-1.pdf Graphic file (type pdf)
+<use Assignment4_files/figure-latex/unnamed-chunk-60-1.pdf>
+Package luatex.def Info: Assignment4_files/figure-latex/unnamed-chunk-60-1.pdf  used on input line 2382.
 (luatex.def)             Requested size: 469.76266pt x 335.54475pt.
-[53] [54<./Assignment4_files/figure-latex/unnamed-chunk-57-1.pdf>] [55] (./Assignment4.aux)
+[50<./Assignment4_files/figure-latex/unnamed-chunk-60-1.pdf>] [51] (./Assignment4.aux)
 
 LaTeX Warning: There were multiply-defined labels.
 
 Package rerunfilecheck Info: File `Assignment4.out' has not changed.
-(rerunfilecheck)             Checksum: DF8A13B1FB178638142A472902422229;3332.
+(rerunfilecheck)             Checksum: 307EBB1CB6B74C63808A471D532ACAF4;3168.
 )
 
 Here is how much of LuaTeX's memory you used:
- 20628 strings out of 478294
- 125007,1977958 words of node,token memory allocated
+ 20622 strings out of 478294
+ 125005,1977958 words of node,token memory allocated
  552 words of node memory still in use:
    6 hlist, 2 vlist, 2 rule, 2 glue, 4 kern, 1 glyph, 7 attribute, 64 glue_spec, 7 attribute_list, 1 write, 1 user_defined nodes
-   avail lists: 2:3377,3:693,4:762,5:1324,6:97,7:10268,8:82,9:2754,10:16,11:356
- 39769 multiletter control sequences out of 65536+600000
+   avail lists: 2:3055,3:639,4:796,5:1292,6:93,7:9380,8:77,9:2691,10:15,11:360
+ 39767 multiletter control sequences out of 65536+600000
  69 fonts using 19851843 bytes
  86i,13n,121p,1285b,455s stack positions out of 10000i,1000n,20000p,200000b,200000s
-</Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm-math/latinmodern-math.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm-math/latinmodern-math.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmroman7-regular.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmmonolt10-boldoblique.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmmonolt10-bold.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmmono10-italic.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmmono10-regular.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmroman10-italic.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmroman10-regular.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmroman10-bold.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmroman12-bold.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmroman12-regular.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmroman17-regular.otf>
-Output written on Assignment4.pdf (55 pages, 3196553 bytes).
+</Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmroman7-regular.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmmonolt10-boldoblique.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmmonolt10-bold.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmmono10-italic.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmmono10-regular.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmroman10-italic.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmroman10-regular.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmroman10-bold.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmroman12-bold.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmroman12-regular.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmroman17-regular.otf>
+Output written on Assignment4.pdf (51 pages, 3186413 bytes).
 
-PDF statistics: 641 PDF objects out of 1000 (max. 8388607)
- 511 compressed objects within 6 object streams
- 200 named destinations out of 1000 (max. 131072)
- 137 words of extra memory for PDF output out of 10000 (max. 100000000)
+PDF statistics: 602 PDF objects out of 1000 (max. 8388607)
+ 483 compressed objects within 5 object streams
+ 196 named destinations out of 1000 (max. 131072)
+ 129 words of extra memory for PDF output out of 10000 (max. 100000000)
 
