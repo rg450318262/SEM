@@ -357,7 +357,7 @@ sem.parameter$`p-value` <- cell_spec(sem.parameter$`p-value`,
 
 #This is for the residual variance of dependence variable
 ##obtain estimates
-variance <- parameterEstimates(sem1, standardized=TRUE)  |>
+variance <- parameterEstimates(sem, standardized=TRUE)  |>
   filter(op == "~~") #select "is correlated with" rows
 ##subset needed rows (variance row)
 variance <- variance |>
@@ -900,7 +900,7 @@ sem.compare2.tab |>
         caption = "Comparison of new and preceding models",
         align = "r") |>
   kable_styling() |>
-  footnote(symbol = "Model1 + parameter 'F4→F11' set free to estimate")
+  footnote(symbol = "Model1 + structural path 'F4→F11' set free to estimate")
 ```
 
 
@@ -1033,8 +1033,8 @@ sem.compare3.tab |>
         caption = "Comparison of new and preceding models",
         align = "r") |>
   kable_styling() |>
-  footnote(symbol = c("Model1 +  parameter 'F4→F11' set free to estimate",
-                      "Model2 +  parameter 'F5→F12' set free to estimate")
+  footnote(symbol = c("Model1 + structural path 'F4→F11' set free to estimate",
+                      "Model2 + structural path 'F5→F12' set free to estimate")
            )
 ```
 
@@ -1164,9 +1164,9 @@ sem.compare4.tab |>
         caption = "Comparison of new  (model 4) and preceding models",
         align = "r") |>
   kable_styling() |>
-  footnote(symbol = c("Model1 +  parameter 'F4→F11' set free to estimate",
-                      "Model2 +  parameter 'F5→F12' set free to estimate",
-                      "Model3 +  parameter 'F2→F9' set free to estimate")
+  footnote(symbol = c("Model1 + structural path 'F4→F11' set free to estimate",
+                      "Model2 + structural path 'F5→F12' set free to estimate",
+                      "Model3 + structural path 'F2→F9' set free to estimate")
            )
 ```
 
@@ -1300,10 +1300,10 @@ sem.compare5.tab |>
         caption = "Comparison of new  (model 5) and preceding models",
         align = "r") |>
   kable_styling() |>
-  footnote(symbol = c("Model1 +  parameter 'F4→F11' set free to estimate",
-                      "Model2 +  parameter 'F5→F12' set free to estimate",
-                      "Model3 +  parameter 'F2→F9' set free to estimate",
-                      "Model5 +  parameter 'F8→F9' set free to estimate")
+  footnote(symbol = c("Model1 + structural path 'F4→F11' set free to estimate",
+                      "Model2 + structural path 'F5→F12' set free to estimate",
+                      "Model3 + structural path 'F2→F9' set free to estimate",
+                      "Model5 + structural path 'F8→F9' set free to estimate")
            )
 ```
 
@@ -1424,35 +1424,76 @@ sem.compare6.tab[1,4] <- "--"
 #add row names
 rownames(sem.compare6.tab) <- c("model1", "model2*",
                                 "Model3†", "Model4‡",
-                                "Model5§", "Model6")
+                                "Model5§", "Model6¶")
 
 #table aesthetics fine-tune and print table
 sem.compare6.tab |>
   kable(booktab =T,
         #format = "markdown",
         caption = "Comparison of new  (model 6) and preceding models",
-        align = "r") |>
+        align = "r",
+        linesep ="") |>
   kable_styling() |>
-  footnote(symbol = c("Model1 +  parameter 'F4→F11' set free to estimate",
-                      "Model2 +  parameter 'F5→F12' set free to estimate",
-                      "Model3 +  parameter 'F2→F9' set free to estimate",
-                      "Model5 +  parameter 'F8→F9' set free to estimate",
-                      "Model6 +  parameter 'F8→F10' set free to estimate")
+  footnote(symbol = c("Model1 + structural path 'F4→F11' set free to estimate",
+                      "Model2 + structural path 'F5→F12' set free to estimate",
+                      "Model3 + structural path 'F2→F9' set free to estimate",
+                      "Model5 + structural path 'F8→F9' set free to estimate",
+                      "Model6 + structural path 'F8→F10' set free to estimate")
            )
 ```
 
-### ### Examine the parameters of concern for model 6
+### Examine the parameters of concern for model 6
+
+```{r}
+concern.table(sem6, 19, "model6")
+```
 
 ### Comment on the result (model 6)
 
-### Model mis-specification
+The estimation of Model 6 yielded a MLM χ2(422) value of 1297.489 (scaling correction factor = 1.116), with the remaining fit indices as follows: CFI = 0.957, TLI = 0.949, RMSEA = 0.038, and SRMR = 0.039. As might be expected given the newly specified path involving Factor 10, the difference in fit between this model (Model 6) and its predecessor (Model 5) was found to be statistically significant (MLM∆χ2[1] = 23.358).
 
-
-
+An important finding here is that the alarming negative residual variance of Factor 10 finally disappeared. The estimated value for the newly specified path (F10 on F8) was statistically significant (Estimate = −0.884; Est/SE = −8.116). Furthermore, one of the previously determined non-significant paths loading from F4 onto F10 turned significant. Nonetheless, the regression path leading from F10 to F12, which has been consistently non-significant, remained so. In addition, however, the parameter, F8 on F7 (Peer Support → Self-Esteem), was found to be statistically non-significant.
 
 *Note:* Here, we will use the sem() function for the estimation, instead of the cfa() function, as we are now working with a full SEM (i.e., CFA + regression paths).
 
+### Model mis-specification
 
+```{r}
+#extract needed variables
+MI.model6 <- modindices(sem6,
+                  standardized = TRUE,
+                  sort. = TRUE,
+                  maximum.number = 50) |>
+  filter(op == "~")
+
+#adapt to publication style
+MI.model6 <- MI.model6 |>
+  mutate(Parameter = paste(rhs, "→", lhs)) |>
+  select(Parameter, MI = mi, EPC = epc, "std EPC" = sepc.all) |>
+  head(2) |>
+  mutate("Logics" = c("Sensible but not meaningfulfor the study",
+                      "Sensible but not meaningful for the study"))
+MI.model6
+#add footnote symbol to parameters
+  for (i in 1:nrow(MI.model5)){
+  symbol <- c("*", "†", "‡")
+  Parameter <- unlist(MI.model5$Parameter)
+  MI.model5$Parameter[i] <-  paste0(Parameter[i], symbol[i])
+  }
+
+#Visualize the table
+MI.model5 |>
+  kable(digits = 3,
+        booktab = T,
+        linesep = "",
+        caption = "Selected modification indices for initial model") |>
+  kable_styling(latex_options = "striped") |>
+  row_spec(1, color = "red") |>
+  footnote(general =
+             "Parameter highlighted in red is selected for modification",
+    symbol = c("Higher depersonalization causes lower esteem",
+             "Higher role conflict improves personal accomplishment"))
+```
 
 ## Exercise 4.2
 
