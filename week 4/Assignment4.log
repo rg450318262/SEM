@@ -1,4 +1,4 @@
-This is LuaHBTeX, Version 1.15.0 (TeX Live 2022)  (format=lualatex 2023.2.10)  11 FEB 2023 23:33
+This is LuaHBTeX, Version 1.15.0 (TeX Live 2022)  (format=lualatex 2023.2.10)  11 FEB 2023 23:40
  restricted system commands enabled.
 **Assignment4.tex
 (./Assignment4.tex
@@ -1059,10 +1059,10 @@ Here is how much of LuaTeX's memory you used:
    6 hlist, 2 vlist, 2 rule, 2 glue, 4 kern, 1 glyph, 7 attribute, 64 glue_spec, 7 attribute_list, 1 write, 1 user_defined nodes
    avail lists: 2:3055,3:639,4:796,5:1292,6:93,7:9380,8:77,9:2691,10:15,11:360
  39767 multiletter control sequences out of 65536+600000
- 69 fonts using 19851843 bytes
+ 69 fonts using 19852071 bytes
  86i,13n,121p,1285b,455s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmroman7-regular.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmmonolt10-boldoblique.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmmonolt10-bold.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmmono10-italic.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmmono10-regular.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmroman10-italic.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmroman10-regular.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmroman10-bold.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmroman12-bold.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmroman12-regular.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmroman17-regular.otf>
-Output written on Assignment4.pdf (51 pages, 3186413 bytes).
+Output written on Assignment4.pdf (51 pages, 3186416 bytes).
 
 PDF statistics: 602 PDF objects out of 1000 (max. 8388607)
  483 compressed objects within 5 object streams

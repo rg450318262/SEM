@@ -1639,7 +1639,7 @@ There are some visual effects I want to realize using Semplot that I finally fai
 
 Calculating degrees of freedom is very chanlleging. I understand every bit of it when the process is shown to me. However, when I need to calculate without any external aide, I always forgot this or that. 
 
-I found SEM is beautiful blending of statistics and mindful sense-making. Indeed, they always go together. Yet, not often so well balanced as they are in SEM, for the scope of statistics I am familiar with. 
+I found SEM is a beautiful blending of statistics and mindful sense-making. Indeed, they always go together. Yet, not often so well balanced as they are in SEM, for the scope of statistics I am familiar with. 
 
 
 
