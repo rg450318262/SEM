@@ -8,16 +8,26 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = F, message = F, cache = F)
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F, cache = T)
 ```
 
-# SEM & teacher burnout
+# Task description
 
 ## Exercise 4.1
 
 Draw the graph of the initial, full structural equation model. Make sure that you have included all the specified paths.
 
 Estimate the initial model using the robust MLM estimator *(robust variant of the ML estimator, to be precise!)* and present a brief summary of the model fit.
+
+## Exercise 4.2
+
+Proceed **step by step** following the guidelines given in the lecture material, i.e., implement the modifications **one at a time**, testing and studying each step. See (and report) how the fit improves and which parameters are suggested to be modified. Please be careful! There will (always) be a lot of suggestions... Do not list all the MIs (only a few of them are useful!), try to keep your report as concise as possible.
+
+## Exercise 4.3
+
+Draw the graph of the final model and present its fit indices and the essential, standardized parameter estimates. **Pay attention to the factor correlations.**
+
+Compare the initial and final graphs and make sure that you understand the whole modelling process and the final conclusions.
 
 # Preparation
 
@@ -32,7 +42,6 @@ library(here)
 
 #This week's file name
 latest.name <- "ALLSEC.CSV"
-
 #read in the data
 mbi <- read_csv(file.path(here(),
                 'data',
@@ -91,7 +100,6 @@ sem.tab.a <- cfa.measure %>%
   row_spec(0, background = "#9999CC")
  cfa.tab.a
 }
-
 #goodness of fit indicators for mlm
 sem.summary.mlm.a <- function(fit, fa.num, item.num, estimator,title){
   options(scipen = 999)
@@ -119,7 +127,6 @@ cfa.tab.a <- cfa.measure %>%
   row_spec(0, background = "#9999CC")
  cfa.tab.a
 }
-
 #factor loading
 sem.summary.b <- function(fit, fa.num, item.num, estimator){
   options(scipen = 999)
@@ -141,14 +148,13 @@ sem.summary.b <- function(fit, fa.num, item.num, estimator){
   row_spec(0, background = "#9999CC") # color the first row
   cfa.tab.b
   }
-
 #Variance
 sem.summary.c <- function(fit, fa.num, item.num, estimator){
   options(scipen = 999)
   #Variance
   type <- rep(c("Residual variance", "Total variance"),
             time = c(item.num, fa.num)) #create a new row clarifying types of variance
-
+  
 variance <- parameterEstimates(fit, standardized=TRUE) %>% #obtain estimates
   filter(op == "~~") #select "is correlated with" rows
 variance <- variance[1:sum(item.num,fa.num),] #subset 1:18 rows (variance row)
@@ -168,7 +174,6 @@ cfa.tab.c <- variance %>%select(Type = type, #select and rename variables
   row_spec(0, background = "#9999CC") # color the variable row
   cfa.tab.c
 }
-
 #Covariance
 sem.summary.d <- function(fit, fa.num, item.num, estimator){
   options(scipen = 999)
@@ -196,7 +201,6 @@ cfa.tab.d <- variance %>%select(Type=type,
   row_spec(0, background = "#9999CC")
   cfa.tab.d
 }
-
 ```
 
 ### to generate functions for improving aethetics of correlation matrix
@@ -215,7 +219,6 @@ my.fun.density <- function(data, mapping, ...) { #notes are roughly same with ab
              panel.background = element_rect(fill = "#9999CC",
                                              color = "black"))
 }
-
 #define a function that allows me to fine-tune the matrix
 my.fun.smooth <- function(data,    #my function needs 3 arguments
                           mapping,
@@ -232,7 +235,6 @@ my.fun.smooth <- function(data,    #my function needs 3 arguments
                  panel.background = element_rect(fill = "#F0E442", #adjust background
                                                  color = "black"))
 }
-
 ```
 
 ### to generate a function for histogram overlapping with density plot
@@ -260,7 +262,6 @@ corr.density <- function(data, fig.num = 1){
                                   hjust = 0.5))+ #adjust the title
   labs(title = paste("Figure", fig.num," Distribution of selected items")) #title it
   }
-
 ```
 
 ### to generate a function for violin overlapping with box plot
@@ -326,7 +327,6 @@ inspect.table %>%
 ```{r}
 #write a function for minus calculation
 minus <- function(x,y) {x - y}
-
 #write a function to print a table with concerned parameters
 concern.table <- function(sem, nofpath, model){
 options(scipen = 999)
@@ -366,7 +366,6 @@ variance <- variance |>
 #variance[minus(sum(32,nofpath), 5-1):sum(32,nofpath),] #32 is the n of indicators;
                                              #12 is the number of factors;
                                              #5 is the new of row I plan to show
-
 ##select&rename columns
 sem.tab.variance <- variance |> select(
                    Parameter=rhs, #right hand side column
@@ -388,7 +387,6 @@ sem.tab.variance$`B` <- cell_spec(sem.tab.variance$`B`,
                                        "red",
                                        "black")
                                      )
-
 #bind the two table
 concern.table <- rbind(sem.parameter, sem.tab.variance)
 concern.table[1:nofpath, 2] <-
@@ -400,8 +398,6 @@ concern.table[sum(nofpath, 1):sum(nofpath, 5),6] <-
       ),
     3)
     )
-
-
 #further aesthetics
 concern.table |>
   select("Parameter*" = Parameter,
@@ -458,7 +454,6 @@ chi.diff <- function(sem1, sem2){ #2 augments input: the 1st is the nested model
 ### To generate a function for ploting full sem diagram
 
 ```{r, fig.height =  10, fig.width = 14, cache=T}
-#plot the diagram
 full.sem.diagram <- function(model, nofpath, fig.num, quotedmodel){
 semPaths(semPlotModel(model),
              style = "lisrel",
@@ -491,20 +486,16 @@ title(main = list(paste("Figure",
 title(sub =
         "Notes: Orange arrow is the regression path set free to estimate in the current model",
       line = 0, adj = 0.7)
-
 }
 ```
 
 ### To generate model comparison tables.
 
 ```{r}
-###function start here
-
 model.comparison.table <- function(sem, mycaption, newpathstext){
   sem.compare <- matrix(NA, ncol =8, nrow = length(sem))
   
   for (i in 1:length(sem)){
-    
     sem.compare[i,] <- fitMeasures(eval(parse(text=sem[i])),#obtain specified measured.
                             c("chisq.scaled",
                               "df.scaled",
@@ -516,7 +507,6 @@ model.comparison.table <- function(sem, mycaption, newpathstext){
                               "chisq.scaling.factor")) |>
   round(3)
 }
-
   colnames(sem.compare) <- c("chisq.scaled",
                               "df.scaled",
                               "pvalue.scaled",
@@ -535,10 +525,7 @@ model.comparison.table <- function(sem, mycaption, newpathstext){
                                                eval(parse(text=sem[j])
                                                     )
                                                )
-                                               
       }
-   
-
 #turn named vector to data frame
 sem.compare<- sem.compare |> 
   select("Chi-square" = chisq.scaled, "DF"=df.scaled,
@@ -555,9 +542,7 @@ sem.compare[1,4] <- "--"
       rownames(sem.compare)[x] <- paste0("Model", symbols[x]) 
       
     }
-
 #table aesthetics fine-tune and print table
-    
 sem.compare |>
   kable(booktab =T,
         #format = "markdown",
@@ -1001,7 +986,7 @@ MI.model2 |>
   kable(digits = 3,
         booktab = T,
         linesep = "",
-        caption = "Selected modification indices for initial model") |>
+        caption = "Selected modification indices for model 2") |>
   kable_styling(latex_options = "striped") |>
   row_spec(2, color = "red") |>
   footnote(general =
@@ -1091,7 +1076,7 @@ MI.model3 |>
   kable(digits = 3,
         booktab = T,
         linesep = "",
-        caption = "Selected modification indices for initial model") |>
+        caption = "Selected modification indices for model 3") |>
   kable_styling(latex_options = "striped") |>
   row_spec(2, color = "red") |>
   footnote(general =
@@ -1184,7 +1169,7 @@ MI.model4 |>
   kable(digits = 3,
         booktab = T,
         linesep = "",
-        caption = "Selected modification indices for initial model") |>
+        caption = "Selected modification indices for model 4") |>
   kable_styling(latex_options = "striped") |>
   row_spec(1, color = "red") |>
   footnote(general =
@@ -1277,7 +1262,7 @@ MI.model5 |>
   kable(digits = 3,
         booktab = T,
         linesep = "",
-        caption = "Selected modification indices for initial model") |>
+        caption = "Selected modification indices for model 5") |>
   kable_styling(latex_options = "striped") |>
   row_spec(1, color = "red") |>
   footnote(general =
@@ -1362,7 +1347,7 @@ MI.model6 |>
   kable(digits = 3,
         booktab = T,
         linesep = "",
-        caption = "Selected modification indices for initial model") |>
+        caption = "Selected modification indices for model 6") |>
   kable_styling(latex_options = "striped") |>
   row_spec(3, color = "red") |>
   footnote(general =
@@ -1502,11 +1487,6 @@ model.comparison.table (sem,
                         newpathstext = newpathstext)
 ```
 
-### Visualize the final model
-
-For the sake of plotting, I deleted the F7 with two of its indicators from the model (which I shouldn't, since they still have a position in the measurement model, but I haven't found a better way to hide a node using semplot). However, this is only for demonstrating the structure of final model. It won't cause any misunderstanding, I think.
-
-Figure 12 displays the final model, which highlights in orange all the regression paths added in addition to the initial model.
 
 ```{r}
 #broom cells 
@@ -1546,8 +1526,15 @@ sem.plot <- sem(model.plot, data = mbi, estimator = "MLM", mimic = "Mplus")
 
 ```
 
-```{r, fig.width=14, fig.height=10}
-semPaths(semPlotModel(model.plot),
+### Visualize the final model
+
+For the sake of plotting, I deleted the F7 with two of its indicators from the model (which I shouldn't, since they still have a position in the measurement model, but I haven't found a better way to hide a node using semplot). However, this is only for demonstrating the structure of final model. It won't cause any misunderstanding, I think.
+
+Figure 12 displays the final model, which highlights in orange all the regression paths added in addition to the initial model. Figure 5(the initial model) is plotted again under figure 12 to make comparison easy. We can see in comparison to initial model, the final model incorporates 5 more structural regression paths, and deleted one factor (with its two indicators) and two structural regression paths(F8 on F7 and F12 on F10). Among the 5 additional paths, two leads from TSS sub-scales into BMI sub-scales (F12-personal accomplishment on F2-role conflict; F12 on F5-decision making); one from self-esteem scale (uni-dimension) to BMI sub-scale (F10, emotional exhaustion); one from TSS sub-scale (F2, role conflict) to external locus of control scale (uni-dimension); and one from self-efficacy scale to external locus of control scale. The deleted factor (Peer support) belong to TSS scale. One deleted regression path leads from peer support to self-esteem scale; the other deleted path leads from one MBI sub-scale (F12-personal accomplishment) to another (F10 emotional exhaustion). 
+
+```{r, fig.width=12, fig.height=16}
+par(mfrow=c(2,1))
+a <- semPaths(semPlotModel(model.plot),
              style = "lisrel",
              rotation = 2,
              sizeLat = 6,
@@ -1557,8 +1544,8 @@ semPaths(semPlotModel(model.plot),
              residScale = 4,
              shapeMan = "rectangle",
              edge.color = c(rep("black",32),
-                            rep("blue",14),
-                            rep("orange",4),
+                            rep("blue",13),
+                            rep("orange",5),
                             rep("gray",32),
                             rep("red",5)),
          residuals = T,
@@ -1572,10 +1559,39 @@ title(main = list("Figure 12. Final model of teacher burnout",
 title(sub = "Notes: Red arrow indicates factor residuals; gray arrow indicates error residuals;
       black arrow indicates factor loading; blue arrow indicates originally hypothesized 
       regression path; orange arrow indicates regression paths added over pos hoc analysis",
+     line = 1, adj = 0.7)
+
+m[53,9] <-"F7PSUP"
+m[59, 6] <- "PSUP1"
+m[59, 13] <- "PSUP2"
+
+semPaths(semPlotModel(initial_model),
+             style = "lisrel",
+             rotation = 2,
+             sizeLat = 6,
+             sizeLat2 = 5,
+             sizeMan = 5,
+             sizeMan2 = 2,
+             residScale = 4,
+             shapeMan = "rectangle",
+             edge.color = c(rep("black",34),
+                            rep("blue",14),
+                            rep("gray",32),
+                            rep("red",5)),
+         residuals = T,
+         layout = m,
+         nCharNodes=0,
+         optimizeLatRes = T,
+         exoVar = F)
+title(main = list("Figure 5. Hypothesized (Initial) model of teacher burnout",
+                  cex = 1.5, font =1),
+     outer = F, line = -1)
+title(sub = "Notes: Red arrow indicates factor residuals; gray arrow indicates error residuals;
+     blue arrow indicates regression path; black arrow indicates factor loading",
      line = 0, adj = 0.7)
 ```
 
-Figure 13 displays the theoretical structure of the final model, showing how the psychological determinants influencing teacher's burnout.
+
 
 ```{r, fig.width=14, fig.height=10}
 
@@ -1583,6 +1599,10 @@ grps <- list(c("F10EE","F11DP","F12PA"),
              c("F1ROLA","F2ROLC","F3WORK","F4CLIM","F5DEC","F6SSUP","F8SELF","F9ELC"))
 a <- "Figure 13. Summary of final model structural paths representing determinants 
       of burnout for teachers"
+#broom cells 
+m[53,9] <- NA
+m[59,6] <- NA
+m[59,13] <- NA
 m[40,12] <-NA
 m[53,9] <-"F6SSUP"
 semPaths(sem8,
@@ -1612,20 +1632,22 @@ semPaths(sem8,
          posCol = c("red","red"),
          negCol = c("steelblue","steelblue"),
          fade = F,
-         edge.label.cex = 0.01,
+         edge.label.cex = 0.7,
          group =grps,
          color = c("lightblue", "white")
 )
 title(main = list(a,
                   cex = 1.5, font =1),
-     outer = F)
+     outer = F, line =-1)
 title(sub = "Notes: Nodes in light blue are outcome of interest;
              Red edge indicates positive influence; blue edges indicate negative influence;
              The thickness of the line indicates strength of influence",
      line = 0, adj = 0.7)
-
-
 ```
+
+The theoretical structure of the final model is shown in figure 13, describing how the psychological determinants influencing teacher's burnout. Standardized parameter estimates are shown on the edges. We can see high workload is one important risk factor to emotional exhaustion, while people with high self-esteem are less likely to develop emotional exhaustion. And within the structure of burnout, the mechanism reflected by the study is--under external influence, teachers start to experience emotional exhaustion. Accumulated, they will feel depersonalized, which further decreases their perception of personal accomplishment. Some other risk and protective factors to burnout can be easily found via this diagram.
+
+However, with the aide of this picture, I saw some anomalies that I missed in the preceding procedures (Actually, I found it after I have submitted the first verison of my homework). My final model shows that Role Conflict(F2), even as a negative perception, alleviates Emotional Exhaustion (F10) and facilitates Personal Accomplishment (F12) at the same time. This is so counter-intuitive. By exmanining slides and Byrne's book, I found these strange effects were also present in their final model (even though my final model and theirs are different). If I had to justify it, it would be that people who are young and just enter a job are more subject to role conflict issues and, concomitantly, they are also the group of people who are energetic (so somewhat immune to exhaustion) and poised to struggle for accomplishment. Yet, if I could continue with this analysis, I would try going through more models to see if these anomalies disappear or simply delete role conflict from the model. *This raises the old question again that when should we stop modifying the model, and also raises a new question that to which extent we should decide base on intuition, (unproven) theory or sense-making, the  counter-proof of which are not rare in science (this might be why we follow evidence-based medicine, instead of theory-based medicine)*. As such, I decided to stop with going over more post-hoc studies and, instead, try to do some more exploration. 
 
 # Summary
 
@@ -1643,9 +1665,658 @@ I found SEM is a beautiful blending of statistics and mindful sense-making. Inde
 
 
 
+```{r}
+model <- '
+# Factors:
+ F1ROLA =~ ROLEA1 + ROLEA2 + DEC2
+ F2ROLC =~ ROLEC1 + ROLEC2
+ F3WORK =~ WORK1 + WORK2
+ F4CLIM =~ CCLIM1 + CCLIM2 + CCLIM3 + CCLIM4
+ F5DEC =~ DEC1 + DEC2
+ F6SSUP =~ SSUP1 + SSUP2 + DEC2
+ F7PSUP =~ PSUP1 + PSUP2
+ F8SELF =~ SELF1 + SELF2 + SELF3
+ F9ELC =~ ELC1 + ELC2 + ELC3 + ELC4 + ELC5
+ F10EE =~ EE1 + EE2 + EE3
+ F11DP =~ DP1 + DP2
+ F12PA =~ PA1 + PA2 + PA3
+# Regressions:
+ F8SELF ~ F5DEC + F6SSUP + F7PSUP
+ F9ELC ~ F5DEC
+ F10EE ~ F2ROLC + F3WORK + F4CLIM
+ F11DP ~ F2ROLC + F10EE
+ F12PA ~ F1ROLA + F8SELF + F9ELC + F10EE + F11DP
+'
+```
+
+
+
+
+##########
+########
+#######
+
+
+
+```{r}
+initial_model <- '
+# Factors:
+ F1ROLA =~ ROLEA1 + ROLEA2 + DEC2
+ F2ROLC =~ ROLEC1 + ROLEC2
+ F3WORK =~ WORK1 + WORK2
+ F4CLIM =~ CCLIM1 + CCLIM2 + CCLIM3 + CCLIM4
+ F5DEC =~ DEC1 + DEC2
+ F6SSUP =~ SSUP1 + SSUP2 + DEC2
+ F7PSUP =~ PSUP1 + PSUP2
+ F8SELF =~ SELF1 + SELF2 + SELF3
+ F9ELC =~ ELC1 + ELC2 + ELC3 + ELC4 + ELC5
+ F10EE =~ EE1 + EE2 + EE3
+ F11DP =~ DP1 + DP2
+ F12PA =~ PA1 + PA2 + PA3
+# Regressions:
+ F8SELF ~ F5DEC + F6SSUP + F7PSUP
+ F9ELC ~ F5DEC
+ F10EE ~ F2ROLC + F3WORK + F4CLIM
+ F11DP ~ F2ROLC + F10EE
+ F12PA ~ F1ROLA + F8SELF + F9ELC + F10EE + F11DP
+'
+#function starts here
+logic <- c(-1,-1,-1,1,1,1,1,1,1,-1,-1,1)
+names(logic) <- c("F1ROLA","F2ROLC","F3WORK","F4CLIM",
+                  "F5DEC","F6SSUP","F7PSUP","F8SELF",
+                  "F9ELC","F10EE","F11DP","F12PA")
+
+model.table <- matrix(NA, ncol = 15, nrow = 1) |> as.data.frame()
+
+colnames(model.table)<- c("chi.square", "df", "cfi", "tli", "rmsea", "srmr", "csf",#1-7
+                     "mi.largest", #8 old model
+                     "n.anomaly", #9 old model
+                     "new.para.sig",#10 next model
+                     "chi.diff",#11
+                     "free.parameter",#12
+                     "modification.n",#13
+                     "train/test",#14
+                     "random.n")#15
+
+
+
+
+for (m in 1:60){
+  table <- matrix(NA, ncol = 15, nrow = 40) |> as.data.frame()
+  colnames(table) <- c("chi.square", "df", "cfi", "tli", "rmsea", "srmr", "csf",#1-7
+                     "mi.largest", #8 old model
+                     "n.anomaly", #9 old model
+                     "new.para.sig",#10 next model
+                     "chi.diff",#11
+                     "free.parameter",#12
+                     "modification.n",#13
+                     "train/test",#14
+                     "random.n")#15
+  table[1:40, 14] <- rep(c("train", "test"), 20)
+  set.seed(m)
+  nr <-  nrow(mbi)
+  #separate train and test data sets
+  ind <- sample(1:nr, size = nr*0.5)
+  train <- mbi[ind,]
+  test <- mbi[-ind,]
+  model <- initial_model
+  n_of_mod <- seq(1,by=2, len=20)
+  
+for (a in n_of_mod){
+  tryCatch({
+  table[a, 13] <- (a+1)/2
+  table[a+1,13] <- (a+1)/2
+  #estimate
+  model.train <- sem(model, data = train, estimator = "MLM", mimic = "Mplus")
+  model.test <- sem(model, data = test, estimator = "MLM", mimic = "Mplus")
+  #pass fit indices of train set to table
+  fit.train <- fitMeasures(model.train, c("chisq.scaled","df.scaled","cfi.scaled","tli.scaled",
+                              "rmsea.scaled","srmr_bentler","chisq.scaling.factor"))
+  table[a,1:7] <- fit.train
+  #pass fit indices of test set to table
+  fit.test <- fitMeasures(model.test, c("chisq.scaled","df.scaled","cfi.scaled","tli.scaled",
+                              "rmsea.scaled","srmr_bentler","chisq.scaling.factor"))
+  table[a+1,1:7] <- fit.test
+  
+  #parameter estimates (for alarming parameters)
+  #pass proportion of p>0.05 parameters into table, column 10
+  concern.train<- parameterEstimates(model.train, standardized=TRUE) |>  
+    filter(op == "~") |>
+    select(pvalue)
+  concern.test<- parameterEstimates(model.test, standardized=TRUE) |>  
+    filter(op == "~") |>
+    select(pvalue)
+  table[a,9] <- length(concern.train$pvalue[concern.train$pvalue>0.05])/length(concern.train$pvalue)
+  table[a+1,9] <- length(concern.test$pvalue[concern.test$pvalue>0.05])/length(concern.test$pvalue)
+  #modification indices
+  mi.train <- modindices(model.train,standardized = TRUE, sort. = TRUE)
+  mi.train <- mi.train |> filter(op == "~") |>  
+    filter (!rhs %in% c("F8SELF","F9ELC","F10EE","F11DP","F12PA"))  
+  #extract the best parameter to set free
+  free.parameter <- mi.train |> select(lhs, op, rhs)
+  free.parameter <- free.parameter[1,] |> unlist() |> unname() |> paste(collapse = "")
+  table[a,12] <- free.parameter
+  table[a+1,12] <- free.parameter
+  table[a,8] <- mi.train[1,4]
+  
+  ##########
+
+  #next model
+  model <- paste(model, "\n",free.parameter)
+  #estimate
+  model.train2 <- sem(model, data = train, estimator = "MLM", mimic = "Mplus")
+  model.test2 <- sem(model, data = test, estimator = "MLM", mimic = "Mplus") 
+  #chi.diff
+  table[a, 11] <- chi.diff(model.train, model.train2)
+  table[a+1, 11] <- chi.diff(model.test, model.test2)
+  #if sig.
+  sig.new.para.train<- parameterEstimates(model.train2, standardized=TRUE) |>  
+    filter(op == "~") |>
+    tail(1) |> 
+    select(pvalue)
+  sig.new.para.test<- parameterEstimates(model.test2, standardized=TRUE) |>  
+    filter(op == "~") |>
+    tail(1) |> 
+    select(pvalue)
+  #pass if new parameter is sig to table 
+  table[a,10] <- sig.new.para.train[1,1]<0.05#train
+  table[a+1,10] <- sig.new.para.test[1,1]<0.05#test
+  }, error = function(e){})
+  
+} 
+  table[1:40,15] <- m
+  model.table <- rbind(model.table, table)
+}
+library(DT) 
+model.table |> datatable()
+```
+
+With judicious selection
+
+```{r}
+initial_model <- '
+# Factors:
+ F1ROLA =~ ROLEA1 + ROLEA2 + DEC2
+ F2ROLC =~ ROLEC1 + ROLEC2
+ F3WORK =~ WORK1 + WORK2
+ F4CLIM =~ CCLIM1 + CCLIM2 + CCLIM3 + CCLIM4
+ F5DEC =~ DEC1 + DEC2
+ F6SSUP =~ SSUP1 + SSUP2 + DEC2
+ F7PSUP =~ PSUP1 + PSUP2
+ F8SELF =~ SELF1 + SELF2 + SELF3
+ F9ELC =~ ELC1 + ELC2 + ELC3 + ELC4 + ELC5
+ F10EE =~ EE1 + EE2 + EE3
+ F11DP =~ DP1 + DP2
+ F12PA =~ PA1 + PA2 + PA3
+# Regressions:
+ F8SELF ~ F5DEC + F6SSUP + F7PSUP
+ F9ELC ~ F5DEC
+ F10EE ~ F2ROLC + F3WORK + F4CLIM
+ F11DP ~ F2ROLC + F10EE
+ F12PA ~ F1ROLA + F8SELF + F9ELC + F10EE + F11DP
+'
+#function starts here
+logic <- c(-1,-1,-1,1,1,1,1,1,1,-1,-1,1)
+names(logic) <- c("F1ROLA","F2ROLC","F3WORK","F4CLIM",
+                  "F5DEC","F6SSUP","F7PSUP","F8SELF",
+                  "F9ELC","F10EE","F11DP","F12PA")
+
+model.table <- matrix(NA, ncol = 15, nrow = 1) |> as.data.frame()
+
+colnames(model.table)<- c("chi.square", "df", "cfi", "tli", "rmsea", "srmr", "csf",#1-7
+                     "mi.largest", #8 old model
+                     "n.anomaly", #9 old model
+                     "new.para.sig",#10 next model
+                     "chi.diff",#11
+                     "free.parameter",#12
+                     "modification.n",#13
+                     "train/test",#14
+                     "random.n")#15
+
+
+
+
+for (m in 1:60){
+  table <- matrix(NA, ncol = 15, nrow = 40) |> as.data.frame()
+  colnames(table) <- c("chi.square", "df", "cfi", "tli", "rmsea", "srmr", "csf",#1-7
+                     "mi.largest", #8 old model
+                     "n.anomaly", #9 old model
+                     "new.para.sig",#10 next model
+                     "chi.diff",#11
+                     "free.parameter",#12
+                     "modification.n",#13
+                     "train/test",#14
+                     "random.n")#15
+  table[1:40, 14] <- rep(c("train", "test"), 20)
+  set.seed(m)
+  nr <-  nrow(mbi)
+  #separate train and test data sets
+  ind <- sample(1:nr, size = nr*0.5)
+  train <- mbi[ind,]
+  test <- mbi[-ind,]
+  model <- initial_model
+  n_of_mod <- seq(1,by=2, len=20)
+  
+for (a in n_of_mod){
+  tryCatch({
+  table[a, 13] <- (a+1)/2
+  table[a+1,13] <- (a+1)/2
+  #estimate
+  model.train <- sem(model, data = train, estimator = "MLM", mimic = "Mplus")
+  model.test <- sem(model, data = test, estimator = "MLM", mimic = "Mplus")
+  #pass fit indices of train set to table
+  fit.train <- fitMeasures(model.train, c("chisq.scaled","df.scaled","cfi.scaled","tli.scaled",
+                              "rmsea.scaled","srmr_bentler","chisq.scaling.factor"))
+  table[a,1:7] <- fit.train
+  #pass fit indices of test set to table
+  fit.test <- fitMeasures(model.test, c("chisq.scaled","df.scaled","cfi.scaled","tli.scaled",
+                              "rmsea.scaled","srmr_bentler","chisq.scaling.factor"))
+  table[a+1,1:7] <- fit.test
+  
+  #parameter estimates (for alarming parameters)
+  #pass proportion of p>0.05 parameters into table, column 10
+  concern.train<- parameterEstimates(model.train, standardized=TRUE) |>  
+    filter(op == "~") |>
+    select(pvalue)
+  concern.test<- parameterEstimates(model.test, standardized=TRUE) |>  
+    filter(op == "~") |>
+    select(pvalue)
+  table[a,9] <- length(concern.train$pvalue[concern.train$pvalue>0.05])/length(concern.train$pvalue)
+  table[a+1,9] <- length(concern.test$pvalue[concern.test$pvalue>0.05])/length(concern.test$pvalue)
+  #modification indices
+  mi.train <- modindices(model.train,standardized = TRUE, sort. = TRUE)
+  mi.train <- mi.train |> filter(op == "~") |>  
+    filter (!rhs %in% c("F8SELF","F9ELC","F10EE","F11DP","F12PA"))  
+  #extract the best parameter to set free
+  #####free.parameter <- mi.train |> select(lhs, op, rhs)
+  #####free.parameter <- free.parameter[1,] |> unlist() |> unname() |> paste(collapse = "")
+  free.parameter <- find.path(mi.train)
+  table[a,12] <- free.parameter
+  table[a+1,12] <- free.parameter
+  table[a,8] <- mi.train[1,4]
+  
+  ##########
+
+  #next model
+  model <- paste(model, "\n",free.parameter)
+  #estimate
+  model.train2 <- sem(model, data = train, estimator = "MLM", mimic = "Mplus")
+  model.test2 <- sem(model, data = test, estimator = "MLM", mimic = "Mplus") 
+  #chi.diff
+  table[a, 11] <- chi.diff(model.train, model.train2)
+  table[a+1, 11] <- chi.diff(model.test, model.test2)
+  #if sig.
+  sig.new.para.train<- parameterEstimates(model.train2, standardized=TRUE) |>  
+    filter(op == "~") |>
+    tail(1) |> 
+    select(pvalue)
+  sig.new.para.test<- parameterEstimates(model.test2, standardized=TRUE) |>  
+    filter(op == "~") |>
+    tail(1) |> 
+    select(pvalue)
+  #pass if new parameter is sig to table 
+  table[a,10] <- sig.new.para.train[1,1]<0.05#train
+  table[a+1,10] <- sig.new.para.test[1,1]<0.05#test
+  }, error = function(e){})
+  
+} 
+  table[1:40,15] <- m
+  model.table <- rbind(model.table, table)
+}
+library(DT) 
+model.table |> datatable()
+```
+
+```{r}
+saveRDS(model.table, file = "modeltable20.rds")
+a <- readRDS(file = "modeltable.rds")
+```
+
+```{r}
+
+```
+
+
+
+
+```{r}
+a <- model.table |> 
+  group_by(modification.n, `train/test`) |> 
+  summarise(mean.chi.square = mean(chi.square, na.rm = T), 
+            sd.chi.square = sd(chi.square, na.rm = T),
+            mean.chi.square.diff =mean(chi.diff, na.rm = T),
+            sd.chi.square.diff = sd(chi.diff, na.rm = T),
+            n.chi.square=length(!is.na(chi.square)),
+            n.chi.square.diff=length(!is.na(chi.diff)),
+            mean.anomaly =mean(n.anomaly, na.rm = T),
+            sd.anomaly = sd(n.anomaly, na.rm = T),
+            n.anomaly=length(!is.na(n.anomaly)),
+            mean.cfi =  mean(cfi, na.rm = T),
+            sd.cfi = sd(cfi, na.rm = T),
+            n.cfi = length (!is.na(cfi)),
+            mean.tli =  mean(tli, na.rm = T),
+            sd.tli = sd(tli, na.rm = T),
+            n.tli = length (!is.na(tli)),
+            mean.rmsea = mean(rmsea, na.rm = T),
+            sd.rmsea = sd(rmsea, na.rm = T),
+            n.rmsea = length(!is.na(rmsea))
+            )
+```            
+
+```{r}
+a |>   na.omit() |> 
+  select(everything(), train = 'train/test') |> 
+  ggplot(aes(x = factor(modification.n), 
+             y = mean.chi.square.diff,  
+             color = train, group = train)) +
+    geom_line()+
+  geom_point()+
+  geom_ribbon(aes(ymin = 
+                    mean.chi.square.diff-1.96*sd.chi.square.diff/sqrt(n.chi.square.diff), 
+                  ymax = 
+                    mean.chi.square.diff+1.96*sd.chi.square.diff/sqrt(n.chi.square.diff),  
+                  fill = train), alpha =0.25,
+                position = position_dodge(0.05))
+
+
+```
+
+```{r}
+a |>   na.omit() |> 
+  select(everything(), train = 'train/test') |> 
+  ggplot(aes(x = factor(modification.n), 
+             y = mean.chi.square,  
+             color = train, group = train)) +
+    geom_line()+
+  geom_point()+
+  geom_ribbon(aes(ymin = 
+                    mean.chi.square-1.96*sd.chi.square/sqrt(n.chi.square), 
+                  ymax = 
+                    mean.chi.square+1.96*sd.chi.square/sqrt(n.chi.square),  
+                  fill = train), alpha =0.25,
+                position = position_dodge(0.05))
+```
+
+```{r}
+a |>   na.omit() |> 
+  select(everything(), train = 'train/test') |> 
+  ggplot(aes(x = factor(modification.n), 
+             y = mean.anomaly,  
+             color = train, group = train)) +
+    geom_line()+
+  geom_point()+
+  geom_ribbon(aes(ymin = 
+                    mean.anomaly-1.96*sd.anomaly/sqrt(n.anomaly), 
+                  ymax = 
+                    mean.anomaly+1.96*sd.anomaly/sqrt(n.anomaly),  
+                  fill = train), alpha =0.25,
+                position = position_dodge(0.05))
+```
+
+```{r}
+a |>   na.omit() |> 
+  select(everything(), train = 'train/test') |> 
+  ggplot(aes(x = factor(modification.n), 
+             y = mean.cfi,  
+             color = train, group = train)) +
+    geom_line()+
+  geom_point()+
+  geom_ribbon(aes(ymin = 
+                    mean.cfi-1.96*sd.cfi/sqrt(n.cfi), 
+                  ymax = 
+                    mean.cfi+1.96*sd.cfi/sqrt(n.cfi),  
+                  fill = train), alpha =0.25,
+                position = position_dodge(0.05))
+```
+
+```{r}
+a |>   na.omit() |> 
+  select(everything(), train = 'train/test') |> 
+  ggplot(aes(x = factor(modification.n), 
+             y = mean.tli,  
+             color = train, group = train)) +
+    geom_line()+
+  geom_point()+
+  geom_ribbon(aes(ymin = 
+                    mean.tli-1.96*sd.tli/sqrt(n.tli), 
+                  ymax = 
+                    mean.tli+1.96*sd.tli/sqrt(n.tli),  
+                  fill = train), alpha =0.25,
+                position = position_dodge(0.05))
+```
+
+```{r}
+a |>   na.omit() |> 
+  select(everything(), train = 'train/test') |> 
+  ggplot(aes(x = factor(modification.n), 
+             y = mean.rmsea,  
+             color = train, group = train)) +
+    geom_line()+
+  geom_point()+
+  geom_ribbon(aes(ymin = 
+                    mean.rmsea-1.96*sd.rmsea/sqrt(n.rmsea), 
+                  ymax = 
+                    mean.rmsea+1.96*sd.rmsea/sqrt(n.rmsea),  
+                  fill = train), alpha =0.25,
+                position = position_dodge(0.05))
+```
+
+
+
+######
+
+Write a function that automate the judicious selection of regression path to set free. 
+
+```{r}
+find.path <- function(mi.train){
+  interest <- c("F11DP", "F10EE", "F12PA")
+  for(r1 in 1:nrow(mi.train)){
+    lhsterm <- mi.train[r1,1]
+    rhsterm <- mi.train[r1,3]
+    epcterm <- mi.train[r1,5]
+    value.left <- logic[lhsterm]
+    value.right <- logic[rhsterm]
+    free.parameter.temp <- paste(lhsterm, "~", rhsterm)
+    if (lhsterm %in% interest & epcterm*value.left*value.right>0){
+      break
+    } }
+    if (lhsterm %in% interest & epcterm*value.left*value.right>0){
+      free.parameter.final <- free.parameter.temp
+    }else{
+      for(r2 in 1:nrow(mi.train)){
+        lhsterm <- mi.train[r2,1]
+        rhsterm <- mi.train[r2,3]
+        epcterm <- mi.train[r2,5]
+        value.left <- logic[lhsterm]
+        value.right <- logic[rhsterm]
+        free.parameter.temp <- paste(lhsterm, "~", rhsterm)
+        if(epcterm*value.left*value.right>0){
+          break} 
+        }
+      free.parameter.final <- free.parameter.temp
+    } 
+  print(free.parameter.final)
+}
+ 
+find.path(mi.train)
+free.parameter.final
+
+```
+
+
+
+
+```{r}
+test <- c("a", "b", "c")
+"a" %in% test
+    lhsterm <- mi.train[1,1]
+    rhsterm <- mi.train[1,3]
+    epcterm <- mi.train[1,5]
+    
+value.left <- logic[lhsterm]
+    value.right <- logic[colnames(logic) == rhsterm]
+   
+  lhsterm  
+  logic
+logic[rhsterm]   
+    eval(parse(text=sem[i]))
+    logic
+```
+
+```{r}
+sem <- sem(model, data = mbi, estimator = "MLM", mimic = "Mplus")
+
+mi.train <- modindices(sem,standardized = TRUE, sort. = TRUE) |> 
+  filter(op == "~") |>  
+  filter (!rhs %in% c("F8SELF","F9ELC","F10EE","F11DP","F12PA"))  
+mi.train <- mi.train[-2,]
+mi.train
+```
+
+
+
+
+
+```{r}
+sem.parameter <- parameterEstimates(sem, standardized=TRUE) |>  # obtain estimates
+  filter(op == "~") |>   #select "is measured by" rows
+  mutate(Parameter = paste0(rhs, "→", lhs)) |>
+  select(Parameter,
+         'B'=est, #estimates
+         'Beta'=std.all,#estimates standardized
+         SE=se, #standard error
+         Z=z, #z statistics
+         'p-value'=pvalue #p value
+         )
+```
+
+
+```{r}
+#extract needed variables
+MI.model3 <- modindices(sem3,
+                  standardized = TRUE,
+                  sort. = TRUE,
+                  maximum.number = 50) |>
+  filter(op == "~") |>
+  filter(lhs %in%  #When these factors are predicted variables, it is related
+           c("F8SELF",  # to the topic of this study
+             "F9ELC",
+             "F10EE",
+             "F11DP",
+             "F12PA"))
+
+#adapt to publication style
+MI.model3 <- MI.model3 |>
+  mutate(Parameter = paste(rhs, "→", lhs)) |>
+  select(Parameter, MI = mi, EPC = epc, "std EPC" = sepc.all) |>
+  filter(MI>10) |>
+  head(3) |>
+  mutate("Logics" = c("Sensible and meaningful, but not as sensible as F2→F9",
+                      "Highly sensible and meaningful",
+                      "Sensible and meaningful, but MI < other 2"))
+
+
+#add footnote symbol to parameters
+  for (i in 1:nrow(MI.model3)){
+  symbol <- c("*", "†", "‡")
+  Parameter <- unlist(MI.model3$Parameter)
+  MI.model3$Parameter[i] <-  paste0(Parameter[i], symbol[i])
+  }
+
+#Visualize the table
+MI.model3 |>
+  kable(digits = 3,
+        booktab = T,
+        linesep = "",
+        caption = "Selected modification indices for model 3") |>
+  kable_styling(latex_options = "striped") |>
+  row_spec(2, color = "red") |>
+  footnote(general =
+             "Parameter highlighted in red is selected for modification",
+    symbol = c("Lower self-esteem will causes higher emotional exhaustion",
+             "Higher role conflict increases external locus of control",
+             "Lower self-esteem leads to higher external locus of control"))
+```
+
+
+
+```{r}
+cfa.measure <- fitMeasures(fit,    #obtain specified measured.
+                            c("chisq",
+                              "df",
+                              "pvalue",
+                              "cfi",
+                              "tli",
+                              "rmsea",
+                              "rmsea.pvalue",
+                              "srmr",
+                              "chisq.scaling.factor"))
+
+
+"chisq.scaled",
+                              "df.scaled",
+                              "pvalue.scaled",
+                              "cfi.scaled",
+                              "tli.scaled",
+                              "rmsea.scaled",
+                              "rmsea.pvalue.scaled",
+                              "srmr_bentler",
+                              "chisq.scaling.factor"
+```
+
+
+```{r}
+
+cfa.tab.b <- parameterEstimates(fit, standardized=TRUE) %>% # obtain estimates
+  filter(op == "=~") %>%  #select "is measured by" rows
+  select('Latent Factor'=lhs, #left hand side column
+         Indicator=rhs, #right hand side column
+         B=est, #estimates
+         SE=se, #standard error
+         Z=z, #z statistics
+         'p-value'=pvalue, #p value
+         Beta=std.all) %>%
+  kable(digits = 3, #rounded to 3
+        format="markdown", #Latex markdown
+        booktabs=TRUE, #Latex booktabs
+        caption=paste("Factor Loadings for",fa.num,"factor CFA model estimated by ", estimator)) %>% #caption
+  kable_styling(latex_options = "striped") %>% #gray every other row
+  row_spec(0, background = "#9999CC") # color the first row
+  cfa.tab.b
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
 
 
 
 
 
 
+
+xie
