@@ -1,6 +1,6 @@
 ---
 title: "backup codes"
-author: "Rong Guang"
+author: "Rong Guang"  
 date: "2023-01-31"
 output: html_document
 ---
@@ -678,7 +678,135 @@ sem.compare5.tab |>
            )
 ```
 
+model 6
 
+```{r}
+sem.measure6 <- fitMeasures(sem6,    #obtain specified measured.
+                            c("chisq.scaled",
+                              "df.scaled",
+                              "pvalue.scaled",
+                              "cfi.scaled",
+                              "tli.scaled",
+                              "rmsea.scaled",
+                              "srmr_bentler",
+                              "chisq.scaling.factor")) |>
+  t() |>
+  round(3)
+#combine the 2 sets of indices and save into a new object
+sem.compare6 <- rbind(sem.measure1, sem.measure2,
+                      sem.measure3, sem.measure4, 
+                      sem.measure5, sem.measure6) |>
+  data.frame()
+sem.compare6.tab <- sem.compare6
+
+#add column "chi square" and place values into it
+sem.compare6.tab$"ΔChi-square" <- rep(NA, 6)
+sem.compare6.tab$"ΔChi-square"[2] <- chi.diff(sem1, sem2)#calculate chisq difference
+sem.compare6.tab$"ΔChi-square"[3] <- chi.diff(sem2, sem3)
+sem.compare6.tab$"ΔChi-square"[4] <- chi.diff(sem3, sem4)
+sem.compare6.tab$"ΔChi-square"[5] <- chi.diff(sem4, sem5)
+sem.compare6.tab$"ΔChi-square"[6] <- chi.diff(sem5, sem6)
+
+#turn named vector to data frame
+sem.compare6.tab<- sem.compare6.tab %>%
+  select("Chi-square" = chisq.scaled, "DF"=df.scaled,
+         "p value"=pvalue.scaled, "ΔChi-square", "CFI"= cfi.scaled,
+         "TLI"= tli.scaled, "RMSEA"= rmsea.scaled,
+         "SRMR"=srmr_bentler, "CSF"=chisq.scaling.factor)
+
+#There is no chisq-diff value for the first model, so place a "--" in the cell
+sem.compare6.tab[1,4] <- "--"
+
+#add row names
+rownames(sem.compare6.tab) <- c("model1", "model2*",
+                                "Model3†", "Model4‡",
+                                "Model5§", "Model6¶")
+
+#table aesthetics fine-tune and print table
+sem.compare6.tab |>
+  kable(booktab =T,
+        #format = "markdown",
+        caption = "Comparison of new  (model 6) and preceding models",
+        align = "r",
+        linesep ="") |>
+  kable_styling() |>
+  footnote(symbol = c("Model1 + structural path 'F4→F11' set free to estimate",
+                      "Model2 + structural path 'F5→F12' set free to estimate",
+                      "Model3 + structural path 'F2→F9' set free to estimate",
+                      "Model5 + structural path 'F8→F9' set free to estimate",
+                      "Model6 + structural path 'F8→F10' set free to estimate")
+           )
+```
+
+```{r}
+sem.measure7 <- fitMeasures(sem7,    #obtain specified measured.
+                            c("chisq.scaled",
+                              "df.scaled",
+                              "pvalue.scaled",
+                              "cfi.scaled",
+                              "tli.scaled",
+                              "rmsea.scaled",
+                              "srmr_bentler",
+                              "chisq.scaling.factor")) |>
+  t() |>
+  round(3)
+#combine the 2 sets of indices and save into a new object
+sem.compare7 <- rbind(sem.measure1, sem.measure2,
+                      sem.measure3, sem.measure4, 
+                      sem.measure5, sem.measure6,
+                      sem.measure7) |>
+  data.frame()
+sem.compare7.tab <- sem.compare7
+
+#add column "chi square" and place values into it
+sem.compare7.tab$"ΔChi-square" <- rep(NA, 7)
+sem.compare7.tab$"ΔChi-square"[2] <- chi.diff(sem1, sem2)#calculate chisq difference
+sem.compare7.tab$"ΔChi-square"[3] <- chi.diff(sem2, sem3)
+sem.compare7.tab$"ΔChi-square"[4] <- chi.diff(sem3, sem4)
+sem.compare7.tab$"ΔChi-square"[5] <- chi.diff(sem4, sem5)
+sem.compare7.tab$"ΔChi-square"[6] <- chi.diff(sem5, sem6)
+sem.compare7.tab$"ΔChi-square"[7] <- chi.diff(sem6, sem7)
+
+#turn named vector to data frame
+sem.compare7.tab<- sem.compare7.tab %>%
+  select("Chi-square" = chisq.scaled, "DF"=df.scaled,
+         "p value"=pvalue.scaled, "ΔChi-square", "CFI"= cfi.scaled,
+         "TLI"= tli.scaled, "RMSEA"= rmsea.scaled,
+         "SRMR"=srmr_bentler, "CSF"=chisq.scaling.factor)
+
+#There is no chisq-diff value for the first model, so place a "--" in the cell
+sem.compare7.tab[1,4] <- "--"
+
+#add row names
+rownames(sem.compare7.tab) <- c("model1", "model2*",
+                                "Model3†", "Model4‡",
+                                "Model5§", "Model6¶",
+                                "Model7**")
+
+#table aesthetics fine-tune and print table
+sem.compare7.tab |>
+  kable(booktab =T,
+        #format = "markdown",
+        caption = "Comparison of new  (model 7) and preceding models",
+        align = "r",
+        linesep ="") |>
+  kable_styling() |>
+  footnote(symbol = c("Model1 + structural path 'F4→F11' set free to estimate",
+                      "Model2 + structural path 'F5→F12' set free to estimate",
+                      "Model3 + structural path 'F2→F9' set free to estimate",
+                      "Model5 + structural path 'F8→F9' set free to estimate",
+                      "Model6 + structural path 'F8→F10' set free to estimate",
+                      "Model7 + structural path 'F2→F12' set free to estimate")
+           )
+```
+
+
+
+
+```{r}
+saveRDS(model.table, file = "rulebasedmodeltabler20.rds")
+a <- readRDS(file = "modeltable.rds")
+```
 
 
 
