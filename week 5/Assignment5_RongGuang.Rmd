@@ -719,55 +719,8 @@ initial.both <- rbind(initial.elm.fit[2,], initial.sec.fit[2,])
 names(initial.both) <- initial.elm.fit[1,]
 rownames(initial.both) <- c("Elementary level",
                        "Secondary level")
-#improve the readability of the combined table
-
+#print the table
 multi.fit.tab(initial.both, "Fit indices for two subgroups, basline models")
-
-# initial.both <- initial.both |> 
-#   rename(p = 'p value',
-#          p2 = 'RMSEA p value',
-#          chi = 'chi square') |> 
-#   mutate(df = as.numeric(df) |> round(0),
-#          p = case_when(
-#            as.numeric(p) < 0.001 ~ "<0.001",
-#            as.numeric(p) >= 0.001 ~ p
-#            ),
-#          p2 = case_when(
-#            as.numeric(p2) < 0.001 ~ "<0.001",
-#            as.numeric(p2) >= 0.001 ~ p2
-#            )
-#          ) |>
-#   mutate('Chi square (df, p)' = 
-#            paste0(chi, "(", df,", ", p, ")"),
-#          'RMSEA(p)'           = 
-#            paste0(RMSEA, "(", p2, ")"
-#                   )
-#          ) |> 
-#   select('Chi square (df, p)', 
-#          CFI, TLI, 
-#          'RMSEA(p)', 
-#          SRMR, 
-#          'CSF*'= CSF
-#          ) 
-# #print the combined table with adjustment of aesthetics
-# initial.both |> 
-#   kable(booktabs = T, 
-#         #format = "markdown", 
-#         caption = 
-#           "Fit indices for two subgroups, basline models",
-#         align = "r"
-#         ) |> 
-#   kable_styling(full_width = T) |> 
-#   footnote(symbol = 
-#              "Chi square scaling factor"
-#            ) |>
-#   column_spec(1, width = "3cm") |> 
-#   column_spec(2, width = "4cm")|> 
-#   column_spec(3, width = "1cm")|> 
-#   column_spec(4, width = "1cm")|> 
-#   column_spec(5, width = "2.5cm")|> 
-#   column_spec(6, width = "1cm") |> 
-#   column_spec(7, width = "1cm") 
 ```
 
 \textcolor{blue}{See table 1. Goodness-of-fit statistics for this baseline model (three factor) reveals that the indices are less than optimal for both elementary (MLM Chi-square[206] = 826.573; CFI = 0.857; RMSEA = 0.072 ; SRMR = 0.068) and secondary (MLM Chi-square[206] = 999.359; CFI = 0.836; RMSEA = 0.075; SRMR = 0.077) levels.}
@@ -1000,6 +953,39 @@ cfa2.sec <-
     )
 ```
 
+
+
+```{r}
+#combine fit indices of both levels
+model2.elm.fit <- cfa.summary.mlm.a(cfa2.elm) |> t() |> as.data.frame()
+model2.sec.fit <- cfa.summary.mlm.a(cfa2.sec) |> t() |> as.data.frame()
+model2.both <- rbind(model2.elm.fit[2,], model2.sec.fit[2,]) 
+names(model2.both) <- model2.elm.fit[1,]
+rownames(model2.both) <- c("Elementary level",
+                       "Secondary level")
+#print the table
+multi.fit.tab(model2.both, "Fit indices for two subgroups, basline models")
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
 
 
 ```{r}
