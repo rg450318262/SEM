@@ -953,27 +953,71 @@ cfa2.sec <-
     )
 ```
 
-
-
 ```{r}
 #combine fit indices of both levels
-model2.elm.fit <- cfa.summary.mlm.a(cfa2.elm) |> t() |> as.data.frame()
-model2.sec.fit <- cfa.summary.mlm.a(cfa2.sec) |> t() |> as.data.frame()
-model2.both <- rbind(model2.elm.fit[2,], model2.sec.fit[2,]) 
+model2.elm.fit <- 
+  cfa.summary.mlm.a(
+    cfa2.elm
+    ) |> 
+  t() |> 
+  as.data.frame()
+
+model2.sec.fit <- 
+  cfa.summary.mlm.a(
+    cfa2.sec
+    ) |> 
+  t() |> 
+  as.data.frame()
+
+model2.both <- 
+  rbind(
+    model2.elm.fit[2,], 
+    model2.sec.fit[2,]
+    ) 
+
 names(model2.both) <- model2.elm.fit[1,]
-rownames(model2.both) <- c("Elementary level",
-                       "Secondary level")
+
+rownames(model2.both) <- 
+  c("Elementary level",
+    "Secondary level")
+
+#
+compare12 <- rbind(initial.both, model2.both)
+
 #print the table
-multi.fit.tab(model2.both, "Fit indices for two subgroups, basline models")
+multi.fit.tab(compare12, 
+              "Fit indices for two subgroups, model 2")
 ```
 
+
+Estimation of this re-specified model, for each teacher group, yielded greatly improved model fit statistics. See table 6. 
 
 ```{r}
+chisq_mlm <- function(fit_nested, fit_parent) {
+    # scaling correction factors
+      c0 <- fitMeasures(fit_nested, "chisq.scaling.factor") %>% as.numeric()
+      c1 <- fitMeasures(fit_parent, "chisq.scaling.factor") %>% as.numeric()
+    # scaling correction of the difference test
+      d0 <- fitMeasures(fit_nested, "df") %>% as.numeric()
+      d1 <- fitMeasures(fit_parent, "df") %>% as.numeric()
+      cd <- ((d0 * c0) - (d1 * c1))/(d0 - d1)
+    # MLM chi-square difference test
+      T0 <- fitMeasures(fit_nested, "chisq.scaled") %>% as.numeric()
+      T1 <- fitMeasures(fit_parent, "chisq.scaled") %>% as.numeric()
+      TRd <- (T0*c0 - T1*c1)/cd
+    # degrees of freedom
+      df = d0 - d1
+    return(c("TR_d" = round(TRd,3), "df" = round(df,0), "p_value" = pchisq(TRd, df, lower.tail = FALSE) |> round(3)))
+}
 ```
-
 
 ```{r}
+a <- chi.diff(cfa.elm, cfa2.elm)
+chisq_mlm(cfa.elm, cfa2.elm) 
 ```
+
+
+
 
 
 ```{r}
