@@ -46,7 +46,7 @@ glimpse(MBIsec)
 
 ### Define and estimate the initial baseline models:
 
-Complete the model definition first (see Assignment 3).
+
 
 ```{r}
 library(lavaan)

@@ -48,7 +48,8 @@ pacman::p_load(here,
                DT,
                stringr,
                labelled,
-               ggstatsplot)
+               ggstatsplot,
+               ggcorplot)
 
 library(tidyverse)
 library(readr)
@@ -143,7 +144,41 @@ corr.density <- function(data, fig.num = 1, group){
   }
 ```
 
+### Write a function to generate dot distribution plot
+
 ```{r}
+dot.dist <- 
+  function(data, type, title){
+    data |>
+      t() |> 
+      as.data.frame() %>% 
+      mutate(Item = rownames(.)) |> 
+      rowwise() |> 
+      mutate(Median = eval(parse(text = type))(V1:V580)) |> 
+      ggstatsplot::ggdotplotstats(
+        point.args = list(color = "red", size = 3, shape = 13),
+        xlab = paste(type, "ratings"),
+        title = title,
+        x = Median,
+        y = Item
+      )
+    }
+```
+
+### Write a fuction to generate correlation matrix with statistical test
+
+```{r}
+mycor <- 
+  function(data, cols, title){
+  mbi.elm |> 
+      select(all_of(cols)) |> 
+      ggstatsplot::ggcorrmat(
+        colors = c("#B2182B", "white", "#4D4D4D"),
+        title = "(a) Items on emotional exhaustion, 
+        elementary school teacher",
+        matrix.type  = "lower"
+      )
+    }
 ```
 
 # Inspect the data
@@ -151,40 +186,121 @@ corr.density <- function(data, fig.num = 1, group){
 ## Distribution
 
 ```{r,fig.width= 8, fig.height = 13}
-p.dist.elm <- corr.density(mbi.elm, fig.num = "1(a)", group = "elementary school teacher")
-p.dist.sec <- corr.density(mbi.sec, fig.num = "1(b)", group = "secondary school teacher")
-library(patchwork)
-p.dist.elm/p.dist.sec
+#generate the plots, by subgroup of teachers
+p.dist.elm <- 
+  corr.density(
+    mbi.elm, 
+    fig.num = "1(a)", 
+    group = "elementary school teacher"
+    )
+p.dist.sec <- 
+  corr.density(
+    mbi.sec, 
+    fig.num = "1(b)",
+    group = "secondary school teacher"
+    )
+#print the plot
+library(patchwork); p.dist.elm/p.dist.sec
 ```
 
  
-```{r}
-mbi.elm |> 
-  t() |> 
-  as.data.frame() %>% 
-  mutate(Item = rownames(.)) |> 
-  ggstatsplot::ggdotsplotstats(
-    y = Item,
-    x = Median,
-    test.value = 3,
-    type = "robust",
-    title      = "Distribution of life expectancy in Asian continent",
-  xlab       = "Life expectancy")
-
-update.packages("tidyverse")
-ggdotplotstats(
-  data       = dplyr::filter(gapminder::gapminder, continent == "Asia"),
-  y          = country,
-  x          = lifeExp,
-  test.value = 55,
-  type       = "robust",
-  title      = "Distribution of life expectancy in Asian continent",
-  xlab       = "Life expectancy"
-)
+```{r,fig.width= 8, fig.height = 5}
+#generate plot by subgroups of teachers
+p.dot.elm <- 
+  dot.dist(
+    data = mbi.elm, 
+    type = "median", 
+    title = "(a) Elementary school teacher"
+    )
+p.dot.sec <- 
+  dot.dist(
+    data = mbi.sec, 
+    type = "median", 
+    title = "(b) Secondary school teacher"
+    )
+#plot layout
+patchwork <- p.dot.elm|p.dot.sec
+#print the plot with a genral title
+patchwork+plot_annotation(
+    title = 
+      'Figure 2 Distributions of median rating for each item',
+    theme = 
+      theme(plot.title = 
+              element_text(
+                size = 16,
+                face = "bold",
+                vjust = -1.5,
+                hjust =0.5)
+            )
+    )
 ```
 
 
-```{r}
+```{r,fig.width= 10, fig.height = 15}
+fa.ee <- c("ITEM1", "ITEM3", "ITEM6", "ITEM8", "ITEM13", "ITEM14", "ITEM16", "ITEM20")
+fa.dp <- c("ITEM5", "ITEM10", "ITEM11", "ITEM15", "ITEM22")
+fa.pa <- c("ITEM4", "ITEM7", "ITEM9", "ITEM12", "ITEM17", "ITEM18", "ITEM19", "ITEM21")
+#generate 6 plots, 3 factors X 2 subgroups of teachers
+p.cor.elm.ee <- 
+       mycor(
+         data= mbi.elm, 
+         cols = fa.ee, 
+         "(a) Items on emotional exhaustion, 
+         elementary school teacher"
+         )
+p.cor.sec.ee <- 
+       mycor(
+         data = mbi.sec, 
+         cols = fa.ee, 
+         "(b) Items on emotional exhaustion, 
+          secondary school teacher"
+         )
+p.cor.elm.dp <- 
+       mycor(
+         data = mbi.elm, 
+         cols = fa.dp, 
+         "(c) Items on depersonalization,
+          elementary school teacher"
+         )
+p.cor.sec.dp <- 
+       mycor(
+         data = mbi.sec, 
+         cols = fa.dp, 
+         "(d) Items on depersonalization,
+          secondary school teacher"
+         )
+p.cor.elm.pa <- 
+       mycor(
+         data = mbi.elm, 
+         cols = fa.pa, 
+         "(e) Items on personal accomplishment,
+         secondary school teacher"
+         )
+p.cor.sec.pa <- 
+       mycor(
+         data = mbi.sec ,
+         cols = fa.pa, 
+         "(f) Items on personal accomplishment,
+          secondary school teacher"
+         )
+#plot sub-figure layout
+patchwork <- 
+  p.cor.elm.ee/p.cor.elm.dp/p.cor.elm.pa|p.cor.sec.ee/p.cor.sec.dp/p.cor.sec.pa 
+#print the plot with a gernal title
+patchwork+
+  plot_annotation(
+    title = 
+      'Figure 3 Correlalogram for items on each factor for two groups of teachers',
+    theme = 
+      theme(plot.title = 
+              element_text(
+                size = 16,
+                face = "bold",
+                vjust = -1.5,
+                hjust =0.5)
+            )
+    )
+
 ```
 
 
