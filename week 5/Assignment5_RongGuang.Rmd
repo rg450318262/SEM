@@ -1096,20 +1096,19 @@ MI2.both    |>
 
 \textcolor{blue}{See table 7. In reviewing this information for elementary teachers, we observe two MIs larger than all other MIs (ITEM7 with ITEM4; ITEM19 with ITEM18); both represent residual co-variances. I followed Byrne's step in addressing these parameters.} According to Byrne, of the two, only the residual covariance between Items 7 and 4 is substantively viable in that there is a clear overlapping of item content. In contrast, the content of Items 19 and 18 exhibits no such redundancy, and, thus, there is no reasonable justification for including this parameter in a succeeding Model 3.
 
-\textcolor{blue}{However, in checking the MI for secondary teachers, the decision was: more work is needed in establishing an appropriate baseline model.} Two parameters were of special concern due to their large MI and substantive meaningfulness. They are Item 11 cross-loads onto factor EE, and item 19 co-varies with item 9. This time I operated by the good practice of specifying one parameter each time. Given the substantially large MI representing the cross-loading of Item 11 on factor EE, this parameter alone was included in our next post-hoc model (Model 3 for secondary teachers).
+\textcolor{blue}{However, in checking the MI for secondary teachers, the decision was made: more work is needed in establishing an appropriate baseline model.} Two parameters were of special concern due to their large MI and substantive meaningfulness. They are Item 11 cross-loads onto factor EE, and item 19 co-varies with item 9. This time I operated by the good practice of specifying one parameter each time. Given the substantially large MI representing the cross-loading of Item 11 on factor EE, this parameter alone was included in our next post-hoc model (Model 3 for secondary teachers).
 
 Byrne noted the reasons for making this decision (to further re-specifying model secondary teachers), which I quoted here for future reflection: (a) The model does not yet reflect a satisfactorily good fit to the data (CFI = 0.920); and (b) in reviewing the MIs in Table 7.2, we observe one very large mis-specified parameter representing the loading of Item 11 on Factor 1 (F1 by ITEM11), as well as another substantially large MI representing a residual covariance between Items 19 and 9, both of which can be substantiated as substantively meaningful parameters.
 
 (3) Model re-specification for model 3 
 
 ```{r}
-respecified3 <- '
-                   EE =~ ITEM11
+respecified3 <- 'EE =~ ITEM11
                  '
 model3 <- paste(model2, respecified3)
 ```
 
-Then, the model fit were re-estimated for secondary teacher group
+Then, the model fit were re-estimated for both group, separately.
 
 ```{r}
 #for elementary
@@ -1180,8 +1179,9 @@ multi.fit.tab(compare123,
   )
 ```
 
-Results from the estimation of Model 3 for elementary teachers yielded goodness-of-fit statistics that represented a satisfactorily good fit to the data (MLM χ2[201] = 451.060; CFI = 0.942; RMSEA = 0.046; SRMR = 0.049) and a corrected difference from the previous model (Model 2) that was statistically significant (∆MLM χ2[1] = 9.664, p < .005). Although a review of Table 7.3 reveals several additional moderately large MIs, it is important always to base final model decisions on goodness-of-fit in combination with model parsimony. With these caveats in mind, I consider Model 3 to best serve as the baseline model for elementary teachers.
-Results from the estimation of Model 3 for secondary teachers, on the other hand, further substantiated the residual covariance between Items 19 and 9 as representing an acutely misspecified parameter in the model. Thus, for secondary teachers only, Model 4 was put to the test with this
+See table 8. Results from the estimation of Model 3 for elementary teachers yielded goodness-of-fit statistics that represented a satisfactorily good fit to the data (MLM chi square[201] = 466.722; CFI = 0.939; RMSEA = 0.048; SRMR = 0.050). Although a review of Table 9 reveals several additional moderately large MIs, for balancing goodness-of-fit and parsimony, \textcolor{blue}{the decision was model 3 could serve as the baseline model for elementary teachers.}
+
+Results from the estimation of Model 3 for secondary teachers, on the other hand, further substantiated the residual covariance between Items 19 and 9 as representing an acutely mis-specified parameter in the model. \textcolor{blue}{Thus, for secondary teachers only, model 4 was put to the test with this residual covariance specified as a freely estimated parameter.}
 
 
 ```{r}
@@ -1217,9 +1217,65 @@ chisq_mlm <- function(fit_nested, fit_parent) {
 }
 ```
 
+```{r}
+
+```
+
+MIs of model 3 for each groups were calculated.
+
+```{r}
+#elementary
+model3.MI.elm <- 
+  modindices(cfa3.elm,
+             standardized = TRUE,
+             sort. = TRUE,
+             maximum.number = 10)
+#secondary
+model3.MI.sec <- 
+  modindices(cfa3.sec,
+             standardized = TRUE,
+             sort. = TRUE,
+             maximum.number = 10)
+```
 
 
+MI tables with 10 largest MI parameters was printed in descending order of MI. Potential mis-specification of most concerns were highlighted in red.
 
+```{r}
+MI3.both <- rbind(model3.MI.elm, model3.MI.sec)
+
+MI3.both    |> 
+  mutate(
+    op = case_when(op == "~~"~"←→",
+                   op == "=~"~"→"), 
+    Parameter = 
+           paste(lhs, op, rhs)
+         ) |>
+  select(Parameter, 
+         MI = mi, 
+         EPC = epc, 
+         "std EPC" = sepc.all
+         )|>
+  kable(digits = 3,
+        booktab = T,
+        linesep = "",
+        caption = 
+          "Selected modification indices for determining baseline model") |>
+  kable_styling(
+    latex_options = "striped"
+    ) |>
+  row_spec(
+    c(1:2, 11:12), 
+    color = "red"
+    ) |> 
+  footnote(general = 
+             "Rows highlighted in red are of special concerns") |> 
+  pack_rows(index = c(
+    "Elementary level" = 10,
+    "Secondary level" = 10
+    )
+    )
+```
 
 
 
