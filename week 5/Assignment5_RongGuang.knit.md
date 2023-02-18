@@ -1,15 +1,13 @@
 ---
 title: "COS-D419 Factor Analysis and Structural Equation Models 2023, Assignment 4"
 author: "Rong Guang"
-date: "`r Sys.Date()`"
+date: "2023-02-18"
 output:
   bookdown::pdf_document2:
     latex_engine: lualatex
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = F, message = F, cache = F, fig.align = 'center')
-```
+
 
 **\textcolor{blue}{The texts that reflect my understanding have been highlighted in} \textcolor{red}{red color}.** 
 
@@ -33,7 +31,8 @@ Present the final baseline models of each group and draw the graphs
 
 Start by downloading the **two data files** from Moodle to your Project folder!
 
-```{r}
+
+```r
 #install the necessary pakages
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(here, 
@@ -75,7 +74,6 @@ mbi.sec <- #secondary school
       latest.name2
       )
     )
-
 ```
 
 ## Write functions
@@ -84,150 +82,16 @@ To control length of reports, codes already shown in the previous homework were 
 
 ### To generate a function for calculating chi square difference was defined.
 
-```{r, echo = F}
-chi.diff <- function(sem1, sem2){ #2 augments input: the 1st is the nested model
-                                  #the 2nd is comparison model (less restricted)
-  measure0 <- fitMeasures(sem1,  #extract robust fit indices for the 1st model
-                          c("df.scaled",
-                            "chisq.scaling.factor",
-                            "chisq.scaled")) |>
-    as.vector()   #turn to vector to facilitate calculation
-  measure1 <- fitMeasures(sem2,  #extract robust fit indices for the 2nd model
-                          c("df.scaled",
-                            "chisq.scaling.factor",
-                            "chisq.scaled")) |>
-    as.vector()
-  cd <-  # this is the formula from p 14, week 4 slide
-    (measure0[1]*measure0[2]-measure1[1]*measure1[2])/(measure0[1]-measure1[1])
-  TRd <- # this is the formula from p 15, week 4 slide
-    (measure0[3]*measure0[2]-measure1[3]*measure1[2])/cd
-  TRd <- TRd |> round(3) # round the value to 3 decimal places
-}
-```
+
 
 ### to generate CFA results with improved readability
 
-```{r, echo = F}
-#goodness of fit indicators for ml
-cfa.summary.mlm.a <- function(fit){
-  options(scipen = 999)
-  cfa.measure <- fitMeasures(fit,    #obtain specified measured.
-                            c("chisq.scaled", 
-                              "df.scaled", 
-                              "pvalue.scaled", 
-                              "cfi.scaled", 
-                              "tli.scaled",
-                              "rmsea.scaled",
-                              "rmsea.pvalue.scaled",
-                              "srmr_bentler",
-                              "chisq.scaling.factor")) 
-  names(cfa.measure) <- c("chi square", "df", "p value", "CFI", "TLI", "RMSEA", "RMSEA p value", "SRMR", "CSF")
-  #turn named vector to data frame
-cfa.tab.a <- cfa.measure %>%  
-  tibble(name= names(cfa.measure), value = cfa.measure) %>% # vector to df
-  select(Measure = name, Value = value) %>%  #select and rename columns
-  mutate(Value = round(as.numeric(Value),3)) 
-}
-#factor loading
-cfa.summary.b <- function(fit, fa.num, item.num, estimator){
-  options(scipen = 999)
-  #factor loading
-  cfa.tab.b <- parameterEstimates(fit, standardized=TRUE) %>% # obtain estimates
-  filter(op == "=~") %>%  #select "is measured by" rows
-  mutate(Parameter = paste0(lhs, "→", rhs),
-         pvalue = case_when(as.numeric(pvalue)<0.001~"<0.001", 
-                            as.numeric(pvalue)>=0.001~as.character(pvalue)
-                            )
-         ) |> 
-  select(Parameter,
-         Beta=std.all, #std estimates
-         SE=se, #standard error
-         Z=z, #z statistics
-         'p-value'=pvalue #p value
-         ) 
-  # %>%  
-  # kable(digits = 3, #rounded to 3
-  #       format="markdown", #Latex markdown
-  #       booktabs=TRUE, #Latex booktabs
-  #       caption=paste("Factor Loadings for",fa.num,"factor CFA model estimated by ", estimator)) %>% #caption
-  # kable_styling(latex_options = "striped") %>% #gray every other row
-  # row_spec(0, background = "#9999CC") # color the first row
-  # cfa.tab.b
-  }
 
-#Variance
-cfa.summary.c <- function(fit, fa.num, item.num, estimator){
-  options(scipen = 999)
-  #Variance
-  type <- rep(c("Residual", "Total"), 
-            time = c(item.num, fa.num)) #create a new row clarifying types of variance
-
-variance <- parameterEstimates(fit, standardized=TRUE) %>% #obtain estimates
-  filter(op == "~~") #select "is correlated with" rows
-variance <- variance[1:sum(item.num,fa.num),] #subset 1:18 rows (variance row)
-variance <- cbind(type, variance) #add column
-cfa.tab.c <- variance |> 
-  mutate(pvalue = case_when(as.numeric(pvalue)<0.001~"<0.001", 
-                            as.numeric(pvalue)>=0.001~as.character(pvalue)
-                            )) |> 
-  select(Parameter = type, #select and rename variables
-                   Indicator=rhs, #right hand side column
-                   B=est, #estimates
-                   "Beta*"=std.all,#std estimates
-                   SE=se,#standard error
-                   Z=z, #z statistics
-                   'p-value'=pvalue #p value
-                   ) 
-
-# %>% 
-#   kable(digits = 3, #rounded
-#         format="markdown",  #Latex markdown
-#         booktabs=TRUE, #Latex booktabs
-#         caption=paste("Variances for", fa.num, "factor model estimated by ", estimator)) %>% #caption
-#   kable_styling(latex_options = "striped") %>% # gray every other row
-#   row_spec(0, background = "#9999CC") # color the variable row
-#   cfa.tab.c
-}
-
-#Covariance
-cfa.summary.d <- function(fit, fa.num, item.num, estimator){
-  options(scipen = 999)
-  #covariance
-  variance <- parameterEstimates(fit, standardized=TRUE) %>%
-  filter(op == "~~")
-  covar.num = (fa.num+(fa.num-1))/2
-variance <- variance[sum(item.num,fa.num,1):sum(item.num,fa.num,covar.num),]
-type <- paste(variance$lhs, "←→", variance$rhs) 
-variance <- cbind(type, variance)
-rownames(variance) <- NULL
-cfa.tab.d <- variance |> 
-  mutate(pvalue = case_when(as.numeric(pvalue)<0.001~"<0.001", 
-                            as.numeric(pvalue)>=0.001~as.character(pvalue)
-                            )) |> 
-  select(Parameter=type,
-         B=est, 
-         Beta=std.all,
-         SE=se,
-         Z=z, 
-         'p-value'=pvalue 
-         )
-# %>% 
-#   kable(digits = 3, 
-#         format="markdown", 
-#         booktabs=TRUE, 
-#         caption=paste("Covariances for", fa.num, 
-#                       "factor model estimated by ", 
-#                       estimator)) %>% 
-#   kable_styling(latex_options = "striped") %>% 
-#   row_spec(0, background = "#9999CC")
-#   cfa.tab.d
-}
-
-```
 
 ### Write a function to simplify plotting of merged tables for multi-group fit indicies
 
-```{r}
+
+```r
 multi.fit.tab <- function(data, title){
 data <- data |> 
   rename(p = 'p value',
@@ -280,7 +144,8 @@ data |>
 
 ### Write a function to simplify plotting aligned residual variance and co-variance tables
 
-```{r}
+
+```r
 align.table <- function(data, num.no.header.col, title){
 
 data  |> 
@@ -310,196 +175,32 @@ data  |>
 
 ### Write a function for correlation matrix with numbers
 
-```{r, echo = F}
-mymatrix <- function(data, fig.num = 3){
-  library(GGally)
-ggcorr(data, 
-       geom = "blank", 
-       label = TRUE, 
-       hjust = 0.9, 
-       color = "red", 
-       face = "bold", 
-       method = c("pairwise","pearson"),
-       digits = 2,
-       size= 2.5,
-       label_size = 2.5,
-       label_round = 2,
-       layout.exp =1) +
-  geom_point(size = 7, 
-             aes(color = "steelblue", 
-                 alpha = abs(coefficient) > 0.3)) +
-  scale_alpha_manual(values = c("TRUE" = 0.4, 
-                                "FALSE" = 0)) +
-    geom_point(size = 8, 
-               aes(color = "red", 
-                   alpha = abs(coefficient) > 0.6)) +
-  scale_alpha_manual(values = c("TRUE" = 0.4, 
-                                "FALSE" = 0)) +
-  guides(color = FALSE, 
-         alpha = FALSE) +
-  labs(title = paste("Figure ", fig.num," Pearson correlation matrix of the selected items"),
-       caption = 
-         " Red circles indicates the absolute of correlation coefficient >= 0.6 
-        green circle indicates >= 0.3")+
-  theme(plot.title = element_text(size = 12,
-                                  face = "bold",
-                                  hjust = 0.5),
-        plot.caption = element_text(color = "red"))
-}
 
-```
 
 ### to generate a function for histogram overlapping with density plot
 
-```{r, echo = F}
-corr.density <- function(data, fig.num = 1){
-  data %>% 
-  pivot_longer(everything()) %>%  #longer format
-  ggplot(aes(x = value)) + #x axis used variable "value" (a default of pivot)
-  geom_histogram(binwidth = 1, aes(y = ..density..), #match ys of density and histogram plots
-                 color = "black",  fill = "#9999CC")+  # adjust aesthetics for hist
-  geom_density(fill = "pink", alpha = 0.25)+ #adjust aesthetics for density plot
-  facet_wrap(~name, scales = "free", ncol =4) + #wrap by name variable
-  theme(panel.grid.major = element_blank(), #get rid of the  grids
-        panel.grid.minor = element_blank(),
-        panel.background = element_rect(fill = "white",#adjust the background
-                                        color = "black"),
-        strip.background = element_rect(color = "black",#adjust the strips aes
-                                        fill = "steelblue"),
-        strip.text = element_text(size =8, color = "white"), #adjust strip text
-        axis.title.x = element_text(size = 3), #adjust the x text
-        axis.title.y = element_text(size = 3), # adjust the y text
-        plot.title = element_text(size = 12, 
-                                  face = "bold",
-                                  hjust = 0.5))+ #adjust the title
-  labs(title = paste("Figure ", fig.num," Distribution of selected items")) #title it
-  }
 
-```
 
 ### to generate a function for violin overlapping with box plot
 
-```{r, echo = F}
-violin.box <- function(data, fig.num = 2){
-  mbi.long <- data %>% pivot_longer(everything(), names_to = "item", values_to = "score")
 
-mbi.long %>% 
-  ggplot(aes(x = item, y = score)) +
-  geom_violin(trim=F, fill = "#9999CC") +
-  theme(legend.position = "none", 
-        axis.text.x = element_text(angle = 45, hjust =1),
-        axis.title = element_text(size = 12),
-        panel.background = element_rect(fill = "white", color = "black"),
-        plot.title = element_text(face="bold",
-                                  hjust = 0.5),
-        axis.title.x = element_blank())+
-  labs(x = "Item", 
-       y = "Score",
-       title = paste("Figure 2 ", fig.num, " Violin plot of the selected items"))+
-  geom_boxplot(width = 0.1, fill = "white")
-}
-```
 
 ### To generate a function describing continuous data set
 
-```{r, echo=F}
-descriptive <- function(data){
-  library(finalfit)
-library(kableExtra)
-inspect.table <- ff_glimpse(data)$Continuous
-inspect.table$label <- NULL
-inspect.table %>% 
-  mutate('Q1Q3' = paste(quartile_25, 
-                        quartile_75, 
-                        sep = " ~ ")) %>% 
-  select(n, 
-         'n of NA' = missing_n, 
-         'Mean' = mean, 
-         'Median' = median,
-         'SD' = sd, 
-         'Min' = min, 
-         'Max' = max,
-         'Q1~Q3' = Q1Q3) %>%
-  kable(booktabs = T,  
-        align = "r",
-        longtable = T,
-        linesep = "",
-        caption = "Descriptive statistics for measurements") %>% 
-  add_header_above(c(" ", 
-                     " " = 2,
-                     "Central tendency" = 2, 
-                     "Dispersion tendency" = 4)) %>% 
-  kable_styling(latex_options = c("striped", 
-                                  "repeat_header")) %>% 
-  column_spec(1, width = "3cm")
-}
-```
+
 
 ### Write a function describing continuous data set
 
-```{r, echo=F}
-descriptive <- function(data){
-  library(finalfit)
-library(kableExtra)
-inspect.table <- ff_glimpse(data)$Continuous
-inspect.table$label <- NULL
-inspect.table %>%
-  mutate('Q1Q3' = paste(quartile_25,
-                        quartile_75,
-                        sep = " ~ ")) %>%
-  select(n,
-         'n of NA' = missing_n,
-         'Mean' = mean,
-         'Median' = median,
-         'SD' = sd,
-         'Min' = min,
-         'Max' = max,
-         'Q1~Q3' = Q1Q3) %>%
-  kable(booktabs = T,
-        align = "r",
-        longtable = T,
-        linesep = "",
-        caption = "Descriptive statistics for measurements") %>%
-  add_header_above(c(" ",
-                     " " = 2,
-                     "Central tendency" = 2,
-                     "Dispersion tendency" = 4)) %>%
-  kable_styling(latex_options = c("striped",
-                                  "repeat_header")) %>%
-  column_spec(1, width = "3cm")
-}
-```
+
 
 ### Write a function for histogram overlapping with density plot
 
-```{r, echo = F}
-corr.density <- function(data, fig.num = 1, group){
-  data %>%
-  pivot_longer(everything()) %>%  #longer format
-  ggplot(aes(x = value)) + #x axis used variable "value" (a default of pivot)
-  geom_histogram(binwidth = 1, aes(y = ..density..), #match ys of density and histogram plots
-                 color = "black",  fill = "#9999CC")+  # adjust aesthetics for hist
-  geom_density(fill = "pink", alpha = 0.25)+ #adjust aesthetics for density plot
-  facet_wrap(~name, scales = "free", ncol =5) + #wrap by name variable
-  theme(panel.grid.major = element_blank(), #get rid of the  grids
-        panel.grid.minor = element_blank(),
-        panel.background = element_rect(fill = "white",#adjust the background
-                                        color = "black"),
-        strip.background = element_rect(color = "black",#adjust the strips aes
-                                        fill = "steelblue"),
-        strip.text = element_text(size =8, color = "white"), #adjust strip text
-        axis.title.x = element_text(size = 3), #adjust the x text
-        axis.title.y = element_text(size = 3), # adjust the y text
-        plot.title = element_text(size = 12,
-                                  face = "bold",
-                                  hjust = 0.5))+ #adjust the title
-  labs(title = paste("Figure", fig.num," Distribution of selected items for", group)) #title it
-  }
-```
+
 
 ### Write a function to generate dot distribution plot
 
-```{r}
+
+```r
 dot.dist <- 
   function(data, type, title){
     data |>
@@ -520,7 +221,8 @@ dot.dist <-
 
 ### Write a fuction to generate correlation matrix with statistical test
 
-```{r}
+
+```r
 mycor <- 
   function(data, cols, title){
   mbi.elm |> 
@@ -538,7 +240,8 @@ mycor <-
 
 ## Distribution
 
-```{r,fig.width= 8, fig.height = 13}
+
+```r
 #generate the plots, by subgroup of teachers
 p.dist.elm <- 
   corr.density(
@@ -556,8 +259,13 @@ p.dist.sec <-
 library(patchwork); p.dist.elm/p.dist.sec
 ```
 
+
+
+\begin{center}\includegraphics{Assignment5_RongGuang_files/figure-latex/unnamed-chunk-14-1} \end{center}
+
  
-```{r,fig.width= 8, fig.height = 5}
+
+```r
 #generate plot by subgroups of teachers
 p.dot.elm <- 
   dot.dist(
@@ -589,7 +297,12 @@ patchwork+plot_annotation(
 ```
 
 
-```{r,fig.width= 10, fig.height = 15}
+
+\begin{center}\includegraphics{Assignment5_RongGuang_files/figure-latex/unnamed-chunk-15-1} \end{center}
+
+
+
+```r
 fa.ee <- c("ITEM1", "ITEM3", "ITEM6", "ITEM8", "ITEM13", "ITEM14", "ITEM16", "ITEM20")
 fa.dp <- c("ITEM5", "ITEM10", "ITEM11", "ITEM15", "ITEM22")
 fa.pa <- c("ITEM4", "ITEM7", "ITEM9", "ITEM12", "ITEM17", "ITEM18", "ITEM19", "ITEM21")
@@ -653,8 +366,11 @@ patchwork+
                 hjust =0.5)
             )
     )
-
 ```
+
+
+
+\begin{center}\includegraphics{Assignment5_RongGuang_files/figure-latex/unnamed-chunk-16-1} \end{center}
 
 # Testing the factorial invariance of MBI inventory between elementary and secondary school teachers  
 
@@ -664,7 +380,8 @@ patchwork+
 
 ### Define the initial model 
 
-```{r}
+
+```r
 library(lavaan)
 # Define a CFA model using the lavaan (Latent Variable Analysis) syntax:
 # see https://lavaan.ugent.be/tutorial/syntax1.html
@@ -684,7 +401,8 @@ Cited from Byrne: *It is important to note that measuring instruments are often 
 
 (1) Estimate factorial validity for the elementary teacher subgroup
 
-```{r}
+
+```r
 cfa.elm <- 
   cfa(
     initial.model, 
@@ -696,7 +414,8 @@ cfa.elm <-
 
 (2) Estimate factorial validity for the secondary teacher subgroup
 
-```{r}
+
+```r
 cfa.sec <- 
   cfa(
     initial.model, 
@@ -710,7 +429,8 @@ cfa.sec <-
 
 (1) Fit indices
 
-```{r}
+
+```r
 library(knitr);library(kableExtra)
 #combine fit indices of both levels
 initial.elm.fit <- cfa.summary.mlm.a(cfa.elm) |> t() |> as.data.frame()
@@ -722,7 +442,24 @@ rownames(initial.both) <- c("Elementary level",
 #improve the readability of the combined table
 
 multi.fit.tab(initial.both, "Fit indices for two subgroups, basline models")
+```
 
+\begin{table}
+
+\caption{(\#tab:unnamed-chunk-20)Fit indices for two subgroups, basline models}
+\centering
+\begin{tabu} to \linewidth {>{\raggedright\arraybackslash}p{3cm}>{\raggedleft\arraybackslash}p{4cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{2.5cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{1cm}}
+\toprule
+  & Chi square (df, p) & CFI & TLI & RMSEA(p) & SRMR & CSF*\\
+\midrule
+Elementary level & 826.573(206, <0.001) & 0.857 & 0.840 & 0.072(<0.001) & 0.068 & 1.225\\
+Secondary level & 999.359(206, <0.001) & 0.836 & 0.816 & 0.075(<0.001) & 0.077 & 1.284\\
+\bottomrule
+\multicolumn{7}{l}{\rule{0pt}{1em}\textsuperscript{*} Chi square scaling factor}\\
+\end{tabu}
+\end{table}
+
+```r
 # initial.both <- initial.both |> 
 #   rename(p = 'p value',
 #          p2 = 'RMSEA p value',
@@ -776,14 +513,16 @@ multi.fit.tab(initial.both, "Fit indices for two subgroups, basline models")
 
 Factor loading of elementary level were extracted.
 
-```{r}
+
+```r
 fl.elm <- cfa.summary.b (cfa.elm) #fl  is for factor loading)
 colnames(fl.elm)[2] <- "Beta*"
 ```
 
 Factor loading of secondary level were extracted.
 
-```{r}
+
+```r
 fl.sec <- cfa.summary.b (cfa.sec) #fl is for factor loading
 colnames(fl.sec) <- c("Parameter",
                      "Beta* ",
@@ -794,7 +533,8 @@ colnames(fl.sec) <- c("Parameter",
 
 Factor loading of both levels were merged in one table and printed.
 
-```{r}
+
+```r
 fl.both <- left_join(fl.elm, 
                      fl.sec, 
                      by = "Parameter")
@@ -825,8 +565,46 @@ fl.both |>
              "Standardized estimates"
                       )
            )
-  
 ```
+
+\begin{table}
+
+\caption{(\#tab:unnamed-chunk-23)Factor loadings for both levels}
+\centering
+\begin{tabular}[t]{lrrrlrrrl}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{4}{c}{Elementary level} & \multicolumn{4}{c}{Secondary level} \\
+\cmidrule(l{3pt}r{3pt}){2-5} \cmidrule(l{3pt}r{3pt}){6-9}
+Parameter & Beta* & SE & Z & p-value & Beta*  & SE  & Z  & p-value \\
+\midrule
+\textbf{\cellcolor[HTML]{E5E4E2}{EE→ITEM1}} & \textbf{\cellcolor[HTML]{E5E4E2}{0.776}} & \textbf{\cellcolor[HTML]{E5E4E2}{0.000}} & \textbf{\cellcolor[HTML]{E5E4E2}{NA}} & \textbf{\cellcolor[HTML]{E5E4E2}{NA}} & \textbf{\cellcolor[HTML]{E5E4E2}{0.756}} & \textbf{\cellcolor[HTML]{E5E4E2}{0.000}} & \textbf{\cellcolor[HTML]{E5E4E2}{NA}} & \textbf{\cellcolor[HTML]{E5E4E2}{NA}}\\
+\cellcolor[HTML]{E5E4E2}{EE→ITEM2} & \cellcolor[HTML]{E5E4E2}{0.754} & \cellcolor[HTML]{E5E4E2}{0.032} & \cellcolor[HTML]{E5E4E2}{28.561} & \cellcolor[HTML]{E5E4E2}{<0.001} & \cellcolor[HTML]{E5E4E2}{0.736} & \cellcolor[HTML]{E5E4E2}{0.031} & \cellcolor[HTML]{E5E4E2}{30.236} & \cellcolor[HTML]{E5E4E2}{<0.001}\\
+\cellcolor[HTML]{E5E4E2}{EE→ITEM3} & \cellcolor[HTML]{E5E4E2}{0.740} & \cellcolor[HTML]{E5E4E2}{0.045} & \cellcolor[HTML]{E5E4E2}{21.984} & \cellcolor[HTML]{E5E4E2}{<0.001} & \cellcolor[HTML]{E5E4E2}{0.722} & \cellcolor[HTML]{E5E4E2}{0.043} & \cellcolor[HTML]{E5E4E2}{24.030} & \cellcolor[HTML]{E5E4E2}{<0.001}\\
+\cellcolor[HTML]{E5E4E2}{EE→ITEM6} & \cellcolor[HTML]{E5E4E2}{0.631} & \cellcolor[HTML]{E5E4E2}{0.051} & \cellcolor[HTML]{E5E4E2}{16.064} & \cellcolor[HTML]{E5E4E2}{<0.001} & \cellcolor[HTML]{E5E4E2}{0.626} & \cellcolor[HTML]{E5E4E2}{0.046} & \cellcolor[HTML]{E5E4E2}{18.669} & \cellcolor[HTML]{E5E4E2}{<0.001}\\
+\cellcolor[HTML]{E5E4E2}{EE→ITEM8} & \cellcolor[HTML]{E5E4E2}{0.855} & \cellcolor[HTML]{E5E4E2}{0.042} & \cellcolor[HTML]{E5E4E2}{28.448} & \cellcolor[HTML]{E5E4E2}{<0.001} & \cellcolor[HTML]{E5E4E2}{0.833} & \cellcolor[HTML]{E5E4E2}{0.046} & \cellcolor[HTML]{E5E4E2}{25.968} & \cellcolor[HTML]{E5E4E2}{<0.001}\\
+\cellcolor[HTML]{E5E4E2}{EE→ITEM13} & \cellcolor[HTML]{E5E4E2}{0.754} & \cellcolor[HTML]{E5E4E2}{0.045} & \cellcolor[HTML]{E5E4E2}{22.474} & \cellcolor[HTML]{E5E4E2}{<0.001} & \cellcolor[HTML]{E5E4E2}{0.762} & \cellcolor[HTML]{E5E4E2}{0.045} & \cellcolor[HTML]{E5E4E2}{23.619} & \cellcolor[HTML]{E5E4E2}{<0.001}\\
+\cellcolor[HTML]{E5E4E2}{EE→ITEM14} & \cellcolor[HTML]{E5E4E2}{0.655} & \cellcolor[HTML]{E5E4E2}{0.046} & \cellcolor[HTML]{E5E4E2}{19.939} & \cellcolor[HTML]{E5E4E2}{<0.001} & \cellcolor[HTML]{E5E4E2}{0.634} & \cellcolor[HTML]{E5E4E2}{0.045} & \cellcolor[HTML]{E5E4E2}{20.685} & \cellcolor[HTML]{E5E4E2}{<0.001}\\
+\cellcolor[HTML]{E5E4E2}{EE→ITEM16} & \cellcolor[HTML]{E5E4E2}{0.640} & \cellcolor[HTML]{E5E4E2}{0.047} & \cellcolor[HTML]{E5E4E2}{15.992} & \cellcolor[HTML]{E5E4E2}{<0.001} & \cellcolor[HTML]{E5E4E2}{0.596} & \cellcolor[HTML]{E5E4E2}{0.047} & \cellcolor[HTML]{E5E4E2}{15.261} & \cellcolor[HTML]{E5E4E2}{<0.001}\\
+\cellcolor[HTML]{E5E4E2}{EE→ITEM20} & \cellcolor[HTML]{E5E4E2}{0.734} & \cellcolor[HTML]{E5E4E2}{0.045} & \cellcolor[HTML]{E5E4E2}{18.371} & \cellcolor[HTML]{E5E4E2}{<0.001} & \cellcolor[HTML]{E5E4E2}{0.707} & \cellcolor[HTML]{E5E4E2}{0.048} & \cellcolor[HTML]{E5E4E2}{17.421} & \cellcolor[HTML]{E5E4E2}{<0.001}\\
+\textbf{DP→ITEM5} & \textbf{0.576} & \textbf{0.000} & \textbf{NA} & \textbf{NA} & \textbf{0.453} & \textbf{0.000} & \textbf{NA} & \textbf{NA}\\
+DP→ITEM10 & 0.794 & 0.115 & 11.968 & <0.001 & 0.820 & 0.188 & 10.259 & <0.001\\
+DP→ITEM11 & 0.793 & 0.122 & 11.588 & <0.001 & 0.808 & 0.197 & 9.666 & <0.001\\
+DP→ITEM15 & 0.505 & 0.072 & 9.287 & <0.001 & 0.472 & 0.098 & 10.295 & <0.001\\
+DP→ITEM22 & 0.351 & 0.091 & 6.997 & <0.001 & 0.447 & 0.131 & 8.226 & <0.001\\
+\textbf{\cellcolor[HTML]{E5E4E2}{PA→ITEM4}} & \textbf{\cellcolor[HTML]{E5E4E2}{0.447}} & \textbf{\cellcolor[HTML]{E5E4E2}{0.000}} & \textbf{\cellcolor[HTML]{E5E4E2}{NA}} & \textbf{\cellcolor[HTML]{E5E4E2}{NA}} & \textbf{\cellcolor[HTML]{E5E4E2}{0.340}} & \textbf{\cellcolor[HTML]{E5E4E2}{0.000}} & \textbf{\cellcolor[HTML]{E5E4E2}{NA}} & \textbf{\cellcolor[HTML]{E5E4E2}{NA}}\\
+\cellcolor[HTML]{E5E4E2}{PA→ITEM7} & \cellcolor[HTML]{E5E4E2}{0.516} & \cellcolor[HTML]{E5E4E2}{0.148} & \cellcolor[HTML]{E5E4E2}{7.308} & \cellcolor[HTML]{E5E4E2}{<0.001} & \cellcolor[HTML]{E5E4E2}{0.545} & \cellcolor[HTML]{E5E4E2}{0.221} & \cellcolor[HTML]{E5E4E2}{7.495} & \cellcolor[HTML]{E5E4E2}{<0.001}\\
+\cellcolor[HTML]{E5E4E2}{PA→ITEM9} & \cellcolor[HTML]{E5E4E2}{0.581} & \cellcolor[HTML]{E5E4E2}{0.280} & \cellcolor[HTML]{E5E4E2}{6.629} & \cellcolor[HTML]{E5E4E2}{<0.001} & \cellcolor[HTML]{E5E4E2}{0.681} & \cellcolor[HTML]{E5E4E2}{0.365} & \cellcolor[HTML]{E5E4E2}{7.432} & \cellcolor[HTML]{E5E4E2}{<0.001}\\
+\cellcolor[HTML]{E5E4E2}{PA→ITEM12} & \cellcolor[HTML]{E5E4E2}{0.611} & \cellcolor[HTML]{E5E4E2}{0.303} & \cellcolor[HTML]{E5E4E2}{6.214} & \cellcolor[HTML]{E5E4E2}{<0.001} & \cellcolor[HTML]{E5E4E2}{0.586} & \cellcolor[HTML]{E5E4E2}{0.283} & \cellcolor[HTML]{E5E4E2}{7.398} & \cellcolor[HTML]{E5E4E2}{<0.001}\\
+\cellcolor[HTML]{E5E4E2}{PA→ITEM17} & \cellcolor[HTML]{E5E4E2}{0.681} & \cellcolor[HTML]{E5E4E2}{0.185} & \cellcolor[HTML]{E5E4E2}{7.796} & \cellcolor[HTML]{E5E4E2}{<0.001} & \cellcolor[HTML]{E5E4E2}{0.546} & \cellcolor[HTML]{E5E4E2}{0.187} & \cellcolor[HTML]{E5E4E2}{7.486} & \cellcolor[HTML]{E5E4E2}{<0.001}\\
+\cellcolor[HTML]{E5E4E2}{PA→ITEM18} & \cellcolor[HTML]{E5E4E2}{0.628} & \cellcolor[HTML]{E5E4E2}{0.276} & \cellcolor[HTML]{E5E4E2}{6.628} & \cellcolor[HTML]{E5E4E2}{<0.001} & \cellcolor[HTML]{E5E4E2}{0.698} & \cellcolor[HTML]{E5E4E2}{0.294} & \cellcolor[HTML]{E5E4E2}{7.431} & \cellcolor[HTML]{E5E4E2}{<0.001}\\
+\cellcolor[HTML]{E5E4E2}{PA→ITEM19} & \cellcolor[HTML]{E5E4E2}{0.643} & \cellcolor[HTML]{E5E4E2}{0.255} & \cellcolor[HTML]{E5E4E2}{6.844} & \cellcolor[HTML]{E5E4E2}{<0.001} & \cellcolor[HTML]{E5E4E2}{0.706} & \cellcolor[HTML]{E5E4E2}{0.324} & \cellcolor[HTML]{E5E4E2}{7.565} & \cellcolor[HTML]{E5E4E2}{<0.001}\\
+\cellcolor[HTML]{E5E4E2}{PA→ITEM21} & \cellcolor[HTML]{E5E4E2}{0.425} & \cellcolor[HTML]{E5E4E2}{0.187} & \cellcolor[HTML]{E5E4E2}{7.018} & \cellcolor[HTML]{E5E4E2}{<0.001} & \cellcolor[HTML]{E5E4E2}{0.410} & \cellcolor[HTML]{E5E4E2}{0.242} & \cellcolor[HTML]{E5E4E2}{6.808} & \cellcolor[HTML]{E5E4E2}{<0.001}\\
+\bottomrule
+\multicolumn{9}{l}{\rule{0pt}{1em}\textit{Note: }}\\
+\multicolumn{9}{l}{\rule{0pt}{1em}Rows with coeffcient estimates fixed to 1 are highligted in bold }\\
+\multicolumn{9}{l}{\rule{0pt}{1em}\textsuperscript{*} Standardized estimates}\\
+\end{tabular}
+\end{table}
 
 the cross-loading involved the loading of Item 12 on Factor 1 (Emotional Exhaustion) in addition to its targeted Factor 3 (Personal Accomplishment)
 
@@ -834,7 +612,8 @@ the cross-loading involved the loading of Item 12 on Factor 1 (Emotional Exhaust
 
 Variance of elementary level were extracted.
 
-```{r}
+
+```r
 var.elm <- cfa.summary.c(cfa.elm, fa.num = 3, item.num = 22)
 names(var.elm)[3] <- "Beta*"
 names(var.elm)[4]<- "Beta†"
@@ -842,7 +621,8 @@ names(var.elm)[4]<- "Beta†"
 
 Variance of secondary level were extracted.
 
-```{r}
+
+```r
 var.sec <- cfa.summary.c(cfa.sec, fa.num = 3, item.num = 22)
 var.sec <- var.sec[,-1]
 names(var.sec) <- 
@@ -857,7 +637,8 @@ names(var.sec) <-
 
 Variance of both levels were merged in one table and printed.
 
-```{r}
+
+```r
 var.both <- left_join(var.elm, 
                      var.sec, 
                      by = "Indicator")
@@ -867,25 +648,69 @@ align.table(data = var.both,
             title = "Residual variance for both levels")
 ```
 
+\begin{table}
+
+\caption{(\#tab:unnamed-chunk-26)Residual variance for both levels}
+\centering
+\begin{tabular}[t]{llrrrrlrrrrl}
+\toprule
+\multicolumn{2}{c}{ } & \multicolumn{5}{c}{Elementary level} & \multicolumn{5}{c}{Secondary level} \\
+\cmidrule(l{3pt}r{3pt}){3-7} \cmidrule(l{3pt}r{3pt}){8-12}
+Parameter & Indicator & Beta* & Beta† & SE & Z & p-value & Beta*  & Beta†  & SE  & Z  & p-value \\
+\midrule
+\cellcolor{gray!6}{Residual} & \cellcolor{gray!6}{ITEM1} & \cellcolor{gray!6}{1.095} & \cellcolor{gray!6}{0.398} & \cellcolor{gray!6}{0.062} & \cellcolor{gray!6}{17.641} & \cellcolor{gray!6}{<0.001} & \cellcolor{gray!6}{1.078} & \cellcolor{gray!6}{0.429} & \cellcolor{gray!6}{0.056} & \cellcolor{gray!6}{19.329} & \cellcolor{gray!6}{<0.001}\\
+Residual & ITEM2 & 1.067 & 0.432 & 0.063 & 16.832 & <0.001 & 1.071 & 0.459 & 0.053 & 20.373 & <0.001\\
+\cellcolor{gray!6}{Residual} & \cellcolor{gray!6}{ITEM3} & \cellcolor{gray!6}{1.322} & \cellcolor{gray!6}{0.452} & \cellcolor{gray!6}{0.089} & \cellcolor{gray!6}{14.773} & \cellcolor{gray!6}{<0.001} & \cellcolor{gray!6}{1.383} & \cellcolor{gray!6}{0.479} & \cellcolor{gray!6}{0.083} & \cellcolor{gray!6}{16.704} & \cellcolor{gray!6}{<0.001}\\
+Residual & ITEM6 & 1.655 & 0.602 & 0.098 & 16.924 & <0.001 & 1.656 & 0.609 & 0.084 & 19.730 & <0.001\\
+\cellcolor{gray!6}{Residual} & \cellcolor{gray!6}{ITEM8} & \cellcolor{gray!6}{0.886} & \cellcolor{gray!6}{0.269} & \cellcolor{gray!6}{0.068} & \cellcolor{gray!6}{13.044} & \cellcolor{gray!6}{<0.001} & \cellcolor{gray!6}{0.890} & \cellcolor{gray!6}{0.306} & \cellcolor{gray!6}{0.061} & \cellcolor{gray!6}{14.560} & \cellcolor{gray!6}{<0.001}\\
+Residual & ITEM13 & 1.281 & 0.431 & 0.087 & 14.663 & <0.001 & 1.167 & 0.419 & 0.075 & 15.574 & <0.001\\
+\cellcolor{gray!6}{Residual} & \cellcolor{gray!6}{ITEM14} & \cellcolor{gray!6}{1.897} & \cellcolor{gray!6}{0.571} & \cellcolor{gray!6}{0.113} & \cellcolor{gray!6}{16.728} & \cellcolor{gray!6}{<0.001} & \cellcolor{gray!6}{1.883} & \cellcolor{gray!6}{0.599} & \cellcolor{gray!6}{0.110} & \cellcolor{gray!6}{17.084} & \cellcolor{gray!6}{<0.001}\\
+Residual & ITEM16 & 1.363 & 0.591 & 0.066 & 20.746 & <0.001 & 1.353 & 0.645 & 0.071 & 19.024 & <0.001\\
+\cellcolor{gray!6}{Residual} & \cellcolor{gray!6}{ITEM20} & \cellcolor{gray!6}{0.954} & \cellcolor{gray!6}{0.461} & \cellcolor{gray!6}{0.093} & \cellcolor{gray!6}{10.210} & \cellcolor{gray!6}{<0.001} & \cellcolor{gray!6}{0.983} & \cellcolor{gray!6}{0.500} & \cellcolor{gray!6}{0.057} & \cellcolor{gray!6}{17.125} & \cellcolor{gray!6}{<0.001}\\
+Residual & ITEM5 & 1.459 & 0.669 & 0.119 & 12.289 & <0.001 & 1.711 & 0.795 & 0.100 & 17.052 & <0.001\\
+\cellcolor{gray!6}{Residual} & \cellcolor{gray!6}{ITEM10} & \cellcolor{gray!6}{0.806} & \cellcolor{gray!6}{0.370} & \cellcolor{gray!6}{0.094} & \cellcolor{gray!6}{8.530} & \cellcolor{gray!6}{<0.001} & \cellcolor{gray!6}{0.803} & \cellcolor{gray!6}{0.328} & \cellcolor{gray!6}{0.090} & \cellcolor{gray!6}{8.944} & \cellcolor{gray!6}{<0.001}\\
+Residual & ITEM11 & 0.848 & 0.372 & 0.101 & 8.404 & <0.001 & 0.854 & 0.347 & 0.095 & 9.013 & <0.001\\
+\cellcolor{gray!6}{Residual} & \cellcolor{gray!6}{ITEM15} & \cellcolor{gray!6}{0.934} & \cellcolor{gray!6}{0.745} & \cellcolor{gray!6}{0.119} & \cellcolor{gray!6}{7.870} & \cellcolor{gray!6}{<0.001} & \cellcolor{gray!6}{1.562} & \cellcolor{gray!6}{0.778} & \cellcolor{gray!6}{0.112} & \cellcolor{gray!6}{13.964} & \cellcolor{gray!6}{<0.001}\\
+Residual & ITEM22 & 2.086 & 0.877 & 0.143 & 14.538 & <0.001 & 2.052 & 0.800 & 0.124 & 16.598 & <0.001\\
+\cellcolor{gray!6}{Residual} & \cellcolor{gray!6}{ITEM4} & \cellcolor{gray!6}{0.696} & \cellcolor{gray!6}{0.800} & \cellcolor{gray!6}{0.066} & \cellcolor{gray!6}{10.568} & \cellcolor{gray!6}{<0.001} & \cellcolor{gray!6}{1.074} & \cellcolor{gray!6}{0.884} & \cellcolor{gray!6}{0.104} & \cellcolor{gray!6}{10.372} & \cellcolor{gray!6}{<0.001}\\
+Residual & ITEM7 & 0.562 & 0.734 & 0.058 & 9.605 & <0.001 & 0.907 & 0.703 & 0.064 & 14.108 & <0.001\\
+\cellcolor{gray!6}{Residual} & \cellcolor{gray!6}{ITEM9} & \cellcolor{gray!6}{1.176} & \cellcolor{gray!6}{0.662} & \cellcolor{gray!6}{0.115} & \cellcolor{gray!6}{10.247} & \cellcolor{gray!6}{<0.001} & \cellcolor{gray!6}{1.194} & \cellcolor{gray!6}{0.536} & \cellcolor{gray!6}{0.097} & \cellcolor{gray!6}{12.297} & \cellcolor{gray!6}{<0.001}\\
+Residual & ITEM12 & 1.039 & 0.627 & 0.079 & 13.108 & <0.001 & 1.177 & 0.657 & 0.076 & 15.418 & <0.001\\
+\cellcolor{gray!6}{Residual} & \cellcolor{gray!6}{ITEM17} & \cellcolor{gray!6}{0.418} & \cellcolor{gray!6}{0.536} & \cellcolor{gray!6}{0.048} & \cellcolor{gray!6}{8.653} & \cellcolor{gray!6}{<0.001} & \cellcolor{gray!6}{0.649} & \cellcolor{gray!6}{0.701} & \cellcolor{gray!6}{0.063} & \cellcolor{gray!6}{10.319} & \cellcolor{gray!6}{<0.001}\\
+Residual & ITEM18 & 0.894 & 0.606 & 0.109 & 8.170 & <0.001 & 0.703 & 0.512 & 0.068 & 10.329 & <0.001\\
+\cellcolor{gray!6}{Residual} & \cellcolor{gray!6}{ITEM19} & \cellcolor{gray!6}{0.753} & \cellcolor{gray!6}{0.587} & \cellcolor{gray!6}{0.062} & \cellcolor{gray!6}{12.153} & \cellcolor{gray!6}{<0.001} & \cellcolor{gray!6}{0.847} & \cellcolor{gray!6}{0.501} & \cellcolor{gray!6}{0.080} & \cellcolor{gray!6}{10.595} & \cellcolor{gray!6}{<0.001}\\
+Residual & ITEM21 & 1.360 & 0.819 & 0.124 & 10.949 & <0.001 & 1.889 & 0.832 & 0.111 & 17.056 & <0.001\\
+\cellcolor{gray!6}{Total} & \cellcolor{gray!6}{EE} & \cellcolor{gray!6}{1.657} & \cellcolor{gray!6}{1.000} & \cellcolor{gray!6}{0.114} & \cellcolor{gray!6}{14.585} & \cellcolor{gray!6}{<0.001} & \cellcolor{gray!6}{1.436} & \cellcolor{gray!6}{1.000} & \cellcolor{gray!6}{0.097} & \cellcolor{gray!6}{14.854} & \cellcolor{gray!6}{<0.001}\\
+Total & DP & 0.723 & 1.000 & 0.111 & 6.515 & <0.001 & 0.442 & 1.000 & 0.085 & 5.188 & <0.001\\
+\cellcolor{gray!6}{Total} & \cellcolor{gray!6}{PA} & \cellcolor{gray!6}{0.174} & \cellcolor{gray!6}{1.000} & \cellcolor{gray!6}{0.046} & \cellcolor{gray!6}{3.814} & \cellcolor{gray!6}{<0.001} & \cellcolor{gray!6}{0.141} & \cellcolor{gray!6}{1.000} & \cellcolor{gray!6}{0.034} & \cellcolor{gray!6}{4.108} & \cellcolor{gray!6}{<0.001}\\
+\bottomrule
+\multicolumn{12}{l}{\rule{0pt}{1em}\textsuperscript{*} Un-standardized estimates}\\
+\multicolumn{12}{l}{\rule{0pt}{1em}\textsuperscript{\dag} Standardized estimates}\\
+\end{tabular}
+\end{table}
+
 (3) Co-variance
 
 Co-variance of elementary level were extracted.
 
-```{r}
+
+```r
 cov.elm <- cfa.summary.d(cfa.elm, fa.num = 3, item.num = 22)
 colnames(cov.elm)[2:3] <- c("Beta*", "Beta†")
 ```
 
 Co-variance of secondary level were extracted.
 
-```{r}
+
+```r
 cov.sec <- cfa.summary.d(cfa.sec, fa.num = 3, item.num = 22)
 colnames(cov.sec) <- c("Parameter", "Beta* ", "Beta† ", "SE ", "Z ", "p-value ")
 ```
 
 Co-variance of both levels were merged in one table and printed.
 
-```{r}
+
+```r
 cov.both <- left_join(cov.elm, 
                      cov.sec, 
                      by = "Parameter")
@@ -895,6 +720,24 @@ align.table(data = cov.both,
             title = "Residual co-variance for both levels")
 ```
 
+\begin{table}
+
+\caption{(\#tab:unnamed-chunk-29)Residual co-variance for both levels}
+\centering
+\begin{tabular}[t]{lrrrrlrrrrl}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{5}{c}{Elementary level} & \multicolumn{5}{c}{Secondary level} \\
+\cmidrule(l{3pt}r{3pt}){2-6} \cmidrule(l{3pt}r{3pt}){7-11}
+Parameter & Beta* & Beta† & SE & Z & p-value & Beta*  & Beta†  & SE  & Z  & p-value \\
+\midrule
+\cellcolor{gray!6}{EE ←→ DP} & \cellcolor{gray!6}{0.688} & \cellcolor{gray!6}{0.628} & \cellcolor{gray!6}{0.075} & \cellcolor{gray!6}{9.171} & \cellcolor{gray!6}{<0.001} & \cellcolor{gray!6}{0.451} & \cellcolor{gray!6}{0.566} & \cellcolor{gray!6}{0.057} & \cellcolor{gray!6}{7.928} & \cellcolor{gray!6}{<0.001}\\
+EE ←→ PA & -0.254 & -0.473 & 0.037 & -6.952 & <0.001 & -0.177 & -0.393 & 0.029 & -6.193 & <0.001\\
+\bottomrule
+\multicolumn{11}{l}{\rule{0pt}{1em}\textsuperscript{*} Un-standardized estimates}\\
+\multicolumn{11}{l}{\rule{0pt}{1em}\textsuperscript{\dag} Standardized estimates}\\
+\end{tabular}
+\end{table}
+
 ### Model re-specification
 
 (1) Search for mis-specified parameters
@@ -903,7 +746,8 @@ align.table(data = cov.both,
 
 MIs of elementary level panel were calculated.
 
-```{r}
+
+```r
 #extract needed variables
 initial.MI.elm <- 
   modindices(cfa.elm,
@@ -914,7 +758,8 @@ initial.MI.elm <-
 
 MIs of secondary level panel were calculated.
 
-```{r}
+
+```r
 #extract needed variables
 initial.MI.sec <- 
   modindices(cfa.sec,
@@ -925,7 +770,8 @@ initial.MI.sec <-
 
 MI tables with 10 largest MI parameters was printed in descending order of MI. Potential mis-specification of most concerns were highlighted in red.
 
-```{r}
+
+```r
 MI.both <- rbind(initial.MI.elm, initial.MI.sec)
 
 MI.both    |> 
@@ -958,6 +804,44 @@ MI.both    |>
     )
 ```
 
+\begin{table}
+
+\caption{(\#tab:unnamed-chunk-32)Selected modification indices for determining baseline model}
+\centering
+\begin{tabular}[t]{llrrr}
+\toprule
+  & Parameter & MI & EPC & std EPC\\
+\midrule
+\addlinespace[0.3em]
+\multicolumn{5}{l}{\textbf{Elementary level}}\\
+\hspace{1em}\textcolor{red}{\cellcolor{gray!6}{183}} & \textcolor{red}{\cellcolor{gray!6}{ITEM16 → ITEM6}} & \textcolor{red}{\cellcolor{gray!6}{180.298}} & \textcolor{red}{\cellcolor{gray!6}{0.893}} & \textcolor{red}{\cellcolor{gray!6}{0.595}}\\
+\hspace{1em}\textcolor{red}{120} & \textcolor{red}{ITEM2 → ITEM1} & \textcolor{red}{103.177} & \textcolor{red}{0.534} & \textcolor{red}{0.494}\\
+\hspace{1em}\textcolor{red}{\cellcolor{gray!6}{84}} & \textcolor{red}{\cellcolor{gray!6}{ITEM12 → EE}} & \textcolor{red}{\cellcolor{gray!6}{81.319}} & \textcolor{red}{\cellcolor{gray!6}{-0.400}} & \textcolor{red}{\cellcolor{gray!6}{-0.400}}\\
+\hspace{1em}\textcolor{red}{285} & \textcolor{red}{ITEM11 → ITEM10} & \textcolor{red}{67.743} & \textcolor{red}{0.688} & \textcolor{red}{0.832}\\
+\hspace{1em}\cellcolor{gray!6}{348} & \cellcolor{gray!6}{ITEM19 → ITEM18} & \cellcolor{gray!6}{43.669} & \cellcolor{gray!6}{0.279} & \cellcolor{gray!6}{0.340}\\
+\hspace{1em}323 & ITEM7 → ITEM4 & 42.833 & 0.184 & 0.294\\
+\hspace{1em}\cellcolor{gray!6}{175} & \cellcolor{gray!6}{ITEM12 → ITEM3} & \cellcolor{gray!6}{28.187} & \cellcolor{gray!6}{-0.287} & \cellcolor{gray!6}{-0.245}\\
+\hspace{1em}275 & ITEM15 → ITEM5 & 25.815 & 0.273 & 0.234\\
+\hspace{1em}\cellcolor{gray!6}{96} & \cellcolor{gray!6}{ITEM16 → DP} & \cellcolor{gray!6}{25.652} & \cellcolor{gray!6}{0.459} & \cellcolor{gray!6}{0.257}\\
+\hspace{1em}185 & ITEM5 → ITEM6 & 23.753 & 0.337 & 0.217\\
+\addlinespace[0.3em]
+\multicolumn{5}{l}{\textbf{Secondary level}}\\
+\hspace{1em}\textcolor{red}{\cellcolor{gray!6}{1201}} & \textcolor{red}{\cellcolor{gray!6}{ITEM2 → ITEM1}} & \textcolor{red}{\cellcolor{gray!6}{171.647}} & \textcolor{red}{\cellcolor{gray!6}{0.627}} & \textcolor{red}{\cellcolor{gray!6}{0.583}}\\
+\hspace{1em}\textcolor{red}{2851} & \textcolor{red}{ITEM11 → ITEM10} & \textcolor{red}{135.841} & \textcolor{red}{1.181} & \textcolor{red}{1.426}\\
+\hspace{1em}\textcolor{red}{\cellcolor{gray!6}{1831}} & \textcolor{red}{\cellcolor{gray!6}{ITEM16 → ITEM6}} & \textcolor{red}{\cellcolor{gray!6}{127.756}} & \textcolor{red}{\cellcolor{gray!6}{0.686}} & \textcolor{red}{\cellcolor{gray!6}{0.458}}\\
+\hspace{1em}\textcolor{red}{841} & \textcolor{red}{ITEM12 → EE} & \textcolor{red}{118.156} & \textcolor{red}{-0.468} & \textcolor{red}{-0.419}\\
+\hspace{1em}\cellcolor{gray!6}{2751} & \cellcolor{gray!6}{ITEM15 → ITEM5} & \cellcolor{gray!6}{77.216} & \cellcolor{gray!6}{0.580} & \cellcolor{gray!6}{0.355}\\
+\hspace{1em}296 & ITEM15 → ITEM11 & 60.947 & -0.485 & -0.420\\
+\hspace{1em}\cellcolor{gray!6}{147} & \cellcolor{gray!6}{ITEM20 → ITEM2} & \cellcolor{gray!6}{53.024} & \cellcolor{gray!6}{-0.324} & \cellcolor{gray!6}{-0.316}\\
+\hspace{1em}274 & ITEM11 → ITEM5 & 48.297 & -0.446 & -0.369\\
+\hspace{1em}\cellcolor{gray!6}{339} & \cellcolor{gray!6}{ITEM19 → ITEM9} & \cellcolor{gray!6}{46.617} & \cellcolor{gray!6}{0.360} & \cellcolor{gray!6}{0.358}\\
+\hspace{1em}77 & ITEM10 → EE & 45.623 & -0.394 & -0.302\\
+\bottomrule
+\multicolumn{5}{l}{\rule{0pt}{1em}\textit{Note: }}\\
+\multicolumn{5}{l}{\rule{0pt}{1em}Rows highlighted in red are of special concerns}\\
+\end{tabular}
+\end{table}
+
 \textcolor{blue}{See table 5. Three exceptionally large residual co-variances and one cross-loading contributed to the misfit of the model for both teacher panels. The residual co-variances involved Items 1 and 2, Items 6 and 16, and Items 10 and 11; the cross-loading involved the loading of Item 12 on Factor 1 (Emotional Exhaustion) in addition to its targeted Factor 3 (Personal Accomplishment).}
 
  In reviewing both the MIs and expected parameter change (EPC) statistics for elementary teachers (table 5, upper part), it is clear that all four parameters are contributing substantially to model misfit, with the residual covariance between Item 6 and Item 16 exhibiting the most profound effect.
@@ -970,7 +854,8 @@ MI.both    |>
 
 First, the 4 parameters were relaxed in model statement.
 
-```{r}
+
+```r
 respecified4 <- 'EE =~ ITEM12
                  ITEM6 ~~ ITEM16
                  ITEM10 ~~ ITEM11
@@ -981,7 +866,8 @@ model2 <- paste(initial.model, respecified4)
 
 Then, the model fit were re-estimated for both group, respectively
 
-```{r}
+
+```r
 #for elementary
 cfa2.elm <- 
   cfa(
@@ -1002,132 +888,100 @@ cfa2.sec <-
 
 
 
-```{r}
-```
+
 xie
 
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
 
 
 
 
-```{r}
-```
 
 
-```{r}
-```
 
 
-```{r}
-```
 
 
-```{r}
-```
 
 
-```{r}
-```
 
 
-```{r}
-```
 
 
-```{r}
-```
 
 
-```{r}
-```
 
 
-```{r}
-```
 
 
-```{r}
-```
 
 
-```{r}
-```
 
 
-```{r}
-```
 
 
-```{r}
-```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
