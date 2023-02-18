@@ -887,7 +887,7 @@ MI.both    |>
     latex_options = "striped"
     ) |>
   row_spec(
-    1:4, 
+    c(1:4, 11:14), 
     color = "red"
     ) |> 
   footnote(general = 
