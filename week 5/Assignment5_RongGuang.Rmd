@@ -8,10 +8,14 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = F, message = F, cache = T)
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F, cache = T, fig.align = 'center')
 ```
 
+**\textcolor{blue}{The texts that reflect my understanding have been highlighted in} \textcolor{red}{red color}.** 
+
 # Task description
+
+The first section is task description, which is copied from the assignment5.rmd. It is for communicating with future "me". Please skip it.
 
 ## Exercise 5.1
 
@@ -23,4 +27,337 @@ Fine-tune the models step by step following the guidelines given in the lecture 
 
 Present the final baseline models of each group and draw the graphs
 
-Roses are \textcolor{red}{red}, violets are \textcolor{blue}{blue}.
+# Preparation
+
+##Read in the data set:
+
+Start by downloading the **two data files** from Moodle to your Project folder!
+
+```{r}
+#install the necessary pakages
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(here, 
+               expss, 
+               tidyverse, 
+               janitor,
+               knitr, 
+               qualtRics, 
+               arules, 
+               arulesViz, 
+               sjlabelled,
+               DT,
+               stringr,
+               labelled,
+               ggstatsplot)
+
+library(tidyverse)
+library(readr)
+
+#This week's file name
+latest.name1 <- "MBIELM1.CSV"
+latest.name2 <- "MBISEC1.CSV"
+#read in the data
+mbi.elm <-  #elementary school
+  read_csv(
+    file.path(
+      here(),
+      'data',
+      latest.name1
+      )
+    )
+
+mbi.sec <- #secondary school
+  read_csv(
+    file.path(
+      here(),
+      'data',
+      latest.name2
+      )
+    )
+
+```
+
+## Write functions
+
+To control length of reports, codes already shown in the previous homework were not showing in the current report. Yet they are available in .rmd report.
+
+### Write a function describing continuous data set
+
+```{r, echo=F}
+descriptive <- function(data){
+  library(finalfit)
+library(kableExtra)
+inspect.table <- ff_glimpse(data)$Continuous
+inspect.table$label <- NULL
+inspect.table %>%
+  mutate('Q1Q3' = paste(quartile_25,
+                        quartile_75,
+                        sep = " ~ ")) %>%
+  select(n,
+         'n of NA' = missing_n,
+         'Mean' = mean,
+         'Median' = median,
+         'SD' = sd,
+         'Min' = min,
+         'Max' = max,
+         'Q1~Q3' = Q1Q3) %>%
+  kable(booktabs = T,
+        align = "r",
+        longtable = T,
+        linesep = "",
+        caption = "Descriptive statistics for measurements") %>%
+  add_header_above(c(" ",
+                     " " = 2,
+                     "Central tendency" = 2,
+                     "Dispersion tendency" = 4)) %>%
+  kable_styling(latex_options = c("striped",
+                                  "repeat_header")) %>%
+  column_spec(1, width = "3cm")
+}
+```
+
+### Write a function for histogram overlapping with density plot
+
+```{r, echo = F}
+corr.density <- function(data, fig.num = 1, group){
+  data %>%
+  pivot_longer(everything()) %>%  #longer format
+  ggplot(aes(x = value)) + #x axis used variable "value" (a default of pivot)
+  geom_histogram(binwidth = 1, aes(y = ..density..), #match ys of density and histogram plots
+                 color = "black",  fill = "#9999CC")+  # adjust aesthetics for hist
+  geom_density(fill = "pink", alpha = 0.25)+ #adjust aesthetics for density plot
+  facet_wrap(~name, scales = "free", ncol =5) + #wrap by name variable
+  theme(panel.grid.major = element_blank(), #get rid of the  grids
+        panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = "white",#adjust the background
+                                        color = "black"),
+        strip.background = element_rect(color = "black",#adjust the strips aes
+                                        fill = "steelblue"),
+        strip.text = element_text(size =8, color = "white"), #adjust strip text
+        axis.title.x = element_text(size = 3), #adjust the x text
+        axis.title.y = element_text(size = 3), # adjust the y text
+        plot.title = element_text(size = 12,
+                                  face = "bold",
+                                  hjust = 0.5))+ #adjust the title
+  labs(title = paste("Figure", fig.num," Distribution of selected items for", group)) #title it
+  }
+```
+
+```{r}
+```
+
+# Inspect the data
+
+## Distribution
+
+```{r,fig.width= 8, fig.height = 13}
+p.dist.elm <- corr.density(mbi.elm, fig.num = "1(a)", group = "elementary school teacher")
+p.dist.sec <- corr.density(mbi.sec, fig.num = "1(b)", group = "secondary school teacher")
+library(patchwork)
+p.dist.elm/p.dist.sec
+```
+
+ 
+```{r}
+mbi.elm |> 
+  t() |> 
+  as.data.frame() %>% 
+  mutate(Item = rownames(.)) |> 
+  ggstatsplot::ggdotsplotstats(
+    y = Item,
+    x = Median,
+    test.value = 3,
+    type = "robust",
+    title      = "Distribution of life expectancy in Asian continent",
+  xlab       = "Life expectancy")
+
+update.packages("tidyverse")
+ggdotplotstats(
+  data       = dplyr::filter(gapminder::gapminder, continent == "Asia"),
+  y          = country,
+  x          = lifeExp,
+  test.value = 55,
+  type       = "robust",
+  title      = "Distribution of life expectancy in Asian continent",
+  xlab       = "Life expectancy"
+)
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
