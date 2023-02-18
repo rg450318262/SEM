@@ -127,7 +127,7 @@ data |>
         #format = "markdown", 
         caption = 
           title,
-        align = "r"
+        align = "lrrrrrr"
         ) |> 
   kable_styling(full_width = T) |> 
   footnote(symbol = 
@@ -470,7 +470,7 @@ multi.fit.tab(initial.both, "Fit indices for two subgroups, basline models")
 
 \caption{(\#tab:unnamed-chunk-20)Fit indices for two subgroups, basline models}
 \centering
-\begin{tabu} to \linewidth {>{\raggedleft\arraybackslash}p{3cm}>{\raggedleft\arraybackslash}p{4cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{2.5cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{1cm}}
+\begin{tabu} to \linewidth {>{\raggedright\arraybackslash}p{3cm}>{\raggedleft\arraybackslash}p{4cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{2.5cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{1cm}}
 \toprule
 Model & Chi square (df, p) & CFI & TLI & RMSEA(p) & SRMR & CSF*\\
 \midrule
@@ -910,7 +910,7 @@ multi.fit.tab(compare12,
 
 \caption{(\#tab:unnamed-chunk-35)Fit indices for two subgroups, model 2}
 \centering
-\begin{tabu} to \linewidth {>{\raggedleft\arraybackslash}p{3cm}>{\raggedleft\arraybackslash}p{4cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{2.5cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{1cm}}
+\begin{tabu} to \linewidth {>{\raggedright\arraybackslash}p{3cm}>{\raggedleft\arraybackslash}p{4cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{2.5cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{1cm}}
 \toprule
 Model & Chi square (df, p) & CFI & TLI & RMSEA(p) & SRMR & CSF*\\
 \midrule
