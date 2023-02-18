@@ -777,12 +777,15 @@ the cross-loading involved the loading of Item 12 on Factor 1 (Emotional Exhaust
 
 (3) Variance 
 
+Variance of elementary level were extracted.
+
 ```{r}
 var.elm <- cfa.summary.c(cfa.elm, fa.num = 3, item.num = 22)
 names(var.elm)[3] <- "Beta*"
 names(var.elm)[4]<- "Beta†"
 ```
 
+Variance of secondary level were extracted.
 
 ```{r}
 var.sec <- cfa.summary.c(cfa.sec, fa.num = 3, item.num = 22)
@@ -797,6 +800,8 @@ names(var.sec) <-
     )
 ```
 
+Variance of both levels were merged in one table and printed.
+
 ```{r}
 var.both <- left_join(var.elm, 
                      var.sec, 
@@ -809,17 +814,21 @@ align.table(data = var.both,
 
 (3) Co-variance
 
+Co-variance of elementary level were extracted.
+
 ```{r}
 cov.elm <- cfa.summary.d(cfa.elm, fa.num = 3, item.num = 22)
 colnames(cov.elm)[2:3] <- c("Beta*", "Beta†")
 ```
 
+Co-variance of secondary level were extracted.
 
 ```{r}
 cov.sec <- cfa.summary.d(cfa.sec, fa.num = 3, item.num = 22)
 colnames(cov.sec) <- c("Parameter", "Beta* ", "Beta† ", "SE ", "Z ", "p-value ")
 ```
 
+Co-variance of both levels were merged in one table and printed.
 
 ```{r}
 cov.both <- left_join(cov.elm, 
@@ -833,6 +842,8 @@ align.table(data = cov.both,
 
 ### Model re-specification
 
+MIs of elementary level panel were calculated.
+
 ```{r}
 #extract needed variables
 BL.MI.elm <- 
@@ -842,19 +853,53 @@ BL.MI.elm <-
              maximum.number = 10)
 ```
 
+MIs of secondary level panel were calculated.
 
 ```{r}
-BL.MI.elm |> 
-  mutate(Parameter = paste(rhs, "→", lhs)) |>
-  select(Parameter, MI = mi, EPC = epc, "std EPC" = sepc.all)|>
+#extract needed variables
+BL.MI.sec <- 
+  modindices(cfa.sec,
+             standardized = TRUE,
+             sort. = TRUE,
+             maximum.number = 10)
+```
+
+MI tables with 10 largest MI parameters was printed in descending order of MI. Potential mis-specification of most concerns were highlighted in red.
+
+```{r}
+MI.both <- rbind(BL.MI.elm, BL.MI.sec)
+
+MI.both    |> 
+  mutate(Parameter = 
+           paste(rhs, "→", lhs)
+         ) |>
+  select(Parameter, 
+         MI = mi, 
+         EPC = epc, 
+         "std EPC" = sepc.all
+         )|>
   kable(digits = 3,
         booktab = T,
         linesep = "",
-        caption = "Selected modification indices for determining baseline model") |>
-  kable_styling(latex_options = "striped") |>
-  row_spec(2, color = "red")
+        caption = 
+          "Selected modification indices for determining baseline model") |>
+  kable_styling(
+    latex_options = "striped"
+    ) |>
+  row_spec(
+    1:4, 
+    color = "red"
+    ) |> 
+  footnote(general = 
+             "Rows highlighted in red are of special concerns") |> 
+  pack_rows(index = c(
+    "Elementary level" = 10,
+    "Secondary level" = 10
+    )
+    )
 ```
 
+Three exceptionally large residual co-variances and one cross-loading contributed to the misfit of the model for both teacher panels. The residual co-variances involved Items 1 and 2, Items 6 and 16, and Items 10 and 11; the cross-loading involved the loading of Item 12 on Factor 1 (Emotional Exhaustion) in addition to its targeted Factor 3 (Personal Accomplishment)
 
 ```{r}
 ```
