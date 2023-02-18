@@ -713,12 +713,28 @@ cfa.sec <-
 ```{r}
 library(knitr);library(kableExtra)
 #combine fit indices of both levels
-initial.elm.fit <- cfa.summary.mlm.a(cfa.elm) |> t() |> as.data.frame()
-initial.sec.fit <- cfa.summary.mlm.a(cfa.sec) |> t() |> as.data.frame()
-initial.both <- rbind(initial.elm.fit[2,], initial.sec.fit[2,]) 
-names(initial.both) <- initial.elm.fit[1,]
-rownames(initial.both) <- c("Elementary level",
-                       "Secondary level")
+initial.elm.fit <- 
+  cfa.summary.mlm.a(cfa.elm) |> 
+  t() |> 
+  as.data.frame()
+
+initial.sec.fit <- 
+  cfa.summary.mlm.a(cfa.sec) |> 
+  t() |> 
+  as.data.frame()
+initial.both <- 
+  rbind(
+    initial.elm.fit[2,], 
+    initial.sec.fit[2,]
+    ) 
+
+names(initial.both) <- 
+  initial.elm.fit[1,]
+
+initial.both |> 
+  mutate(Model = c("Elementary level",
+    "Secondary level")) |> 
+  select(Model, everything())
 #print the table
 multi.fit.tab(initial.both, "Fit indices for two subgroups, basline models")
 ```
@@ -977,16 +993,23 @@ model2.both <-
 
 names(model2.both) <- model2.elm.fit[1,]
 
-rownames(model2.both) <- 
-  c("Elementary level",
-    "Secondary level")
+model2.both |> 
+  mutate(Model = c("Elementary level",
+    "Secondary level")) |> 
+  select(Model, everything())
+  
 
 #
 compare12 <- rbind(initial.both, model2.both)
 
 #print the table
 multi.fit.tab(compare12, 
-              "Fit indices for two subgroups, model 2")
+              "Fit indices for two subgroups, model 2") |> 
+  pack_rows(index = c(
+    "Initial model" = 2,
+    "Model 2" = 2
+  )
+  )
 ```
 
 
