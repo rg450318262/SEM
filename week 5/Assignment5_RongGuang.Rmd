@@ -1020,7 +1020,7 @@ compare12 <- rbind(initial.both, model2.both)
 
 #print the table
 multi.fit.tab(compare12, 
-              "Fit indices for two subgroups, model 2") |> 
+              "Fit indices for two subgroups, model 2, comparing to initial model") |> 
   pack_rows(index = c(
     "Initial model" = 2,
     "Model 2" = 2
@@ -1131,7 +1131,7 @@ cfa3.sec <-
 
 ### Examine Model 3
 
-(1) Inspect fit indices of model2 (comparing to initial model)
+(1) Inspect fit indices of model3 (comparing to model 2)
 
 ```{r}
 #combine fit indices of both levels
@@ -1170,7 +1170,7 @@ compare123 <- rbind(initial.both, model2.both, model3.both)
 
 #print the table
 multi.fit.tab(compare123, 
-              "Fit indices for two subgroups, model 3") |> 
+              "Fit indices for two subgroups, model 3, comparing to preceding models") |> 
   pack_rows(index = c(
     "Initial model" = 2,
     "Model 2" = 2,
@@ -1179,47 +1179,11 @@ multi.fit.tab(compare123,
   )
 ```
 
-See table 8. Results from the estimation of Model 3 for elementary teachers yielded goodness-of-fit statistics that represented a satisfactorily good fit to the data (MLM chi square[201] = 466.722; CFI = 0.939; RMSEA = 0.048; SRMR = 0.050). Although a review of Table 9 reveals several additional moderately large MIs, for balancing goodness-of-fit and parsimony, \textcolor{blue}{the decision was model 3 could serve as the baseline model for elementary teachers.}
+See table 8. Results from the estimation of Model 3 for elementary teachers yielded goodness-of-fit statistics that represented a satisfactorily good fit to the data (MLM chi square[201] = 466.722; CFI = 0.939; RMSEA = 0.048; SRMR = 0.050). Although a review of Table 9 (find below) reveals several additional moderately large MIs, for balancing goodness-of-fit and parsimony, \textcolor{blue}{the decision was model 3 can serve as the baseline model for elementary teachers.}
 
 Results from the estimation of Model 3 for secondary teachers, on the other hand, further substantiated the residual covariance between Items 19 and 9 as representing an acutely mis-specified parameter in the model. \textcolor{blue}{Thus, for secondary teachers only, model 4 was put to the test with this residual covariance specified as a freely estimated parameter.}
 
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-
-
-
-
-```{r}
-chisq_mlm <- function(fit_nested, fit_parent) {
-    # scaling correction factors
-      c0 <- fitMeasures(fit_nested, "chisq.scaling.factor") %>% as.numeric()
-      c1 <- fitMeasures(fit_parent, "chisq.scaling.factor") %>% as.numeric()
-    # scaling correction of the difference test
-      d0 <- fitMeasures(fit_nested, "df") %>% as.numeric()
-      d1 <- fitMeasures(fit_parent, "df") %>% as.numeric()
-      cd <- ((d0 * c0) - (d1 * c1))/(d0 - d1)
-    # MLM chi-square difference test
-      T0 <- fitMeasures(fit_nested, "chisq.scaled") %>% as.numeric()
-      T1 <- fitMeasures(fit_parent, "chisq.scaled") %>% as.numeric()
-      TRd <- (T0*c0 - T1*c1)/cd
-    # degrees of freedom
-      df = d0 - d1
-    return(c("TR_d" = round(TRd,3), 
-             "df" = round(df,0), 
-             "p_value" = pchisq(TRd, df, lower.tail = FALSE) |> round(3)))
-}
-```
-
-```{r}
-
-```
+(2) Modification indices of model 3
 
 MIs of model 3 for each groups were calculated.
 
@@ -1265,7 +1229,7 @@ MI3.both    |>
     latex_options = "striped"
     ) |>
   row_spec(
-    c(1:2, 11:12), 
+    c(1:2, 11), 
     color = "red"
     ) |> 
   footnote(general = 
@@ -1277,11 +1241,96 @@ MI3.both    |>
     )
 ```
 
+(3) Re-specification for model 3 (only for secondary teacher)
+
+The parameter ITEM9 ~~ ITEM19 was relaxed for estimation.
+
+```{r}
+respecified4 <- 'ITEM9 ~~ ITEM19
+                 '
+model4 <- paste(model3, respecified4)
+```
+
+Then, the model fit were re-estimated for secondary group, only
+
+```{r}
+cfa4.sec <- 
+  cfa(
+    model4, 
+    data = mbi.sec,  
+    estimator = "MLM",
+    mimic = "Mplus"
+    )
+```
+
+### Examine Model 4
+
+\textcolor{blue}{Note that at this point I had taken model 3 as the baseline model for elementary teachers, and model 4 was to achieve the baseline model for secondary teachers.}
+
+(1) Inspect fit indices of model4 (comparing to 3)
+
+```{r}
+model4.sec.fit <- 
+  cfa.summary.mlm.a(
+    cfa4.sec
+    ) |> 
+  t() |> 
+  as.data.frame()
+
+names(model4.sec.fit ) <- model4.sec.fit[1,]
+
+rownames(model4.sec.fit ) <- NULL
+model4.sec.fit <- model4.sec.fit [-1,]
+model4.sec.fit  <- 
+  model4.sec.fit  |> 
+  mutate(Model = "Secondary level") |> 
+  select(Model, everything())
+
+#combine model 1 and 2 tables
+compare1234 <- rbind(initial.both, model2.both, model3.both, model4.sec.fit )
+
+#print the table
+multi.fit.tab(compare1234, 
+              "Fit indices for two subgroups, model 4, comparing to preceding models") |> 
+  pack_rows(index = c(
+    "Initial model" = 2,
+    "Model 2" = 2,
+    "Model 3" =2,
+    "Model 4" =1
+  )
+  )
+```
+
+```{r}
+
+```
+
+
 
 
 ```{r}
 ```
 
+```{r}
+chisq_mlm <- function(fit_nested, fit_parent) {
+    # scaling correction factors
+      c0 <- fitMeasures(fit_nested, "chisq.scaling.factor") %>% as.numeric()
+      c1 <- fitMeasures(fit_parent, "chisq.scaling.factor") %>% as.numeric()
+    # scaling correction of the difference test
+      d0 <- fitMeasures(fit_nested, "df") %>% as.numeric()
+      d1 <- fitMeasures(fit_parent, "df") %>% as.numeric()
+      cd <- ((d0 * c0) - (d1 * c1))/(d0 - d1)
+    # MLM chi-square difference test
+      T0 <- fitMeasures(fit_nested, "chisq.scaled") %>% as.numeric()
+      T1 <- fitMeasures(fit_parent, "chisq.scaled") %>% as.numeric()
+      TRd <- (T0*c0 - T1*c1)/cd
+    # degrees of freedom
+      df = d0 - d1
+    return(c("TR_d" = round(TRd,3), 
+             "df" = round(df,0), 
+             "p_value" = pchisq(TRd, df, lower.tail = FALSE) |> round(3)))
+}
+```
 
 ```{r}
 ```
