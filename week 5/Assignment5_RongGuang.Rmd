@@ -1289,22 +1289,28 @@ rownames(model4.sec.fit ) <- NULL
 
 #combine model 1 and 2 tables
 model3.both[1,1] <- "Elementary level†"
-compare1234 <- rbind(initial.both, 
-                     model2.both, 
-                     model3.both, 
-                     model4.sec.fit )
+model4.sec.fit[1,1] <- "Secondary level†"
+compare1234 <- 
+  rbind(initial.both,
+        model2.both, 
+        model3.both, 
+        model4.sec.fit )
 
 #print the table
 multi.fit.tab(compare1234, 
               "Fit indices for two subgroups, model 4, comparing to preceding models",
-              "Baseline model for elementary teachers") |> 
+              c("Baseline model for elementary teachers", 
+                "Baseline model for secondary teachers")) |> 
   pack_rows(index = c(
     "Initial model" = 2,
     "Model 2" = 2,
     "Model 3" =2,
     "Model 4" =1
   )
-  ) 
+  ) |> 
+  row_spec(c(5,7), 
+           color = "red"
+           )
 ```
 
 ```{r}
