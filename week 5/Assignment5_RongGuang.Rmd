@@ -905,8 +905,11 @@ MI tables with 10 largest MI parameters was printed in descending order of MI. P
 MI.both <- rbind(initial.MI.elm, initial.MI.sec)
 
 MI.both    |> 
-  mutate(Parameter = 
-           paste(rhs, "→", lhs)
+  mutate(
+    op = case_when(op == "~~"~"←→",
+                   op == "=~"~"→"), 
+    Parameter = 
+           paste(lhs, op, rhs)
          ) |>
   select(Parameter, 
          MI = mi, 
@@ -1059,8 +1062,11 @@ MI tables with 10 largest MI parameters was printed in descending order of MI. P
 MI2.both <- rbind(model2.MI.elm, model2.MI.sec)
 
 MI2.both    |> 
-  mutate(Parameter = 
-           paste(rhs, "→", lhs)
+  mutate(
+    op = case_when(op == "~~"~"←→",
+                   op == "=~"~"→"), 
+    Parameter = 
+           paste(lhs, op, rhs)
          ) |>
   select(Parameter, 
          MI = mi, 
@@ -1173,6 +1179,9 @@ multi.fit.tab(compare123,
   )
   )
 ```
+
+Results from the estimation of Model 3 for elementary teachers yielded goodness-of-fit statistics that represented a satisfactorily good fit to the data (MLM χ2[201] = 451.060; CFI = 0.942; RMSEA = 0.046; SRMR = 0.049) and a corrected difference from the previous model (Model 2) that was statistically significant (∆MLM χ2[1] = 9.664, p < .005). Although a review of Table 7.3 reveals several additional moderately large MIs, it is important always to base final model decisions on goodness-of-fit in combination with model parsimony. With these caveats in mind, I consider Model 3 to best serve as the baseline model for elementary teachers.
+Results from the estimation of Model 3 for secondary teachers, on the other hand, further substantiated the residual covariance between Items 19 and 9 as representing an acutely misspecified parameter in the model. Thus, for secondary teachers only, Model 4 was put to the test with this
 
 
 ```{r}
