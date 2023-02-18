@@ -36,6 +36,21 @@ Compare the initial and final graphs and make sure that you understand the whole
 Start by downloading the data file from Moodle to Project folder.
 
 ```{r}
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(here, 
+               expss, 
+               tidyverse, 
+               janitor,
+               knitr, 
+               qualtRics, 
+               arules, 
+               arulesViz, 
+               sjlabelled,
+               DT,
+               stringr,
+               rCBA,
+               labelled)
+
 library(tidyverse)
 library(readr)
 library(here)

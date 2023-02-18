@@ -1,0 +1,562 @@
+---
+title: "COS-D419 Factor Analysis and Structural Equation Models 2023, Assignment 5"
+author: "write your name here"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# CFA invariance & teacher burnout
+
+## Exercise 5.1
+
+Specify and estimate the initial baseline models for the two groups. 
+
+Present a brief summary of the model fit and make the first step of the modification by including **(exceptionally, at the same time!)** all the four parameters known to be required for improving the model fit of both models.
+
+Fine-tune the models step by step following the guidelines given in the lecture material, i.e., implement the modifications **(as usually, one change at a time)** testing and studying each step. 
+
+Present the final baseline models of each group and draw the graphs.
+
+### Read in the data set:
+
+Start by downloading the **two data files** from Moodle to your Project folder!
+
+```{r}
+library(tidyverse)
+library(readr)
+
+MBIelm <- read_csv("MBIELM1.CSV", show_col_types = FALSE) 
+glimpse(MBIelm)
+
+MBIsec <- read_csv("MBISEC1.CSV", show_col_types = FALSE) 
+glimpse(MBIsec)
+```
+
+### Explore the data (always do that!):
+
+```{r}
+
+# (copy and modify your earlier R codes)
+
+```
+
+### Define and estimate the initial baseline models:
+
+Complete the model definition first (see Assignment 3).
+
+```{r}
+library(lavaan)
+
+# Define a CFA model using the lavaan (Latent Variable Analysis) syntax:
+# see https://lavaan.ugent.be/tutorial/syntax1.html
+
+BLmodel <- '
+# CFA model for the burnout, the baseline model:
+# EE: EmotionalExhaustion
+# DP: Depersonalization
+# PA: PersonalAccomplishment
+    EE =~ ITEM1 + ...
+    DP =~ ITEM5 + ...
+    PA =~ ITEM4 + ...
+
+```
+
+The initial baseline model (BLmodel above) is the same for both groups, but the data sets are of course different. 
+
+Now, begin by estimating the model **separately for both groups**. 
+
+Then follow the instructions above (Exercise 5.1) until you have the final baseline models for each group.
+
+**This time I will give you much more detailed instructions, as you will see...**
+
+```{r}
+# (copy and modify your earlier R codes)
+
+# note: you should use the good old cfa() function here, as this is CFA, not full SEM
+
+# so, two cfa()s here (same model, but different data):
+
+
+
+# followed by their summary()s etc.:
+
+
+
+
+```
+
+Then, the first four modifications (exceptionally all at the same time):
+
+```{r}
+# here is a suggestion to use the paste() function for implementing
+# the first four modifications, exceptionally all at the same time:
+# (of course, you may always re-write the whole model if you want!)
+
+first4mods <- '
+# first four modifications (common to the groups):
+EE =~ ITEM12
+ITEM6 ~~ ITEM16
+ITEM10 ~~ ITEM11
+ITEM1 ~~ ITEM2
+'
+
+BLmodelelm <- paste(BLmodel, first4mods, sep = "\n  ")
+
+# and as they are (still) equal to both groups, we may just copy the whole model:
+
+BLmodelsec <- BLmodelelm
+```
+
+Then continue fitting and modifying both two models separately, one step at a time (from now on, the two models can be different from each other: the principle of *Partial Measurement Invariance* lets them to differ while still making it possible to continue with multigroup analyses.
+
+**Just follow Byrne's ideas here. Do not implement any additional modifications.**
+
+```{r}
+# perhaps first work through the elm group, then the sec group - your decision!
+
+# (copy and modify your earlier R codes)
+
+
+
+
+
+
+
+```
+
+### Visualize the final baseline models for each group
+
+At this stage, the elm and sec models have some differences.
+
+```{r}
+library(semPlot)
+
+# create two plots (one for each baseline model)
+
+# try to display the two plots side by side (as in the lecture material)!
+# hint: a great R package called `patchwork`!
+
+
+# (copy and modify your earlier R codes)
+
+```
+
+## Exercise 5.2: 
+
+**Now we are getting to the point of this Assignment: testing the invariance.** See slide #14.
+
+*Note:* To continue you have to combine the two data sets into one data set, so that it includes a variable for identifying the two groups.
+
+As soon as you have the new data, go ahead and specify the *common baseline (configural) model*, and then begin the **invariance testing** by estimating that configural model and studying its output. See below! A lot of ready R code given! :)
+
+### Combine the data sets and establish the group variable accordingly
+
+```{r}
+# There are many ways to do this in R, this is just one possibility:
+# (you may well use your own way to achieve a similar result!)
+# (merge() comes from the base R, it has a handy argument `group`)
+
+MBIelmsec <- merge(data.frame(MBIelm, group = "elementary"),
+                   data.frame(MBIsec, group = "secondary"), 
+                   all = TRUE, sort = FALSE)
+
+# quickly check that the new group variable includes the specified values:
+head(MBIelmsec[, 21:23])
+tail(MBIelmsec[, 21:23])
+# good - now we can identify the groups from the combined data, too!
+```
+
+### Configural model (common baseline model for both groups simultaneously)
+
+To get you going, I give you the complete, commented R code for the configural model below
+(see also https://lavaan.ugent.be/tutorial/syntax2.html).
+
+**NOTE:** No equality constraints are imposed (see the end of my slide #18). Not yet! :)
+
+This is the default in lavaan (and as you will see, everything is much simpler than in Mplus).
+
+You should have **401 degrees of freedom** when fitting the multigroup version of the baseline models for the two teacher groups. Please check that you get it right before proceeding forward!
+
+```{r}
+INV1model <- '
+# CFA model for the burnout, the configural model:
+#
+# EE: EmotionalExhaustion
+# DP: Depersonalization
+# PA: PersonalAccomplishment
+#
+# The ones (1s) can be written explicitly (the default is the 1st one of each set):
+# (this is "nice to know": would be easy to change the fixed item(s), if needed)
+
+    EE =~ 1*ITEM1 + ITEM2 + ITEM3 + ITEM6 + ITEM8 + ITEM13 + ITEM14 + ITEM16 + ITEM20
+    DP =~ 1*ITEM5 + ITEM10 + ITEM11 + ITEM15 + ITEM22
+    PA =~ 1*ITEM4 + ITEM7 + ITEM9 + ITEM12 + ITEM17 + ITEM18 + ITEM19 + ITEM21
+
+# Common modifications (from baseline models built above)
+    EE =~ ITEM12 # common cross-loading
+ ITEM1 ~~ ITEM2  # common residual covariances (3)
+ ITEM6 ~~ ITEM16
+ITEM10 ~~ ITEM11
+
+# Group-specific parameters for elementary teachers:
+ ITEM4 ~~ c(NA, 0)*ITEM7  # specific residual covariance
+
+# Group-specific parameters for secondary teachers:
+    EE =~ c(0, NA)*ITEM11 # specific cross-loading
+ ITEM9 ~~ c(0, NA)*ITEM19 # specific residual covariance
+'
+```
+
+The configural model (the common baseline model for both groups) can now be estimated:
+
+(Again, I am giving you more R code to keep you on the track.) :) You may, of course, always edit my code and add your own!
+
+```{r}
+# From now on, we need the group argument in the cfa() function:
+INV1fit <- cfa(INV1model, data = MBIelmsec, estimator = "MLM", group = "group")
+
+# Numerical summary of the model (yes, it is getting longer...)
+summary(INV1fit, fit.measures = TRUE, standardized = TRUE)
+
+# (copy and modify your earlier R codes)
+
+
+# (constructing the TABLES for the model comparisons are again recommended...)
+
+```
+
+Study the output. Then, you will finally be ready for the point: **invariance testing** phase.
+
+*(Luckily it will all be quite much simpler than with Mplus! But there are many phases.)*
+
+Your task is to proceed *carefully* with the measurement model modifications for two TASKS:
+**TASK 1) Factor loadings**
+and 
+**TASK 2) Residual covariances**.
+
+In the end of this phase, Byrne has some unfortunate errors... (see slide #25). Check what you get!
+
+```{r}
+# take a look at this web page: https://lavaan.ugent.be/tutorial/groups.html
+# (see esp. under the heading "Constraining groups of parameters to be equal across groups")
+
+# TASK 1) begins here!
+# ####################
+# to constrain the 20 common factor loadings equal,
+# simply use `group.equal` in cfa() for "loadings",
+# and 
+# to keep the one specific cross-loading ("EE =~ ITEM11") free,
+# simply use `group.partial` in cfa() for that cross-loading:
+
+INV2fit <- cfa(INV1model, data = MBIelmsec, estimator = "MLM", 
+               group = "group",
+               # to be completed... see above!
+               # to be completed... see above!
+              )
+
+# Study the output carefully to see the results of these simple operations.
+#
+# Write a short note of what you see! This is always recommended, to make
+# it easier for me, for others and yourself to follow your steps afterwards.
+# 
+# (compare with the tricky Mplus procedure on slides #19-#21... ugh...) 8~)
+
+summary(INV2fit, fit.measures = TRUE, standardized = TRUE)
+```
+
+Testing two consecutive (nested) models using the $\chi^2$ difference test:
+
+```{r}
+# example of manual calcucations (cf. lecture material, part 3 and Assignment 3):
+cd <- ((421*1.263)-(401*1.266))/(421-401)
+cd
+TRd <- (995.433*1.263 - 939.696*1.266)/cd
+TRd
+# select and activate the line (after #) to get help related to the chi^2 distribution:
+# ?Chisquare
+# use the distribution function pchisq() to find the corresponding p-value:
+1-pchisq(TRd,(421-401)) # (tail probability)
+# 2.730413e-05
+# (clear case: significantly better than the configural model)
+
+# why not create an R function for these calculations? For example:
+chisq_mlm <- function(fit_nested, fit_parent) {
+    # scaling correction factors
+      c0 <- fitMeasures(fit_nested, "chisq.scaling.factor") %>% as.numeric()
+      c1 <- fitMeasures(fit_parent, "chisq.scaling.factor") %>% as.numeric()
+    # scaling correction of the difference test
+      d0 <- fitMeasures(fit_nested, "df") %>% as.numeric()
+      d1 <- fitMeasures(fit_parent, "df") %>% as.numeric()
+      cd <- ((d0 * c0) - (d1 * c1))/(d0 - d1)
+    # MLM chi-square difference test
+      T0 <- fitMeasures(fit_nested, "chisq.scaled") %>% as.numeric()
+      T1 <- fitMeasures(fit_parent, "chisq.scaled") %>% as.numeric()
+      TRd <- (T0*c0 - T1*c1)/cd
+    # degrees of freedom
+      df = d0 - d1
+    return(c("TR_d" = TRd, "df" = df, "p_value" = pchisq(TRd, df, lower.tail = FALSE)))
+}
+
+# let us test it!
+chisq_mlm(INV2fit, INV1fit)
+
+```
+
+Then, the modification indices (MIs), again with some *new options* to reduce the output:
+
+```{r}
+modindices(INV2fit, standardized = TRUE, minimum.value = 3.84, free.remove = FALSE,
+           op = "=~", sort. = TRUE)
+  
+```
+
+Follow Byrne (slide #21) and estimate the next model:
+
+```{r}
+# just ADD that modification ("DP =~ ITEM11") in the `group.partial`
+# in the following - it will then be estimated separately instead
+# of restricting it equal across the groups:
+
+INV3fit <- cfa(INV1model, data = MBIelmsec, estimator = "MLM", 
+               group = "group",
+               # to be completed... see above!
+               # to be completed... see above!
+              )
+
+# Again, study the output to see how the results changed:
+summary(INV3fit, fit.measures = TRUE, standardized = TRUE)
+
+```
+
+Now you can proceed easily with the testing, using the R function:
+
+```{r}
+# note that we are still comparing against the configural model INV1:
+chisq_mlm(INV3fit, INV1fit)
+```
+
+According to Byrne, further improvement of the model is required.
+
+So, take another round of MIs, similarly as above:
+
+(you may have to fine-tune the 'minimum.value' a bit smaller to see more MIs)
+
+```{r}
+
+
+# (copy and modify your earlier R codes)
+
+
+```
+
+**[begin EXTRA]** ----8-<----8-<----8-<----8-<----8-<----8-<----8-<----8-<---
+
+Below is 'a bit' technical trick to dig some information from the lavaan objects: 
+
+**OBS!** *you may well skip these details - easy way is just to follow Byrne’s steps and implement them!*
+
+```{r}
+# So called Score test for releasing one or more fixed or constrained parameters in model:
+mi_inv3 <- lavTestScore(INV3fit, warn = FALSE)$uni
+arrange(mi_inv3, -X2) # largest chi-squares (=smallest p-values) first
+# check from the parameter table, to which parameters those ".p13." and ".p95." refer to:
+p3 <- parTable(INV3fit) # 183 rows... pick the one:
+p3[p3$label == ".p13." & p3$plabel == ".p95.", c("lhs", "op", "rhs", "label", "plabel")]
+```
+
+# yes: it is DP =~ ITEM15 (cf. slide #23) :-)
+
+--8-<----8-<----8-<----8-<----8-<----8-<----8-<----8-<----8-< **[end EXTRA]**
+
+Follow Byrne (slide #23) and estimate the next model:
+
+```{r}
+# just ADD that modification ("DP =~ ITEM15") in the `group.partial`
+# etc. (just like you did earlier!)
+
+# (copy and modify your earlier R codes)
+
+
+
+# Again, study the output to see how the results changed:
+summary(INV4fit, fit.measures = TRUE, standardized = TRUE)
+
+```
+
+Again, do the testing using the R function:
+
+```{r}
+# note that we are still comparing against the configural model INV1:
+chisq_mlm(INV4fit, INV1fit)
+```
+
+Now, the corrected MLM $\chi^2$ difference should be *n.s.* (non-significant),
+see slide #23, so our *TASK 1* (about 200 lines above) is complete! :)
+
+**********************************************
+
+## Second last stage: residual covariances
+
+See slide #24 and proceed (actually, quite similarly as with Mplus).
+
+For clarity, I will give the complete R code here. Enjoy! :)
+
+```{r}
+# TASK 2) begins here!
+# ####################
+# constrain equal the three residual covariances:
+# ITEM1 ~~ ITEM2
+# ITEM6 ~~ ITEM16
+# ITEM10 ~~ ITEM11
+
+INV5model <- '
+# EE: EmotionalExhaustion
+# EP: Depersonalization
+# PA: PersonalAccomplishment
+
+    EE =~ 1*ITEM1 + ITEM2 + ITEM3 + ITEM6 + ITEM8 + ITEM13 + ITEM14 + ITEM16 + ITEM20
+    DP =~ 1*ITEM5 + ITEM10 + ITEM11 + ITEM15 + ITEM22
+    PA =~ 1*ITEM4 + ITEM7 + ITEM9 + ITEM12 + ITEM17 + ITEM18 + ITEM19 + ITEM21
+
+# Common modifications (from baseline models)
+    EE =~ ITEM12 # common cross-loading
+
+# Residual covariances (in both groups) - NOW THE FOCUS is on these three:
+ ITEM1 ~~ c(a, a)*ITEM2
+ ITEM6 ~~ c(b, b)*ITEM16
+ITEM10 ~~ c(c, c)*ITEM11
+
+# Group-specific parameters for elementary teachers:
+ ITEM4 ~~ c(NA, 0)*ITEM7
+
+# Group-specific parameters for secondary teachers:
+    EE =~ c(0, NA)*ITEM11
+ ITEM9 ~~ c(0, NA)*ITEM19
+'
+
+INV5fit <- cfa(INV5model, data = MBIelmsec, estimator = "MLM", 
+               group = "group",
+               # (copy from your earlier R code)
+               # (copy from your earlier R code)
+              ) 
+
+# and, once again, study the output:
+summary(INV5fit, fit.measures = TRUE, standardized = TRUE)
+
+```
+
+*OBS!* Now the nested model is INV5 and parent model is INV4 (the previous one)!
+(their df difference is only 3 - those three parameters that we focused on)
+
+Here is the problematic point of the material: Byrne's book seems to have an error. :( See slide #25.
+
+Actually, the result is clearly significant:
+
+```{r}
+chisq_mlm(INV5fit, INV4fit)
+```
+
+However, to finish the story (along the lines of Byrne), we'd better continue here by assuming that the result was n.s., and that *the three residual covariances are operating equivalently across the groups* (as she says).
+
+Hence, the invariance model 5 is taken as the **final model** in this phase.
+
+******************************************
+
+FINALLY, continue with the *structural model* modifications (here, those refer only to the *factor variances* and the *factor covariances*).
+
+Finally-finally: Conclude.
+
+
+## Last stage: structural parameters (i.e., factor variances and covariances)
+
+This is easy: just add the lavaan short cuts "lv.variances" and "lv.covariances" to the `group.equal`.
+
+(We could also specify them one by one, similarly as in the previous phase, see the "EXTRA" below.)
+
+```{r}
+INV6fit <- cfa(INV5model, data = elmsec, estimator = "MLM", 
+               group = "group",
+               # (copy and modify from your earlier R code)
+               # (copy from your earlier R code)
+              ) 
+
+```
+
+**[begin EXTRA]** ----8-<----8-<----8-<----8-<----8-<----8-<----8-<----8-<---
+
+*An alternative way for setting the factor variances and covariances equal across the groups:*
+
+```{r}
+INV6model <- '
+# EE: EmotionalExhaustion
+# EP: Depersonalization
+# PA: PersonalAccomplishment
+
+    EE =~ 1*ITEM1 + ITEM2 + ITEM3 + ITEM6 + ITEM8 + ITEM13 + ITEM14 + ITEM16 + ITEM20
+    DP =~ 1*ITEM5 + ITEM10 + ITEM11 + ITEM15 + ITEM22
+    PA =~ 1*ITEM4 + ITEM7 + ITEM9 + ITEM12 + ITEM17 + ITEM18 + ITEM19 + ITEM21
+
+# Common modifications (from baseline models)
+    EE =~ ITEM12 # common cross-loading
+
+# Residual covariances (in both groups)
+ ITEM1 ~~ c(a, a)*ITEM2
+ ITEM6 ~~ c(b, b)*ITEM16
+ITEM10 ~~ c(c, c)*ITEM11
+
+# LAST STEP, alternative way: NOW THE FOCUS is on these six (3 lv.covariances + 3 lv.variances):
+
+    EE ~~ c(d, d)*DP
+    EE ~~ c(e, e)*PA
+    DP ~~ c(f, f)*PA
+    
+    EE ~~ c(g, g)*EE
+    DP ~~ c(h, h)*DP
+    PA ~~ c(i, i)*PA
+
+# Group-specific parameters for elementary teachers:
+ ITEM4 ~~ c(NA, 0)*ITEM7
+
+# Group-specific parameters for secondary teachers:
+    EE =~ c(0, NA)*ITEM11
+ ITEM9 ~~ c(0, NA)*ITEM19
+'
+
+INV6fit <- cfa(INV6model, data = MBIelmsec, estimator = "MLM", 
+               group = "group",
+               # (copy from your earlier R code)
+               # (copy from your earlier R code)
+              )
+
+```
+
+--8-<----8-<----8-<----8-<----8-<----8-<----8-<----8-<----8-< **[end EXTRA]**
+
+Using either way, we then do these steps one more time:
+
+```{r}
+# study the output:
+summary(INV6fit, fit.measures = TRUE, standardized = TRUE)
+
+# Check the test:
+chisq_mlm(INV6fit, INV5fit) # now we compare with the final model of the previous phase
+# (again significant with lavaan (was n.s. with Mplus, see slide #25)... close to "0.05"!
+
+# (I know, I should have asked about these errors from Barbara Byrne, but it is now too late.)
+
+```
+
+This completes our *TASK 2* and hence the whole invariance testing.
+
+*********************************************************
+
+## Exercise 5.3
+
+Summarize the whole invariance testing concisely, preferably with a summary table that displays the key results of each phase. 
+
+**Also write a brief conclusion of the whole testing process using your own words.**
+

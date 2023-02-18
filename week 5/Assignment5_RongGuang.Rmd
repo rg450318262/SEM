@@ -1,0 +1,26 @@
+---
+title: "COS-D419 Factor Analysis and Structural Equation Models 2023, Assignment 4"
+author: "Rong Guang"
+date: "`r Sys.Date()`"
+output:
+  bookdown::pdf_document2:
+    latex_engine: lualatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F, cache = T)
+```
+
+# Task description
+
+## Exercise 5.1
+
+Specify and estimate the initial baseline models for the two groups. 
+
+Present a brief summary of the model fit and make the first step of the modification by including **(exceptionally, at the same time!)** all the four parameters known to be required for improving the model fit of both models.
+
+Fine-tune the models step by step following the guidelines given in the lecture material, i.e., implement the modifications **(as usually, one change at a time)** testing and studying each step. 
+
+Present the final baseline models of each group and draw the graphs
+
+Roses are \textcolor{red}{red}, violets are \textcolor{blue}{blue}.
