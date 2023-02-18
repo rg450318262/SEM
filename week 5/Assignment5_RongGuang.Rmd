@@ -8,7 +8,7 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = F, message = F, cache = T, fig.align = 'center')
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F, cache = F, fig.align = 'center')
 ```
 
 **\textcolor{blue}{The texts that reflect my understanding have been highlighted in} \textcolor{red}{red color}.** 
@@ -82,6 +82,29 @@ mbi.sec <- #secondary school
 
 To control length of reports, codes already shown in the previous homework were not showing in the current report. Yet they are available in .rmd report.
 
+### To generate a function for calculating chi square difference was defined.
+
+```{r, echo = F}
+chi.diff <- function(sem1, sem2){ #2 augments input: the 1st is the nested model
+                                  #the 2nd is comparison model (less restricted)
+  measure0 <- fitMeasures(sem1,  #extract robust fit indices for the 1st model
+                          c("df.scaled",
+                            "chisq.scaling.factor",
+                            "chisq.scaled")) |>
+    as.vector()   #turn to vector to facilitate calculation
+  measure1 <- fitMeasures(sem2,  #extract robust fit indices for the 2nd model
+                          c("df.scaled",
+                            "chisq.scaling.factor",
+                            "chisq.scaled")) |>
+    as.vector()
+  cd <-  # this is the formula from p 14, week 4 slide
+    (measure0[1]*measure0[2]-measure1[1]*measure1[2])/(measure0[1]-measure1[1])
+  TRd <- # this is the formula from p 15, week 4 slide
+    (measure0[3]*measure0[2]-measure1[3]*measure1[2])/cd
+  TRd <- TRd |> round(3) # round the value to 3 decimal places
+}
+```
+
 ### to generate CFA results with improved readability
 
 ```{r, echo = F}
@@ -111,47 +134,59 @@ cfa.summary.b <- function(fit, fa.num, item.num, estimator){
   #factor loading
   cfa.tab.b <- parameterEstimates(fit, standardized=TRUE) %>% # obtain estimates
   filter(op == "=~") %>%  #select "is measured by" rows
-  select('Latent Factor'=lhs, #left hand side column
-         Indicator=rhs, #right hand side column
-         B=est, #estimates
+  mutate(Parameter = paste0(lhs, "→", rhs),
+         pvalue = case_when(as.numeric(pvalue)<0.001~"<0.001", 
+                            as.numeric(pvalue)>=0.001~as.character(pvalue)
+                            )
+         ) |> 
+  select(Parameter,
+         Beta=std.all, #std estimates
          SE=se, #standard error
          Z=z, #z statistics
-         'p-value'=pvalue, #p value
-         Beta=std.all) %>%  
-  kable(digits = 3, #rounded to 3
-        format="markdown", #Latex markdown
-        booktabs=TRUE, #Latex booktabs
-        caption=paste("Factor Loadings for",fa.num,"factor CFA model estimated by ", estimator)) %>% #caption
-  kable_styling(latex_options = "striped") %>% #gray every other row
-  row_spec(0, background = "#9999CC") # color the first row
-  cfa.tab.b
+         'p-value'=pvalue #p value
+         ) 
+  # %>%  
+  # kable(digits = 3, #rounded to 3
+  #       format="markdown", #Latex markdown
+  #       booktabs=TRUE, #Latex booktabs
+  #       caption=paste("Factor Loadings for",fa.num,"factor CFA model estimated by ", estimator)) %>% #caption
+  # kable_styling(latex_options = "striped") %>% #gray every other row
+  # row_spec(0, background = "#9999CC") # color the first row
+  # cfa.tab.b
   }
 
 #Variance
 cfa.summary.c <- function(fit, fa.num, item.num, estimator){
   options(scipen = 999)
   #Variance
-  type <- rep(c("Residual variance", "Total variance"), 
+  type <- rep(c("Residual", "Total"), 
             time = c(item.num, fa.num)) #create a new row clarifying types of variance
 
 variance <- parameterEstimates(fit, standardized=TRUE) %>% #obtain estimates
   filter(op == "~~") #select "is correlated with" rows
 variance <- variance[1:sum(item.num,fa.num),] #subset 1:18 rows (variance row)
 variance <- cbind(type, variance) #add column
-cfa.tab.c <- variance %>%select(Type = type, #select and rename variables
+cfa.tab.c <- variance |> 
+  mutate(pvalue = case_when(as.numeric(pvalue)<0.001~"<0.001", 
+                            as.numeric(pvalue)>=0.001~as.character(pvalue)
+                            )) |> 
+  select(Parameter = type, #select and rename variables
                    Indicator=rhs, #right hand side column
                    B=est, #estimates
+                   "Beta*"=std.all,#std estimates
                    SE=se,#standard error
                    Z=z, #z statistics
-                   'p-value'=pvalue, #p value
-                   Beta=std.all) %>% 
-  kable(digits = 3, #rounded
-        format="markdown",  #Latex markdown
-        booktabs=TRUE, #Latex booktabs
-        caption=paste("Variances for", fa.num, "factor model estimated by ", estimator)) %>% #caption
-  kable_styling(latex_options = "striped") %>% # gray every other row
-  row_spec(0, background = "#9999CC") # color the variable row
-  cfa.tab.c
+                   'p-value'=pvalue #p value
+                   ) 
+
+# %>% 
+#   kable(digits = 3, #rounded
+#         format="markdown",  #Latex markdown
+#         booktabs=TRUE, #Latex booktabs
+#         caption=paste("Variances for", fa.num, "factor model estimated by ", estimator)) %>% #caption
+#   kable_styling(latex_options = "striped") %>% # gray every other row
+#   row_spec(0, background = "#9999CC") # color the variable row
+#   cfa.tab.c
 }
 
 #Covariance
@@ -162,29 +197,66 @@ cfa.summary.d <- function(fit, fa.num, item.num, estimator){
   filter(op == "~~")
   covar.num = (fa.num+(fa.num-1))/2
 variance <- variance[sum(item.num,fa.num,1):sum(item.num,fa.num,covar.num),]
-type <- paste(variance$lhs, "with", variance$rhs) 
+type <- paste(variance$lhs, "←→", variance$rhs) 
 variance <- cbind(type, variance)
 rownames(variance) <- NULL
-cfa.tab.d <- variance %>%select(Type=type, 
-                   B=est, 
-                   SE=se,
-                   Z=z, 
-                   'p-value'=pvalue, 
-                   Beta=std.all) %>% 
-  kable(digits = 3, 
-        format="markdown", 
-        booktabs=TRUE, 
-        caption=paste("Covariances for", fa.num, 
-                      "factor model estimated by ", 
-                      estimator)) %>% 
-  kable_styling(latex_options = "striped") %>% 
-  row_spec(0, background = "#9999CC")
-  cfa.tab.d
+cfa.tab.d <- variance |> 
+  mutate(pvalue = case_when(as.numeric(pvalue)<0.001~"<0.001", 
+                            as.numeric(pvalue)>=0.001~as.character(pvalue)
+                            )) |> 
+  select(Parameter=type,
+         B=est, 
+         Beta=std.all,
+         SE=se,
+         Z=z, 
+         'p-value'=pvalue 
+         )
+# %>% 
+#   kable(digits = 3, 
+#         format="markdown", 
+#         booktabs=TRUE, 
+#         caption=paste("Covariances for", fa.num, 
+#                       "factor model estimated by ", 
+#                       estimator)) %>% 
+#   kable_styling(latex_options = "striped") %>% 
+#   row_spec(0, background = "#9999CC")
+#   cfa.tab.d
 }
 
 ```
 
-### to generate a function for correlation matrix with numbers
+
+###Write a function to generate aligned residual variance and co-variance tables
+
+```{r}
+align.table <- function(data, num.no.header.col, title){
+
+data  |> 
+  kable(
+    digits = 3,
+    booktabs = T,
+    #format = "markdown",
+    caption = title,
+    linesep = ""
+    ) |>  
+  add_header_above(c(" " = num.no.header.col, 
+                     "Elementary level" = 5,
+                     "Secondary level" = 5
+                     )
+                   ) |> 
+  kable_styling(
+    latex_options = "striped"
+  ) |> 
+  footnote(
+           symbol = c(
+             "Un-standardized estimates",
+             "Standardized estimates"
+                      )
+           )
+}
+```
+
+### Write a function for correlation matrix with numbers
 
 ```{r, echo = F}
 mymatrix <- function(data, fig.num = 3){
@@ -582,17 +654,20 @@ cfa.sec <-
     )
 ```
 
-### Evaluate model fit 
+### Evaluate model
+
+(1) Fit indices
 
 ```{r}
 library(knitr);library(kableExtra)
+#combine fit indices of both levels
 BL.elm.fit <- cfa.summary.mlm.a(cfa.elm) |> t() |> as.data.frame()
 BL.sec.fit <- cfa.summary.mlm.a(cfa.sec) |> t() |> as.data.frame()
 BL.both <- rbind(BL.elm.fit[2,], BL.sec.fit[2,]) 
 names(BL.both) <- BL.elm.fit[1,]
-rownames(BL.both) <- c("Elementary School Teachers",
-                       "Secondary School Tearchers")
-
+rownames(BL.both) <- c("Elementary level",
+                       "Secondary level")
+#improve the readability of the combined table
 BL.both <- BL.both |> 
   rename(p = 'p value',
          p2 = 'RMSEA p value',
@@ -619,7 +694,7 @@ BL.both <- BL.both |>
          SRMR, 
          'CSF*'= CSF
          ) 
-
+#print the combined table with adjustment of aesthetics
 BL.both |> 
   kable(booktabs = T, 
         #format = "markdown", 
@@ -631,7 +706,7 @@ BL.both |>
   footnote(symbol = 
              "Chi square scaling factor"
            ) |>
-  column_spec(1, width = "3.5cm") |> 
+  column_spec(1, width = "3cm") |> 
   column_spec(2, width = "4cm")|> 
   column_spec(3, width = "1cm")|> 
   column_spec(4, width = "1cm")|> 
@@ -640,41 +715,150 @@ BL.both |>
   column_spec(7, width = "1cm") 
 ```
 
-Goodness-of-fit statistics for this baseline model (three factor) reveals that the indices are less than optimal for both elementary (MLM χ2[206] = 826.573; CFI = 0.857; RMSEA = 0.072 ; SRMR = 0.068) and secondary (MLM χ2[206] = 999.359; CFI = 0.836; RMSEA = 0.075; SRMR = 0.077) levels
+\textcolor{blue}{See table 1. Goodness-of-fit statistics for this baseline model (three factor) reveals that the indices are less than optimal for both elementary (MLM Chi-square[206] = 826.573; CFI = 0.857; RMSEA = 0.072 ; SRMR = 0.068) and secondary (MLM Chi-square[206] = 999.359; CFI = 0.836; RMSEA = 0.075; SRMR = 0.077) levels.}
+
+(2) factor loading
+
+Factor loading of elementary level were extracted.
+
+```{r}
+fl.elm <- cfa.summary.b (cfa.elm) #fl  is for factor loading)
+colnames(fl.elm)[2] <- "Beta*"
+```
+
+Factor loading of secondary level were extracted.
+
+```{r}
+fl.sec <- cfa.summary.b (cfa.sec) #fl is for factor loading
+colnames(fl.sec) <- c("Parameter",
+                     "Beta* ",
+                     "SE ",
+                     "Z ",
+                     "p-value ")
+```
+
+Factor loading of both levels were merged in one table and printed.
+
+```{r}
+fl.both <- left_join(fl.elm, 
+                     fl.sec, 
+                     by = "Parameter")
+fl.both |> 
+  kable(
+    digits = 3,
+    booktabs = T,
+    #format = "markdown",
+    caption = "Factor loadings for both levels",
+    linesep = ""
+    ) |>  
+  add_header_above(c(" " = 1, 
+                     "Elementary level" = 4,
+                     "Secondary level" = 4
+                     )
+                   ) |> 
+  kable_styling() |> 
+  row_spec(1:9, 
+           background = "#E5E4E2"
+           ) |> 
+  row_spec(15:22, 
+           background = "#E5E4E2"
+           ) |> 
+  row_spec(c(1,10,15), bold = T) |> 
+  footnote(general = 
+             "Rows with coeffcient estimates fixed to 1 are highligted in bold ",
+           symbol = c(
+             "Standardized estimates"
+                      )
+           )
+  
+```
+
+the cross-loading involved the loading of Item 12 on Factor 1 (Emotional Exhaustion) in addition to its targeted Factor 3 (Personal Accomplishment)
+
+(3) Variance 
+
+```{r}
+var.elm <- cfa.summary.c(cfa.elm, fa.num = 3, item.num = 22)
+names(var.elm)[3] <- "Beta*"
+names(var.elm)[4]<- "Beta†"
+```
 
 
 ```{r}
+var.sec <- cfa.summary.c(cfa.sec, fa.num = 3, item.num = 22)
+var.sec <- var.sec[,-1]
+names(var.sec) <- 
+  c("Indicator", 
+    "Beta* ", 
+    "Beta† ",
+    "SE ", 
+    "Z ", 
+    "p-value "
+    )
+```
 
+```{r}
+var.both <- left_join(var.elm, 
+                     var.sec, 
+                     by = "Indicator")
+
+align.table(data = var.both, 
+            num.no.header.col = 2, 
+            title = "Residual variance for both levels")
+```
+
+(3) Co-variance
+
+```{r}
+cov.elm <- cfa.summary.d(cfa.elm, fa.num = 3, item.num = 22)
+colnames(cov.elm)[2:3] <- c("Beta*", "Beta†")
+```
+
+
+```{r}
+cov.sec <- cfa.summary.d(cfa.sec, fa.num = 3, item.num = 22)
+colnames(cov.sec) <- c("Parameter", "Beta* ", "Beta† ", "SE ", "Z ", "p-value ")
+```
+
+
+```{r}
+cov.both <- left_join(cov.elm, 
+                     cov.sec, 
+                     by = "Parameter")
+
+align.table(data = cov.both, 
+            num.no.header.col = 1, 
+            title = "Residual co-variance for both levels")
+```
+
+### Model re-specification
+
+```{r}
+#extract needed variables
+BL.MI.elm <- 
+  modindices(cfa.elm,
+             standardized = TRUE,
+             sort. = TRUE,
+             maximum.number = 10)
+```
+
+
+```{r}
+BL.MI.elm |> 
+  mutate(Parameter = paste(rhs, "→", lhs)) |>
+  select(Parameter, MI = mi, EPC = epc, "std EPC" = sepc.all)|>
+  kable(digits = 3,
+        booktab = T,
+        linesep = "",
+        caption = "Selected modification indices for determining baseline model") |>
+  kable_styling(latex_options = "striped") |>
+  row_spec(2, color = "red")
 ```
 
 
 ```{r}
 ```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
+xie
 
 ```{r}
 ```
