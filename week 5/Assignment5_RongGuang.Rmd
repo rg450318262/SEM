@@ -976,6 +976,10 @@ cfa2.sec <-
     )
 ```
 
+### From Model 2 to baseline model 
+
+(1) Inspect fit indices of model2 (comparing to initial model)
+
 ```{r}
 #combine fit indices of both levels
 model2.elm.fit <- 
@@ -1021,8 +1025,73 @@ multi.fit.tab(compare12,
   )
 ```
 
+\textcolor{blue}{Estimation of this re-specified model, for each teacher group, yielded greatly improved model fit statistics than initial model. See table 6. }
 
-Estimation of this re-specified model, for each teacher group, yielded greatly improved model fit statistics. See table 6. 
+(2) Re-specification of model 2
+
+\textcolor{blue}{To establish baseline models for both panels of teachers that represent good model fit and parsimony, I further investigated the modification indices of model 2, respectively for two groups, to decide if there was any more model mis-fit and mis-specification }
+
+MIs of elementary level panel were calculated.
+
+```{r}
+#extract needed variables
+model2.MI.elm <- 
+  modindices(cfa2.elm,
+             standardized = TRUE,
+             sort. = TRUE,
+             maximum.number = 10)
+```
+
+MIs of secondary level panel were calculated.
+
+```{r}
+#extract needed variables
+model2.MI.sec <- 
+  modindices(cfa2.sec,
+             standardized = TRUE,
+             sort. = TRUE,
+             maximum.number = 10)
+```
+
+MI tables with 10 largest MI parameters was printed in descending order of MI. Potential mis-specification of most concerns were highlighted in red.
+
+```{r}
+MI2.both <- rbind(model2.MI.elm, model2.MI.sec)
+
+MI2.both    |> 
+  mutate(Parameter = 
+           paste(rhs, "→", lhs)
+         ) |>
+  select(Parameter, 
+         MI = mi, 
+         EPC = epc, 
+         "std EPC" = sepc.all
+         )|>
+  kable(digits = 3,
+        booktab = T,
+        linesep = "",
+        caption = 
+          "Selected modification indices for determining baseline model") |>
+  kable_styling(
+    latex_options = "striped"
+    ) |>
+  row_spec(
+    c(1:4, 11:14), 
+    color = "red"
+    ) |> 
+  footnote(general = 
+             "Rows highlighted in red are of special concerns") |> 
+  pack_rows(index = c(
+    "Elementary level" = 10,
+    "Secondary level" = 10
+    )
+    )
+```
+
+```{r}
+
+```
+
 
 ```{r}
 chisq_mlm <- function(fit_nested, fit_parent) {
@@ -1039,14 +1108,13 @@ chisq_mlm <- function(fit_nested, fit_parent) {
       TRd <- (T0*c0 - T1*c1)/cd
     # degrees of freedom
       df = d0 - d1
-    return(c("TR_d" = round(TRd,3), "df" = round(df,0), "p_value" = pchisq(TRd, df, lower.tail = FALSE) |> round(3)))
+    return(c("TR_d" = round(TRd,3), 
+             "df" = round(df,0), 
+             "p_value" = pchisq(TRd, df, lower.tail = FALSE) |> round(3)))
 }
 ```
 
-```{r}
-a <- chi.diff(cfa.elm, cfa2.elm)
-chisq_mlm(cfa.elm, cfa2.elm) 
-```
+
 
 
 
