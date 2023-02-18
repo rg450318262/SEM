@@ -228,7 +228,7 @@ cfa.tab.d <- variance |>
 ### Write a function to simplify plotting of merged tables for multi-group fit indicies
 
 ```{r}
-multi.fit.tab <- function(data, title){
+multi.fit.tab <- function(data, title, more.footnote = NULL){
 data <- data |> 
   rename(p = 'p value',
          p2 = 'RMSEA p value',
@@ -267,9 +267,10 @@ data |>
         ) |> 
   kable_styling(full_width = T) |> 
   footnote(symbol = 
-             "Chi square scaling factor"
+             c("Chi square scaling factor", 
+               more.footnote)
            ) |>
-  column_spec(1, width = "3cm") |> 
+  column_spec(1, width = "3.5cm") |> 
   column_spec(2, width = "4cm")|> 
   column_spec(3, width = "1cm")|> 
   column_spec(4, width = "1cm")|> 
@@ -278,7 +279,6 @@ data |>
   column_spec(7, width = "1cm") 
 }
 ```
-
 
 ### Write a function to simplify plotting aligned residual variance and co-variance tables
 
@@ -1279,26 +1279,32 @@ model4.sec.fit <-
 
 names(model4.sec.fit ) <- model4.sec.fit[1,]
 
-rownames(model4.sec.fit ) <- NULL
 model4.sec.fit <- model4.sec.fit [-1,]
 model4.sec.fit  <- 
   model4.sec.fit  |> 
   mutate(Model = "Secondary level") |> 
   select(Model, everything())
 
+rownames(model4.sec.fit ) <- NULL
+
 #combine model 1 and 2 tables
-compare1234 <- rbind(initial.both, model2.both, model3.both, model4.sec.fit )
+model3.both[1,1] <- "Elementary level†"
+compare1234 <- rbind(initial.both, 
+                     model2.both, 
+                     model3.both, 
+                     model4.sec.fit )
 
 #print the table
 multi.fit.tab(compare1234, 
-              "Fit indices for two subgroups, model 4, comparing to preceding models") |> 
+              "Fit indices for two subgroups, model 4, comparing to preceding models",
+              "Baseline model for elementary teachers") |> 
   pack_rows(index = c(
     "Initial model" = 2,
     "Model 2" = 2,
     "Model 3" =2,
     "Model 4" =1
   )
-  )
+  ) 
 ```
 
 ```{r}

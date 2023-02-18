@@ -92,7 +92,7 @@ To control length of reports, codes already shown in the previous homework were 
 
 
 ```r
-multi.fit.tab <- function(data, title){
+multi.fit.tab <- function(data, title, more.footnote = NULL){
 data <- data |> 
   rename(p = 'p value',
          p2 = 'RMSEA p value',
@@ -131,9 +131,10 @@ data |>
         ) |> 
   kable_styling(full_width = T) |> 
   footnote(symbol = 
-             "Chi square scaling factor"
+             c("Chi square scaling factor", 
+               more.footnote)
            ) |>
-  column_spec(1, width = "3cm") |> 
+  column_spec(1, width = "3.5cm") |> 
   column_spec(2, width = "4cm")|> 
   column_spec(3, width = "1cm")|> 
   column_spec(4, width = "1cm")|> 
@@ -142,7 +143,6 @@ data |>
   column_spec(7, width = "1cm") 
 }
 ```
-
 
 ### Write a function to simplify plotting aligned residual variance and co-variance tables
 
@@ -470,7 +470,7 @@ multi.fit.tab(initial.both, "Fit indices for two subgroups, basline models")
 
 \caption{(\#tab:unnamed-chunk-20)Fit indices for two subgroups, basline models}
 \centering
-\begin{tabu} to \linewidth {>{\raggedright\arraybackslash}p{3cm}>{\raggedleft\arraybackslash}p{4cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{2.5cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{1cm}}
+\begin{tabu} to \linewidth {>{\raggedright\arraybackslash}p{3.5cm}>{\raggedleft\arraybackslash}p{4cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{2.5cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{1cm}}
 \toprule
 Model & Chi square (df, p) & CFI & TLI & RMSEA(p) & SRMR & CSF*\\
 \midrule
@@ -917,7 +917,7 @@ multi.fit.tab(compare12,
 
 \caption{(\#tab:unnamed-chunk-35)Fit indices for two subgroups, model 2, comparing to initial model}
 \centering
-\begin{tabu} to \linewidth {>{\raggedright\arraybackslash}p{3cm}>{\raggedleft\arraybackslash}p{4cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{2.5cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{1cm}}
+\begin{tabu} to \linewidth {>{\raggedright\arraybackslash}p{3.5cm}>{\raggedleft\arraybackslash}p{4cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{2.5cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{1cm}}
 \toprule
 Model & Chi square (df, p) & CFI & TLI & RMSEA(p) & SRMR & CSF*\\
 \midrule
@@ -1133,7 +1133,7 @@ multi.fit.tab(compare123,
 
 \caption{(\#tab:unnamed-chunk-41)Fit indices for two subgroups, model 3, comparing to preceding models}
 \centering
-\begin{tabu} to \linewidth {>{\raggedright\arraybackslash}p{3cm}>{\raggedleft\arraybackslash}p{4cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{2.5cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{1cm}}
+\begin{tabu} to \linewidth {>{\raggedright\arraybackslash}p{3.5cm}>{\raggedleft\arraybackslash}p{4cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{2.5cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{1cm}}
 \toprule
 Model & Chi square (df, p) & CFI & TLI & RMSEA(p) & SRMR & CSF*\\
 \midrule
@@ -1297,53 +1297,67 @@ model4.sec.fit <-
 
 names(model4.sec.fit ) <- model4.sec.fit[1,]
 
-rownames(model4.sec.fit ) <- NULL
 model4.sec.fit <- model4.sec.fit [-1,]
 model4.sec.fit  <- 
   model4.sec.fit  |> 
   mutate(Model = "Secondary level") |> 
   select(Model, everything())
 
+rownames(model4.sec.fit ) <- NULL
+
 #combine model 1 and 2 tables
-compare1234 <- rbind(initial.both, model2.both, model3.both, model4.sec.fit )
+model3.both[1,1] <- "Elementary level†"
+model4.sec.fit[1,1] <- "Secondary level†"
+compare1234 <- 
+  rbind(initial.both,
+        model2.both, 
+        model3.both, 
+        model4.sec.fit )
 
 #print the table
 multi.fit.tab(compare1234, 
-              "Fit indices for two subgroups, model 4, comparing to preceding models") |> 
+              "Fit indices for two subgroups, model 4, comparing to preceding models",
+              c("Baseline model for elementary teachers", 
+                "Baseline model for secondary teachers")) |> 
   pack_rows(index = c(
     "Initial model" = 2,
     "Model 2" = 2,
     "Model 3" =2,
     "Model 4" =1
   )
-  )
+  ) |> 
+  row_spec(c(5,7), 
+           color = "red"
+           )
 ```
 
 \begin{table}
 
 \caption{(\#tab:unnamed-chunk-46)Fit indices for two subgroups, model 4, comparing to preceding models}
 \centering
-\begin{tabu} to \linewidth {>{\raggedright\arraybackslash}p{3cm}>{\raggedright\arraybackslash}p{4cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{2.5cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft}X}
+\begin{tabu} to \linewidth {>{\raggedright\arraybackslash}p{3.5cm}>{\raggedleft\arraybackslash}p{4cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{2.5cm}>{\raggedleft\arraybackslash}p{1cm}>{\raggedleft\arraybackslash}p{1cm}}
 \toprule
-  & Model & Chi square (df, p) & CFI & TLI & RMSEA(p) & SRMR & CSF*\\
+Model & Chi square (df, p) & CFI & TLI & RMSEA(p) & SRMR & CSF*\\
 \midrule
 \addlinespace[0.3em]
-\multicolumn{8}{l}{\textbf{Initial model}}\\
-\hspace{1em}1 & Elementary level & 826.573(206, <0.001) & 0.857 & 0.840 & 0.072(<0.001) & 0.068 & 1.225\\
-\hspace{1em}2 & Secondary level & 999.359(206, <0.001) & 0.836 & 0.816 & 0.075(<0.001) & 0.077 & 1.284\\
+\multicolumn{7}{l}{\textbf{Initial model}}\\
+\hspace{1em}Elementary level & 826.573(206, <0.001) & 0.857 & 0.840 & 0.072(<0.001) & 0.068 & 1.225\\
+\hspace{1em}Secondary level & 999.359(206, <0.001) & 0.836 & 0.816 & 0.075(<0.001) & 0.077 & 1.284\\
 \addlinespace[0.3em]
-\multicolumn{8}{l}{\textbf{Model 2}}\\
-\hspace{1em}3 & Elementary level & 477.667(202, <0.001) & 0.936 & 0.927 & 0.049(  0.679) & 0.050 & 1.224\\
-\hspace{1em}4 & Secondary level & 587.538(202, <0.001) & 0.920 & 0.909 & 0.053(  0.168) & 0.056 & 1.278\\
+\multicolumn{7}{l}{\textbf{Model 2}}\\
+\hspace{1em}Elementary level & 477.667(202, <0.001) & 0.936 & 0.927 & 0.049(  0.679) & 0.050 & 1.224\\
+\hspace{1em}Secondary level & 587.538(202, <0.001) & 0.920 & 0.909 & 0.053(  0.168) & 0.056 & 1.278\\
 \addlinespace[0.3em]
-\multicolumn{8}{l}{\textbf{Model 3}}\\
-\hspace{1em}5 & Elementary level & 466.722(201, <0.001) & 0.939 & 0.930 & 0.048(  0.761) & 0.050 & 1.223\\
-\hspace{1em}6 & Secondary level & 535.759(201, <0.001) & 0.931 & 0.920 & 0.049(  0.629) & 0.053 & 1.275\\
+\multicolumn{7}{l}{\textbf{Model 3}}\\
+\textcolor{red}{\hspace{1em}Elementary level†} & \textcolor{red}{466.722(201, <0.001)} & \textcolor{red}{0.939} & \textcolor{red}{0.930} & \textcolor{red}{0.048(  0.761)} & \textcolor{red}{0.050} & \textcolor{red}{1.223}\\
+\hspace{1em}Secondary level & 535.759(201, <0.001) & 0.931 & 0.920 & 0.049(  0.629) & 0.053 & 1.275\\
 \addlinespace[0.3em]
-\multicolumn{8}{l}{\textbf{Model 4}}\\
-\hspace{1em}21 & Secondary level & 505.831(200, <0.001) & 0.937 & 0.927 & 0.047(  0.859) & 0.052 & 1.273\\
+\multicolumn{7}{l}{\textbf{Model 4}}\\
+\textcolor{red}{\hspace{1em}Secondary level†} & \textcolor{red}{505.831(200, <0.001)} & \textcolor{red}{0.937} & \textcolor{red}{0.927} & \textcolor{red}{0.047(  0.859)} & \textcolor{red}{0.052} & \textcolor{red}{1.273}\\
 \bottomrule
-\multicolumn{8}{l}{\rule{0pt}{1em}\textsuperscript{*} Chi square scaling factor}\\
+\multicolumn{7}{l}{\rule{0pt}{1em}\textsuperscript{*} Chi square scaling factor}\\
+\multicolumn{7}{l}{\rule{0pt}{1em}\textsuperscript{\dag} Baseline model for elementary teachers}\\
+\multicolumn{7}{l}{\rule{0pt}{1em}\textsuperscript{\ddag} Baseline model for secondary teachers}\\
 \end{tabu}
 \end{table}
 
