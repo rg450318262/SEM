@@ -8,7 +8,7 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = F, message = F, cache = F, fig.align = 'center')
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F, cache = T, fig.align = 'center')
 ```
 
 **\textcolor{blue}{The texts that reflect my understanding have been highlighted in} \textcolor{red}{red color}.** 
@@ -32,7 +32,7 @@ Present the final baseline models of each group and draw the graphs
 ##Read in the data set:
 
 Start by downloading the **two data files** from Moodle to your Project folder!
-
+xie
 ```{r}
 #install the necessary pakages
 if (!require("pacman")) install.packages("pacman")
@@ -1355,7 +1355,7 @@ cfa4.sec <-
 ```
 
 
-```{r, fig.width= 5, fig.height= 12, fig.align='left'}
+```{r, fig.width= 5, fig.height= 12, fig.align='center'}
 library(semPlot)
 grps <- list(EE = c("ITEM1", "ITEM2", "ITEM3", "ITEM6", "ITEM8", 
         "ITEM13", "ITEM14",  "ITEM16", "ITEM20"), 
@@ -1368,8 +1368,10 @@ order.manifest <- c("ITEM4", "ITEM7", "ITEM9", "ITEM12",
         "ITEM5", "ITEM10", "ITEM11", "ITEM15","ITEM22",
         "ITEM1", "ITEM2", "ITEM3", "ITEM6", "ITEM8", 
         "ITEM13", "ITEM14",  "ITEM16", "ITEM20")
+
 order.latent <- c("PA", "DP", "EE")
 par(mfrow=c(1,2))
+
 a <- semPaths(cfa3.elm, 
          "col", #un-weighted edges
          "no", #edge label is standarized
@@ -1404,8 +1406,9 @@ a <- semPaths(cfa3.elm,
          posCol = c("black","black"),
          negCol = c("steelblue","steelblue")
          )
-
-a <- semPaths(cfa4.sec, 
+title(main = list("Elementary School Teachers",
+                  cex = 1, font =1),outer = F, line = -3)
+b <- semPaths(cfa4.sec, 
          "col", #un-weighted edges
          "no", #edge label is standarized
          reorder = F,
@@ -1439,7 +1442,9 @@ a <- semPaths(cfa4.sec,
          posCol = c("black","black"),
          negCol = c("steelblue","steelblue")
          )
-
+title(main = list("Secondary School Teachers",
+                  cex = 1, font =1), outer = F, line = -3)
+mtext("My 'Title' in a strange place", side = 3, line = -0.5, outer = TRUE)
 ```
 
 
