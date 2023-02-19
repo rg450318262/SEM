@@ -1479,11 +1479,6 @@ inv1.fit <-
 ### Summarize the results
 
 ```{r}
-1
-```
-
-
-```{r}
 #extract the key indicators
 inv1.fit.indices <- 
   cfa.summary.mlm.a(inv1.fit) |> 
@@ -1494,15 +1489,185 @@ inv1.fit.indices <-
 names(inv1.fit.indices) <- inv1.fit.indices[1,]
 inv1.fit.indices <- inv1.fit.indices[-1,]
 rownames(inv1.fit.indices) <- NULL
-inv1.fit.indices$Model <-"Configural (inv1.model)"
+inv1.fit.indices$Model <-"Configural (inv1)"
 
 #print the table
 multi.fit.tab(
   inv1.fit.indices, 
-  "Fit indices for the configural model (inv1)"
+  "Fit indices for the configural model (inv1.model)"
   )
 ```
 
+Results for this configural model (inv1.model) were as follows: MLM chi-square(401) = 939.696, CFI = 0.939, RMSEA = 0.046, and SRMR = 0.051.
+
+## Impose equality constraints on factor loadings of configural model
+
+### Constrain 20 common factor loadings equal (inv2.model)
+
+\textcolor{blue}{All the common factor loadings were constrained equal across groups. If the results show significant improvement from configural model, we get the evidence about multi-group in-variance. If not, we need to further explore which parameter(s) bring about the difference observed. }
+
+```{r}
+inv2.fit <- 
+  cfa(inv1.model, 
+      data = mbi.both, 
+      estimator = "MLM", 
+      group = "group",
+      group.equal = c("loadings"),
+      group.partial = c("EE =~ ITEM11")
+  )
+```
+
+```{r}
+#extract the key indicators
+inv2.fit.indices <- 
+  cfa.summary.mlm.a(inv2.fit) |> 
+  t() |> 
+  as.data.frame()
+
+#define column and row names for the indicator table
+names(inv2.fit.indices) <- inv2.fit.indices[1,]
+inv2.fit.indices <- inv2.fit.indices[-1,]
+rownames(inv2.fit.indices) <- NULL
+inv2.fit.indices$Model <-"Model2 (inv2)+"
+
+#merge configural model and inv2.model.
+fit.indices.12 <- # 12 is for inv1 and inv 2
+  rbind(
+    inv1.fit.indices, 
+    inv2.fit.indices
+    ) 
+
+#print the table
+multi.fit.tab(
+  fit.indices.12, 
+  "Comparison Fit indices between the configural model (inv1.model) and model 2 (inv2.model)",
+  "Configural model + 20 common factor loadings constrained equal across groups"
+  )
+```
+
+
+```{r}
+multi.fit.tab <- function(data, title, more.footnote = NULL){
+data <- data |> 
+  rename(p = 'p value',
+         p2 = 'RMSEA p value',
+         chi = 'chi square') |> 
+  mutate(df = as.numeric(df) |> round(0),
+         p = case_when(
+           as.numeric(p) < 0.001 ~ "<0.001",
+           as.numeric(p) >= 0.001 ~ p
+           ),
+         p2 = case_when(
+           as.numeric(p2) < 0.001 ~ "<0.001",
+           as.numeric(p2) >= 0.001 ~ p2
+           )
+         ) |>
+  mutate('Chi square (df, p)' = 
+           paste0(chi, "(", df,", ", p, ")"),
+         'RMSEA(p)'           = 
+           paste0(RMSEA, "(", p2, ")"
+                  )
+         ) |> 
+  select(
+    Model,
+    'Chi square (df, p)', 
+    CFI, TLI,
+    'RMSEA(p)', 
+    SRMR, 
+    'CSF*'= CSF
+    ) 
+#print the combined table with adjustment of aesthetics
+data |> 
+  kable(booktabs = T, 
+        #format = "markdown", 
+        caption = 
+          title,
+        align = "lrrrrrr"
+        ) |> 
+  kable_styling(full_width = T) |> 
+  footnote(symbol = 
+             c("Chi square scaling factor", 
+               more.footnote)
+           ) |>
+  column_spec(1, width = "3.5cm") |> 
+  column_spec(2, width = "4cm")|> 
+  column_spec(3, width = "1cm")|> 
+  column_spec(4, width = "1cm")|> 
+  column_spec(5, width = "2.5cm")|> 
+  column_spec(6, width = "1cm") |> 
+  column_spec(7, width = "1cm") 
+}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+xie
+
+```{r}
+inv1.fit.indices <- 
+  cfa.summary.mlm.a(inv1.fit) |> 
+  t() |> 
+  as.data.frame()
+
+initial.sec.fit <- 
+  cfa.summary.mlm.a(cfa.sec) |> 
+  t() |> 
+  as.data.frame()
+
+initial.both <- 
+  rbind(
+    initial.elm.fit[2,], 
+    initial.sec.fit[2,]
+    ) 
+
+names(initial.both) <- 
+  initial.elm.fit[1,]
+
+rownames(initial.both) <- NULL
+
+initial.both <- 
+  initial.both |> 
+  mutate(Model = c("Elementary level",
+    "Secondary level")) |> 
+  select(Model, everything())
+
+#print the table
+multi.fit.tab(initial.both, "Fit indices for two subgroups, basline models")
+```
+```
 
 
 
