@@ -943,7 +943,7 @@ MI.both    |>
  
  We see precisely the same pattern on secondary teachers, albeit the effect would appear to be even more pronounced than it was for elementary teachers. One slight difference between the two groups of teachers regards the impact of these four parameters on model misfit. Whereas the residual covariance between Items 6 and 16 was found to be the most seriously misfitting parameter for elementary teachers; for secondary teachers, the residual covariance between Items 1 and 2 was most pronounced. 
 
-(2) Re-specified both models 
+(2) Re-specify initial model to model 2
 
 \textcolor{blue}{The good practice is relaxing one parameter each time. Nonetheless, according to the knowledge derived from our previous work, I included all four mis-specified parameters in a post-hoc model (common to the groups).}
 
@@ -1100,12 +1100,15 @@ MI2.both    |>
 
 Byrne noted the reasons for making this decision (to further re-specifying model secondary teachers), which I quoted here for future reflection: (a) The model does not yet reflect a satisfactorily good fit to the data (CFI = 0.920); and (b) in reviewing the MIs in Table 7.2, we observe one very large mis-specified parameter representing the loading of Item 11 on Factor 1 (F1 by ITEM11), as well as another substantially large MI representing a residual covariance between Items 19 and 9, both of which can be substantiated as substantively meaningful parameters.
 
-(3) Model re-specification for model 3 
+(3) Model re-specification of model 2 to model 3
 
 ```{r}
-respecified3 <- 'EE =~ ITEM11
-                 '
-model3 <- paste(model2, respecified3)
+respecified3.elm <- 'ITEM4 ~~ ITEM7
+                     '
+respecified3.sec <- 'EE =~ ITEM11
+                     '
+model3.elm <- paste(model2, respecified3.elm)                 
+model3.sec <- paste(model2, respecified3.sec)
 ```
 
 Then, the model fit were re-estimated for both group, separately.
@@ -1114,7 +1117,7 @@ Then, the model fit were re-estimated for both group, separately.
 #for elementary
 cfa3.elm <- 
   cfa(
-    model3, 
+    model3.elm, 
     data = mbi.elm,  
     estimator = "MLM",
     mimic = "Mplus"
@@ -1122,7 +1125,7 @@ cfa3.elm <-
 #for secondary
 cfa3.sec <- 
   cfa(
-    model3, 
+    model3.sec, 
     data = mbi.sec,  
     estimator = "MLM",
     mimic = "Mplus"
@@ -1241,7 +1244,7 @@ MI3.both    |>
     )
 ```
 
-(3) Re-specification for model 3 (only for secondary teacher)
+(3) Re-specification of model 3 to model 4 (only for secondary teacher)
 
 The parameter ITEM9 ~~ ITEM19 was relaxed for estimation.
 
@@ -1289,7 +1292,7 @@ rownames(model4.sec.fit ) <- NULL
 
 #combine model 1 and 2 tables
 model3.both[1,1] <- "Elementary level†"
-model4.sec.fit[1,1] <- "Secondary level†"
+model4.sec.fit[1,1] <- "Secondary level‡"
 compare1234 <- 
   rbind(initial.both,
         model2.both, 
@@ -1313,15 +1316,83 @@ multi.fit.tab(compare1234,
            )
 ```
 
+\textcolor{blue}{See table 10. Based on a moderately satisfactory goodness-of-fit (MLM cgi-square[200] = 505.831; CFI = 0.937; RMSEA = 0.047; SRMR = 0.052) and to balance fit with parsimony, I consider Model 4 as the final baseline model for secondary teachers. }
+
 ```{r}
+model3 <- 'EE =~ ITEM1 + ITEM2 + ITEM3 + ITEM6 + ITEM8 + ITEM13 + ITEM14 + ITEM16 + ITEM20
+           DP =~ ITEM5 + ITEM10 + ITEM11 + ITEM15 +ITEM22
+           EE =~ ITEM12  
+           PA =~ ITEM4 + ITEM7 + ITEM9 + ITEM12 + ITEM17 + ITEM18 + ITEM19 + ITEM21
+           ITEM6 ~~ ITEM16               
+           ITEM10 ~~ ITEM11                
+           ITEM1 ~~ ITEM2 
+           '
+cfa3 <- 
+  cfa(
+    model3, 
+    data = mbi.elm,  
+    estimator = "MLM"
+    #mimic = "Mplus"
+    )
+```
+
+
+```{r, fig.width= 8, fig.height= 12}
+library(semPlot)
+grps <- list(EE = c("ITEM1", "ITEM2", "ITEM3", "ITEM6", "ITEM8", 
+        "ITEM13", "ITEM14",  "ITEM16", "ITEM20"), 
+        DP = c("ITEM5", "ITEM10", "ITEM11", "ITEM15","ITEM22"),
+        PA = c("ITEM4", "ITEM7", "ITEM9", "ITEM12",
+               "ITEM17", "ITEM18", "ITEM19", "ITEM21"))
+
+order.manifest <- c("ITEM4", "ITEM7", "ITEM9", "ITEM12",
+        "ITEM17", "ITEM18", "ITEM19", "ITEM21",
+        "ITEM5", "ITEM10", "ITEM11", "ITEM15","ITEM22",
+        "ITEM1", "ITEM2", "ITEM3", "ITEM6", "ITEM8", 
+        "ITEM13", "ITEM14",  "ITEM16", "ITEM20")
+order.latent <- c("PA", "DP", "EE")
+semPaths(cfa3, 
+         "col", #un-weighted edges
+         "std", #edge label is standarized
+         reorder = F,
+         latents = order.latent,
+         manifest = order.manifest,
+         sizeLat = 8,
+         sizeLat2 = 5,
+         sizeMan = 6,
+         sizeMan2 = 3,
+         residScale = 4,
+         curveAdjacent = "cov", # if edge for adjacent nodes curly or not, "reg"
+         shapeMan = "rectangle",
+         style = "lisrel",
+         group = "latent",
+         
+         residuals = T,
+         curve = 1.5,
+         curvature = 0.2,
+         #theme = "colorblind",
+         #cardinal = "lat cov",
+         curvePivot = F,
+         layout = "tree",
+         rotation = 2,
+         posColor = c("red", "purple", "yellow", "black"),
+         color = c("#c68642", "#58668b", "#8874a3"),
+         #edge.color = "steelblue",
+         shapeLat = "ellipse",
+         label.font = 2,
+         label.color = "white",
+         #Label.scale =T,
+         label.prop = 0.7,
+         posCol = c("black","black"),
+         negCol = c("steelblue","steelblue")
+         )
+
 
 ```
 
 
 
 
-```{r}
-```
 
 ```{r}
 chisq_mlm <- function(fit_nested, fit_parent) {
@@ -1348,11 +1419,34 @@ chisq_mlm <- function(fit_nested, fit_parent) {
 ```
 
 
+
+
 ```{r}
+```{r}
+weighted = FALSE, #no weight
+         groups = grps,
+         posColor = c("red", "purple", "yellow", "black"),
+         color = c("#bdeaee", "#dcedc1", "#8b9dc3"), 
+         curvature = 1,  #curvature strength
+         shapeMan = "rectangle", #manifest variable's shape
+         sizeMan = 8, # manifest variable's font size
+         sizeMan2 = 3, # manifest variable's tile size
+         rotation = 2, # turn vertical
+         edge.color = "steelblue", #specify line color
+         edge.label.cex = 0.6,
+         title = T,
+         curve =1.5,
+         legend = F,
+         asize = 1, #arrow size
+         #style = "ram",
+         #layoutSplit= T,
+         fixedStyle = c("red",3),
+         #edge.color = "#bdeaee",
+         reorder= F,
+         layout = "tree2",
+         manifests = order.manifest,
+         latents = order.latent
 ```
-
-
-```{r}
 ```
 xie
 
