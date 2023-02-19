@@ -1319,7 +1319,7 @@ multi.fit.tab(compare1234,
 \textcolor{blue}{See table 10. Based on a moderately satisfactory goodness-of-fit (MLM cgi-square[200] = 505.831; CFI = 0.937; RMSEA = 0.047; SRMR = 0.052) and to balance fit with parsimony, I consider Model 4 as the final baseline model for secondary teachers. }
 
 ```{r}
-model3 <- 'EE =~ ITEM1 + ITEM2 + ITEM3 + ITEM6 + ITEM8 + ITEM13 + ITEM14 + ITEM16 + ITEM20
+model3.elm <- 'EE =~ ITEM1 + ITEM2 + ITEM3 + ITEM6 + ITEM8 + ITEM13 + ITEM14 + ITEM16 + ITEM20
            DP =~ ITEM5 + ITEM10 + ITEM11 + ITEM15 +ITEM22
            EE =~ ITEM12  
            PA =~ ITEM4 + ITEM7 + ITEM9 + ITEM12 + ITEM17 + ITEM18 + ITEM19 + ITEM21
@@ -1327,9 +1327,27 @@ model3 <- 'EE =~ ITEM1 + ITEM2 + ITEM3 + ITEM6 + ITEM8 + ITEM13 + ITEM14 + ITEM1
            ITEM10 ~~ ITEM11                
            ITEM1 ~~ ITEM2 
            '
-cfa3 <- 
+
+model4.sec <- 'EE =~ ITEM1 + ITEM2 + ITEM3 + ITEM6 + ITEM8 + ITEM13 + ITEM14 + ITEM16 + ITEM20
+           DP =~ ITEM5 + ITEM10 + ITEM11 + ITEM15 +ITEM22
+           PA =~ ITEM4 + ITEM7 + ITEM9 + ITEM12 + ITEM17 + ITEM18 + ITEM19 + ITEM21
+           ITEM6 ~~ ITEM16               
+           ITEM10 ~~ ITEM11                
+           ITEM1 ~~ ITEM2
+           EE =~ ITEM11 
+           ITEM9 ~~ ITEM19
+           '
+cfa3.elm <- 
   cfa(
-    model3, 
+    model3.elm, 
+    data = mbi.elm,  
+    estimator = "MLM"
+    #mimic = "Mplus"
+    )
+
+cfa4.sec <- 
+  cfa(
+    model4.sec, 
     data = mbi.elm,  
     estimator = "MLM"
     #mimic = "Mplus"
@@ -1337,7 +1355,7 @@ cfa3 <-
 ```
 
 
-```{r, fig.width= 8, fig.height= 12}
+```{r, fig.width= 5, fig.height= 12, fig.align='left'}
 library(semPlot)
 grps <- list(EE = c("ITEM1", "ITEM2", "ITEM3", "ITEM6", "ITEM8", 
         "ITEM13", "ITEM14",  "ITEM16", "ITEM20"), 
@@ -1351,9 +1369,10 @@ order.manifest <- c("ITEM4", "ITEM7", "ITEM9", "ITEM12",
         "ITEM1", "ITEM2", "ITEM3", "ITEM6", "ITEM8", 
         "ITEM13", "ITEM14",  "ITEM16", "ITEM20")
 order.latent <- c("PA", "DP", "EE")
-semPaths(cfa3.elm, 
+par(mfrow=c(1,2))
+a <- semPaths(cfa3.elm, 
          "col", #un-weighted edges
-         "std", #edge label is standarized
+         "no", #edge label is standarized
          reorder = F,
          latents = order.latent,
          manifest = order.manifest,
@@ -1367,8 +1386,8 @@ semPaths(cfa3.elm,
          style = "lisrel",
          group = "latent",
          residuals = T,
-         curve = 1.5,
-         curvature = 0.2,
+         curve = 0.3,
+         curvature = 0.1,
          #theme = "colorblind",
          #cardinal = "lat cov",
          curvePivot = F,
@@ -1386,6 +1405,40 @@ semPaths(cfa3.elm,
          negCol = c("steelblue","steelblue")
          )
 
+a <- semPaths(cfa4.sec, 
+         "col", #un-weighted edges
+         "no", #edge label is standarized
+         reorder = F,
+         latents = order.latent,
+         manifest = order.manifest,
+         sizeLat = 8,
+         sizeLat2 = 5,
+         sizeMan = 6,
+         sizeMan2 = 3,
+         residScale = 4,
+         curveAdjacent = "cov", # if edge for adjacent nodes curly or not, "reg"
+         shapeMan = "rectangle",
+         style = "lisrel",
+         group = "latent",
+         residuals = T,
+         curve = 0.3,
+         curvature = 0.1,
+         #theme = "colorblind",
+         #cardinal = "lat cov",
+         curvePivot = F,
+         layout = "tree",
+         rotation = 2,
+         posColor = c("red", "purple", "yellow", "black"),
+         color = c("#c68642", "#58668b", "#8874a3"),
+         #edge.color = "steelblue",
+         shapeLat = "ellipse",
+         label.font = 2,
+         label.color = "white",
+         #Label.scale =T,
+         label.prop = 0.7,
+         posCol = c("black","black"),
+         negCol = c("steelblue","steelblue")
+         )
 
 ```
 
