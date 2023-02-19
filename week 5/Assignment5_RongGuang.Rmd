@@ -8,7 +8,7 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = F, message = F, cache = T, fig.align = 'center')
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F, cache = F, fig.align = 'center')
 ```
 
 **\textcolor{blue}{The texts that reflect my understanding have been highlighted in} \textcolor{red}{red color}.** 
@@ -29,7 +29,7 @@ Present the final baseline models of each group and draw the graphs
 
 # Preparation
 
-##Read in the data set:
+## Read in the data set:
 
 Start by downloading the **two data files** from Moodle to your Project folder!
 xie
@@ -1336,6 +1336,7 @@ cfa4.sec <-
     )
 ```
 
+### Visualize the final baseline models for each group
 
 ```{r, fig.width= 9, fig.height= 12, fig.align='center'}
 library(semPlot)
@@ -1410,75 +1411,99 @@ title(main = list("Secondary School Teachers",
 mtext("Figure 1 Hypothesized configural model", cex = 1.5, side = 1, line = -5, outer = TRUE)
 ```
 
+\textcolor{blue}{The the plot of baseline model for each group of teachers was created. See pciture 1}  There are three parameters (two residual co-variances [Item 4 with Item 7; Item 9 with Item 19] and one cross-loading [Item 11 on F1]) that were not part of the originally postulated model and that differ across the two groups of teachers. They have the same number of factors and the same factor-loading pattern (\textcolor{red} {A question: Is there any standard for such a pattern? The current baseline models have one cross-loading that differs across the groups so they are not exactaly same.})
 
+# Testing factorial equivalence of MBI between elementary and secondary shcool teachers
 
+\textcolor{blue}{With the baseline models established through the previous steps, I could combine them to generate a common baseline model for both group, or configural model, which bridges the baseline model and the final task--testing factorial in-variance across groups.}
+
+## Establish configural model (inv1.model)
+
+### Combine the datasets
+
+```{r}
+mbi.both <- 
+  merge(
+    data.frame(
+      mbi.elm, 
+      group = "elementary"
+      ),
+    data.frame(
+      mbi.sec, 
+      group = "secondary"
+      ),
+    all = TRUE, 
+    sort = FALSE
+    )
+```
+
+### Define the configural model
+
+ No equality constraints are imposed for this model. 
+
+```{r}
+inv1.model <- '
+    EE =~ 1*ITEM1 + ITEM2 + ITEM3 + ITEM6 + ITEM8 + ITEM13 + ITEM14 + ITEM16 + ITEM20
+    DP =~ 1*ITEM5 + ITEM10 + ITEM11 + ITEM15 + ITEM22
+    PA =~ 1*ITEM4 + ITEM7 + ITEM9 + ITEM12 + ITEM17 + ITEM18 + ITEM19 + ITEM21
+
+# Common modifications (from baseline models built above)
+    EE =~ ITEM12 # common cross-loading
+ ITEM1 ~~ ITEM2  # common residual covariances (3)
+ ITEM6 ~~ ITEM16
+ITEM10 ~~ ITEM11
+
+# Group-specific parameters for elementary teachers:
+ ITEM4 ~~ c(NA, 0)*ITEM7  # specific residual covariance
+
+# Group-specific parameters for secondary teachers:
+    EE =~ c(0, NA)*ITEM11 # specific cross-loading
+ ITEM9 ~~ c(0, NA)*ITEM19 # specific residual covariance
+'
+```
+
+### Estimate the configural model
+
+The model fit results derived from this model represent a multi-group version of the combined baseline models for elementary and secondary teacher. 
+
+```{r}
+inv1.fit <- 
+  cfa(
+    inv1.model, 
+    data = mbi.both, 
+    estimator = "MLM", 
+    group = "group"
+    )
+```
+
+### Summarize the results
+
+```{r}
+1
+```
 
 
 ```{r}
+#extract the key indicators
+inv1.fit.indices <- 
+  cfa.summary.mlm.a(inv1.fit) |> 
+  t() |> 
+  as.data.frame()
 
-```
+#define column and row names for the indicator table
+names(inv1.fit.indices) <- inv1.fit.indices[1,]
+inv1.fit.indices <- inv1.fit.indices[-1,]
+rownames(inv1.fit.indices) <- NULL
+inv1.fit.indices$Model <-"Configural (inv1.model)"
 
-```{r}
-```
-
-
-
-
-```{r}
-
-```
-xie
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
+#print the table
+multi.fit.tab(
+  inv1.fit.indices, 
+  "Fit indices for the configural model (inv1)"
+  )
 ```
 
 
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
 
 
 ```{r}
