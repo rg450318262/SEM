@@ -85,23 +85,23 @@ To control length of reports, codes already shown in the previous homework were 
 ### To generate a function for calculating chi square difference was defined.
 
 ```{r, echo = F}
-chi.diff <- function(sem1, sem2){ #2 augments input: the 1st is the nested model
-                                  #the 2nd is comparison model (less restricted)
-  measure0 <- fitMeasures(sem1,  #extract robust fit indices for the 1st model
-                          c("df.scaled",
-                            "chisq.scaling.factor",
-                            "chisq.scaled")) |>
-    as.vector()   #turn to vector to facilitate calculation
-  measure1 <- fitMeasures(sem2,  #extract robust fit indices for the 2nd model
-                          c("df.scaled",
-                            "chisq.scaling.factor",
-                            "chisq.scaled")) |>
-    as.vector()
-  cd <-  # this is the formula from p 14, week 4 slide
-    (measure0[1]*measure0[2]-measure1[1]*measure1[2])/(measure0[1]-measure1[1])
-  TRd <- # this is the formula from p 15, week 4 slide
-    (measure0[3]*measure0[2]-measure1[3]*measure1[2])/cd
-  TRd <- TRd |> round(3) # round the value to 3 decimal places
+chisq_mlm <- function(fit_nested, fit_parent) {
+    # scaling correction factors
+      c0 <- fitMeasures(fit_nested, "chisq.scaling.factor") %>% as.numeric()
+      c1 <- fitMeasures(fit_parent, "chisq.scaling.factor") %>% as.numeric()
+    # scaling correction of the difference test
+      d0 <- fitMeasures(fit_nested, "df") %>% as.numeric()
+      d1 <- fitMeasures(fit_parent, "df") %>% as.numeric()
+      cd <- ((d0 * c0) - (d1 * c1))/(d0 - d1)
+    # MLM chi-square difference test
+      T0 <- fitMeasures(fit_nested, "chisq.scaled") %>% as.numeric()
+      T1 <- fitMeasures(fit_parent, "chisq.scaled") %>% as.numeric()
+      TRd <- (T0*c0 - T1*c1)/cd
+    # degrees of freedom
+      df = d0 - d1
+    return(c("TR_d" = TRd |> round(3), 
+             "df" = df |> round(0), 
+             "p_value" = pchisq(TRd, df, lower.tail = FALSE) |> round(3)))
 }
 ```
 
@@ -279,6 +279,90 @@ data |>
   column_spec(7, width = "1cm") 
 }
 ```
+
+###########
+
+### Write a function to simplify plotting of merged tables for multi-group fit indicies with chi square difference statistics
+
+```{r}
+delta.fit.tab <- function(data, title, more.footnote = NULL){
+  
+  for (i in 2:nrow(data)){
+    data$'ΔChi-square(p)' <- rep(NA, nrow(data))
+    nested <- paste0("inv", i, ".fit")
+    diff<- as.numeric(chisq_mlm(eval(parse(text = nested)), inv1.fit)[1])
+    diff.p<- as.numeric(chisq_mlm(eval(parse(text = nested)), inv1.fit)[3])                 
+    data$'ΔChi-square(p)' = paste0(diff, "(", diff.p, ")")
+  }
+  
+data[1,3] <- "__"
+data <- data |> 
+  rename(p = 'p value',
+         p2 = 'RMSEA p value',
+         chi = 'chi square') |> 
+  mutate(df = as.numeric(df) |> round(0),
+         p = case_when(
+           as.numeric(p) < 0.001 ~ "<0.001",
+           as.numeric(p) >= 0.001 ~ p
+           ),
+         p2 = case_when(
+           as.numeric(p2) < 0.001 ~ "<0.001",
+           as.numeric(p2) >= 0.001 ~ p2
+           )
+         ) |>
+  mutate('Chi square (df, p)' = 
+           paste0(chi, "(", df,", ", p, ")"),
+         'RMSEA(p)'           = 
+           paste0(RMSEA, "(", p2, ")"
+              )
+         ) |> 
+  select(
+    Model,
+    'Chi square (df, p)', 
+    'ΔChi-square(p)',
+    CFI, TLI,
+    'RMSEA(p)', 
+    SRMR
+    ) 
+#print the combined table with adjustment of aesthetics
+data |> 
+  kable(booktabs = T, 
+        #format = "markdown", 
+        caption = 
+          title,
+        align = "lrrrrrr"
+        ) |> 
+  kable_styling(full_width = T) |> 
+  footnote(symbol = 
+             c("Chi square scaling factor", 
+               more.footnote)
+           ) |>
+  column_spec(1, width = "3cm") |> 
+  column_spec(2, width = "4cm")|> 
+  column_spec(3, width = "2.5cm")|> 
+  column_spec(4, width = "1cm")|> 
+  column_spec(5, width = "1cm")|> 
+  column_spec(6, width = "2.5cm") |> 
+  column_spec(7, width = "1cm") 
+}
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+########
 
 ### Write a function to simplify plotting aligned residual variance and co-variance tables
 
@@ -1498,11 +1582,13 @@ multi.fit.tab(
   )
 ```
 
-Results for this configural model (inv1.model) were as follows: MLM chi-square(401) = 939.696, CFI = 0.939, RMSEA = 0.046, and SRMR = 0.051.
+See table 11. Results for this configural model (inv1.model) were as follows: MLM chi-square(401) = 939.696, CFI = 0.939, RMSEA = 0.046, and SRMR = 0.051.
 
 ## Impose equality constraints on factor loadings of configural model
 
-### Constrain 20 common factor loadings equal (inv2.model)
+### Constrain 20 common factor loadings equal step by step(inv2.model)
+
+(1) Define and inspect the fit indices of model 2 (inv2.model)
 
 \textcolor{blue}{All the common factor loadings were constrained equal across groups. If the results show significant improvement from configural model, we get the evidence about multi-group in-variance. If not, we need to further explore which parameter(s) bring about the difference observed. }
 
@@ -1528,7 +1614,7 @@ inv2.fit.indices <-
 names(inv2.fit.indices) <- inv2.fit.indices[1,]
 inv2.fit.indices <- inv2.fit.indices[-1,]
 rownames(inv2.fit.indices) <- NULL
-inv2.fit.indices$Model <-"Model2 (inv2)+"
+inv2.fit.indices$Model <-"Model2 (inv2)†"
 
 #merge configural model and inv2.model.
 fit.indices.12 <- # 12 is for inv1 and inv 2
@@ -1545,58 +1631,190 @@ multi.fit.tab(
   )
 ```
 
+See table 12. As indicated by the very slightly higher MLM chi-square value (939.696→995.433) and lower CFI value (0.939→0.935), compared with the configural model, results suggest that the model does not fit the data quite as well as it did with no factor-loading constraints imposed. \textcolor{blue}{Thus, we explore furhter to find out the parammeter(s) brought about the non-invariance. }
+
+(2) Examine the modification indices for inv2.model
+
+MIs of inv2.model were calculated. In seeking evidence of non-invariance, we focus only on the factor loadings that were constrained equal across the groups. In addition, in testing for invariance, only those parameters that were constrained equal, are of relevance. Hence, only the parameter statement that meets these requirements were extracted.
+
+First, to simplify the searching for relevant parameters, I defined an object including all parameters were relevant, so that what parameters were shown in MI table were automatically controlled. 
 
 ```{r}
-multi.fit.tab <- function(data, title, more.footnote = NULL){
-data <- data |> 
-  rename(p = 'p value',
-         p2 = 'RMSEA p value',
-         chi = 'chi square') |> 
-  mutate(df = as.numeric(df) |> round(0),
-         p = case_when(
-           as.numeric(p) < 0.001 ~ "<0.001",
-           as.numeric(p) >= 0.001 ~ p
-           ),
-         p2 = case_when(
-           as.numeric(p2) < 0.001 ~ "<0.001",
-           as.numeric(p2) >= 0.001 ~ p2
-           )
-         ) |>
-  mutate('Chi square (df, p)' = 
-           paste0(chi, "(", df,", ", p, ")"),
-         'RMSEA(p)'           = 
-           paste0(RMSEA, "(", p2, ")"
-                  )
-         ) |> 
-  select(
-    Model,
-    'Chi square (df, p)', 
-    CFI, TLI,
-    'RMSEA(p)', 
-    SRMR, 
-    'CSF*'= CSF
+#create the parameter statements of relevancy
+itemset1 <- "ITEM2 + ITEM3 + ITEM6 + ITEM8 + ITEM13 + ITEM14 + ITEM16 + ITEM20 + ITEM12"
+itemset2 <- "ITEM10 + ITEM11 + ITEM15 + ITEM22"
+itemset3 <- "ITEM7 + ITEM9 + ITEM12 + ITEM17 + ITEM18 + ITEM19 + ITEM21"
+#create relevant statement for EE
+relevant.items1 <- 
+  stringr::str_replace_all(
+    stringr::str_split_1(itemset1, "\\+" ), 
+    " ", 
+    ""
     ) 
-#print the combined table with adjustment of aesthetics
-data |> 
-  kable(booktabs = T, 
-        #format = "markdown", 
+relevant.items1 <- 
+  paste("EE", "→", relevant.items1)
+#create relevant statement for DP
+relevant.items2 <- 
+  stringr::str_replace_all(
+    stringr::str_split_1(itemset2, "\\+" ), 
+    " ", 
+    ""
+    ) 
+relevant.items2 <- 
+  paste("DP", "→", relevant.items2)
+#create relevant statement for PA
+relevant.items3 <- 
+  stringr::str_replace_all(
+    stringr::str_split_1(itemset3, "\\+" ), 
+    " ", 
+    ""
+    ) 
+relevant.items3 <- 
+  paste("PA", "→", relevant.items3)
+#combine the above into one 
+relevant.items <- c(relevant.items1, relevant.items2, relevant.items3)
+```
+
+Next, I extract MI table with relevant parameters.
+
+```{r}
+inv2.model.MI <- modindices(inv2.fit, 
+           standardized = TRUE, 
+           minimum.value = 3.84, 
+           free.remove = FALSE,
+           op = "=~", 
+           sort. = TRUE) |> 
+  mutate(Parameter = paste(lhs, "→", rhs)) |> 
+  filter(Parameter %in% relevant.items) |> 
+  arrange(group)
+```
+
+Then, MI tables with relevant parameters was printed in descending order of MI. Potential parameters that are very possibly undermining equivalence across elementary and secondary teachers were highlighted in red.
+
+```{r}
+inv2.model.MI.elm <- 
+  inv2.model.MI  |> 
+  filter(group == 1) |> 
+  select(Parameter, 
+         MI = mi, 
+         EPC = epc, 
+         "std EPC" = sepc.all
+         )
+
+inv2.model.MI.sec <- 
+  inv2.model.MI  |>  
+  filter(group == 2) |> 
+  select(Parameter, 
+         MI = mi, 
+         EPC = epc, 
+         "std EPC" = sepc.all
+         )
+
+
+rbind(inv2.model.MI.elm, inv2.model.MI.sec) |> 
+  kable(digits = 3,
+        booktab = T,
+        linesep = "",
         caption = 
-          title,
-        align = "lrrrrrr"
-        ) |> 
-  kable_styling(full_width = T) |> 
-  footnote(symbol = 
-             c("Chi square scaling factor", 
-               more.footnote)
-           ) |>
-  column_spec(1, width = "3.5cm") |> 
-  column_spec(2, width = "4cm")|> 
-  column_spec(3, width = "1cm")|> 
-  column_spec(4, width = "1cm")|> 
-  column_spec(5, width = "2.5cm")|> 
-  column_spec(6, width = "1cm") |> 
-  column_spec(7, width = "1cm") 
+          "Selected modification indices for inv2.model") |>
+  kable_styling(
+    latex_options = "striped"
+    ) |>
+  pack_rows(index = c("Elementary teachers" = nrow(inv2.model.MI.elm),
+                      "Secondary teachers" = nrow(inv2.model.MI.sec)
+                      )
+            )|>
+  row_spec(
+    c(1:2), 
+    color = "red"
+    ) |> 
+  footnote(general = 
+             "Rows highlighted in red are of special concerns") 
+```
+
+\textcolor{blue}{See table 13. Of all the eligible parameters, the factor loading of Item 11 on DP appears to be the most problematic in terms of its equivalence across elementary and secondary teachers. I relaxed this factor loading(Item 11 by DP) for establishing the the next model, model3 (inv3.model)}
+
+(3) Re-specify model2 to fit model 3 (inv3.model)
+
+```{r}
+inv3.fit <- 
+  cfa(inv1.model, 
+      data = mbi.both, 
+      estimator = "MLM", 
+      group = "group",
+      group.equal = c("loadings"),
+      group.partial = c("EE =~ ITEM11",
+                        "DP =~ ITEM11")
+  )
+```
+
+### Constrain 20 common factor loadings equal step by step(inv3.model)
+
+(1) Inspect fit indices of model 3 (inv3.model)
+
+```{r}
+#extract the key indicators
+inv3.fit.indices <- 
+  cfa.summary.mlm.a(inv3.fit) |> 
+  t() |> 
+  as.data.frame()
+
+#define column and row names for the indicator table
+names(inv3.fit.indices) <- inv3.fit.indices[1,]
+inv3.fit.indices <- inv3.fit.indices[-1,]
+rownames(inv3.fit.indices) <- NULL
+inv3.fit.indices$Model <-"Model3 (inv3)‡"
+
+#merge configural model and inv2.model.
+fit.indices.123 <- # 123 is for inv1, 2 and 3 models
+  rbind(
+    inv1.fit.indices, 
+    inv2.fit.indices,
+    inv3.fit.indices
+    ) 
+
+#print the table
+multi.fit.tab(
+  fit.indices.123, 
+  "Comparison Fit indices across the inv1.model through inv3.model",
+  c("Configural model + 20 common factor loadings constrained equal across groups",
+    "Inv2.model + a parameter(DP By Item11) set relaxed")
+  )
+```
+
+ The fit statistics of inv3.model: MLM χ2[420] 969.990, CFI 0.937, RMSEA 0.045, SRMR 0.054.
+ 
+```{r}
+delta.fit.tab(fit.indices.123, "title")
+```
+ 
+
+(2) Examine the modification indices for inv3.model
+(3) Re-specify model2 to fit model 3 (inv3.model)
+
+
+
+```{r}
+
+chisq_mlm <- function(fit_nested, fit_parent) {
+    # scaling correction factors
+      c0 <- fitMeasures(fit_nested, "chisq.scaling.factor") %>% as.numeric()
+      c1 <- fitMeasures(fit_parent, "chisq.scaling.factor") %>% as.numeric()
+    # scaling correction of the difference test
+      d0 <- fitMeasures(fit_nested, "df") %>% as.numeric()
+      d1 <- fitMeasures(fit_parent, "df") %>% as.numeric()
+      cd <- ((d0 * c0) - (d1 * c1))/(d0 - d1)
+    # MLM chi-square difference test
+      T0 <- fitMeasures(fit_nested, "chisq.scaled") %>% as.numeric()
+      T1 <- fitMeasures(fit_parent, "chisq.scaled") %>% as.numeric()
+      TRd <- (T0*c0 - T1*c1)/cd
+    # degrees of freedom
+      df = d0 - d1
+    return(c("TR_d" = TRd |> round(3), 
+             "df" = df |> round(0), 
+             "p_value" = pchisq(TRd, df, lower.tail = FALSE) |> round(3)))
 }
+
 ```
 
 
@@ -1631,6 +1849,9 @@ data |>
 ```{r}
 ```
 
+(1) Inspect fit indices of model 3 (inv3.model)
+(2) Examine the modification indices for inv3.model
+(3) Re-specify model2 to fit model 3 (inv3.model)
 
 ```{r}
 ```
