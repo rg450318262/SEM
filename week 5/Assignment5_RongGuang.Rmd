@@ -1351,7 +1351,7 @@ order.manifest <- c("ITEM4", "ITEM7", "ITEM9", "ITEM12",
         "ITEM1", "ITEM2", "ITEM3", "ITEM6", "ITEM8", 
         "ITEM13", "ITEM14",  "ITEM16", "ITEM20")
 order.latent <- c("PA", "DP", "EE")
-semPaths(cfa3, 
+semPaths(cfa3.elm, 
          "col", #un-weighted edges
          "std", #edge label is standarized
          reorder = F,
@@ -1366,7 +1366,6 @@ semPaths(cfa3,
          shapeMan = "rectangle",
          style = "lisrel",
          group = "latent",
-         
          residuals = T,
          curve = 1.5,
          curvature = 0.2,
@@ -1395,24 +1394,7 @@ semPaths(cfa3,
 
 
 ```{r}
-chisq_mlm <- function(fit_nested, fit_parent) {
-    # scaling correction factors
-      c0 <- fitMeasures(fit_nested, "chisq.scaling.factor") %>% as.numeric()
-      c1 <- fitMeasures(fit_parent, "chisq.scaling.factor") %>% as.numeric()
-    # scaling correction of the difference test
-      d0 <- fitMeasures(fit_nested, "df") %>% as.numeric()
-      d1 <- fitMeasures(fit_parent, "df") %>% as.numeric()
-      cd <- ((d0 * c0) - (d1 * c1))/(d0 - d1)
-    # MLM chi-square difference test
-      T0 <- fitMeasures(fit_nested, "chisq.scaled") %>% as.numeric()
-      T1 <- fitMeasures(fit_parent, "chisq.scaled") %>% as.numeric()
-      TRd <- (T0*c0 - T1*c1)/cd
-    # degrees of freedom
-      df = d0 - d1
-    return(c("TR_d" = round(TRd,3), 
-             "df" = round(df,0), 
-             "p_value" = pchisq(TRd, df, lower.tail = FALSE) |> round(3)))
-}
+
 ```
 
 ```{r}
