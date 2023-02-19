@@ -1444,7 +1444,7 @@ b <- semPaths(cfa4.sec,
          )
 title(main = list("Secondary School Teachers",
                   cex = 1, font =1), outer = F, line = -3)
-mtext("My 'Title' in a strange place", side = 3, line = -0.5, outer = TRUE)
+mtext("Figure 1 Hypothesized configural model", side = 3, line = -2, outer = TRUE)
 ```
 
 
