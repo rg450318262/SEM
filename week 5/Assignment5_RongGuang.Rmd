@@ -1251,7 +1251,7 @@ The parameter ITEM9 ~~ ITEM19 was relaxed for estimation.
 ```{r}
 respecified4.sec <- 'ITEM9 ~~ ITEM19
                  '
-model4 <- paste(model3.sec, respecified4.sec)
+model4.sec <- paste(model3.sec, respecified4.sec)
 ```
 
 Then, the model fit were re-estimated for secondary group, only
@@ -1259,7 +1259,7 @@ Then, the model fit were re-estimated for secondary group, only
 ```{r}
 cfa4.sec <- 
   cfa(
-    model4, 
+    model4.sec, 
     data = mbi.sec,  
     estimator = "MLM",
     mimic = "Mplus"
@@ -1319,24 +1319,6 @@ multi.fit.tab(compare1234,
 \textcolor{blue}{See table 10. Based on a moderately satisfactory goodness-of-fit (MLM cgi-square[200] = 505.831; CFI = 0.937; RMSEA = 0.047; SRMR = 0.052) and to balance fit with parsimony, I consider Model 4 as the final baseline model for secondary teachers. }
 
 ```{r}
-model3.elm <- 'EE =~ ITEM1 + ITEM2 + ITEM3 + ITEM6 + ITEM8 + ITEM13 + ITEM14 + ITEM16 + ITEM20
-           DP =~ ITEM5 + ITEM10 + ITEM11 + ITEM15 +ITEM22
-           EE =~ ITEM12  
-           PA =~ ITEM4 + ITEM7 + ITEM9 + ITEM12 + ITEM17 + ITEM18 + ITEM19 + ITEM21
-           ITEM6 ~~ ITEM16               
-           ITEM10 ~~ ITEM11                
-           ITEM1 ~~ ITEM2 
-           '
-
-model4.sec <- 'EE =~ ITEM1 + ITEM2 + ITEM3 + ITEM6 + ITEM8 + ITEM13 + ITEM14 + ITEM16 + ITEM20
-           DP =~ ITEM5 + ITEM10 + ITEM11 + ITEM15 +ITEM22
-           PA =~ ITEM4 + ITEM7 + ITEM9 + ITEM12 + ITEM17 + ITEM18 + ITEM19 + ITEM21
-           ITEM6 ~~ ITEM16               
-           ITEM10 ~~ ITEM11                
-           ITEM1 ~~ ITEM2
-           EE =~ ITEM11 
-           ITEM9 ~~ ITEM19
-           '
 cfa3.elm <- 
   cfa(
     model3.elm, 
@@ -1355,7 +1337,7 @@ cfa4.sec <-
 ```
 
 
-```{r, fig.width= 5, fig.height= 12, fig.align='center'}
+```{r, fig.width= 9, fig.height= 12, fig.align='center'}
 library(semPlot)
 grps <- list(EE = c("ITEM1", "ITEM2", "ITEM3", "ITEM6", "ITEM8", 
         "ITEM13", "ITEM14",  "ITEM16", "ITEM20"), 
@@ -1372,7 +1354,7 @@ order.manifest <- c("ITEM4", "ITEM7", "ITEM9", "ITEM12",
 order.latent <- c("PA", "DP", "EE")
 par(mfrow=c(1,2))
 
-a <- semPaths(cfa3.elm, 
+semPaths(cfa3.elm, 
          "col", #un-weighted edges
          "no", #edge label is standarized
          reorder = F,
@@ -1382,33 +1364,23 @@ a <- semPaths(cfa3.elm,
          sizeLat2 = 5,
          sizeMan = 6,
          sizeMan2 = 3,
-         residScale = 4,
          curveAdjacent = "cov", # if edge for adjacent nodes curly or not, "reg"
          shapeMan = "rectangle",
          style = "lisrel",
          group = "latent",
-         residuals = T,
          curve = 0.3,
-         curvature = 0.1,
-         #theme = "colorblind",
-         #cardinal = "lat cov",
-         curvePivot = F,
-         layout = "tree",
+         curvature = 0.1,#theme = "colorblind",#cardinal = "lat cov",
+         curvePivot = F,# curly edge or not
          rotation = 2,
-         posColor = c("red", "purple", "yellow", "black"),
-         color = c("#c68642", "#58668b", "#8874a3"),
-         #edge.color = "steelblue",
+         color = c("#c68642", "#58668b", "#8874a3"),#edge.color = "steelblue",
          shapeLat = "ellipse",
          label.font = 2,
-         label.color = "white",
-         #Label.scale =T,
-         label.prop = 0.7,
-         posCol = c("black","black"),
-         negCol = c("steelblue","steelblue")
+         label.color = "white", #Label.scale =T,
+         label.prop = 0.7
          )
 title(main = list("Elementary School Teachers",
                   cex = 1, font =1),outer = F, line = -3)
-b <- semPaths(cfa4.sec, 
+semPaths(cfa4.sec, 
          "col", #un-weighted edges
          "no", #edge label is standarized
          reorder = F,
@@ -1418,29 +1390,20 @@ b <- semPaths(cfa4.sec,
          sizeLat2 = 5,
          sizeMan = 6,
          sizeMan2 = 3,
-         residScale = 4,
-         curveAdjacent = "cov", # if edge for adjacent nodes curly or not, "reg"
+         curveAdjacent = "cov", #if edge for adjacent nodes curly or not, "reg"
          shapeMan = "rectangle",
          style = "lisrel",
          group = "latent",
-         residuals = T,
          curve = 0.3,
-         curvature = 0.1,
-         #theme = "colorblind",
-         #cardinal = "lat cov",
-         curvePivot = F,
+         curvature = 0.1,#theme = "colorblind", #cardinal = "lat cov",
+         curvePivot = F, # curly edge or not
          layout = "tree",
          rotation = 2,
-         posColor = c("red", "purple", "yellow", "black"),
-         color = c("#c68642", "#58668b", "#8874a3"),
-         #edge.color = "steelblue",
+         color = c("#c68642", "#58668b", "#8874a3"), #edge.color = "steelblue",
          shapeLat = "ellipse",
          label.font = 2,
-         label.color = "white",
-         #Label.scale =T,
-         label.prop = 0.7,
-         posCol = c("black","black"),
-         negCol = c("steelblue","steelblue")
+         label.color = "white",#Label.scale =T,
+         label.prop = 0.7
          )
 title(main = list("Secondary School Teachers",
                   cex = 1, font =1), outer = F, line = -3)
