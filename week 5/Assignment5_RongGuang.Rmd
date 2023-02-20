@@ -11,28 +11,41 @@ output:
 knitr::opts_chunk$set(echo = TRUE, warning = F, message = F, cache = F, fig.align = 'center')
 ```
 
-**\textcolor{blue}{The texts that reflect my understanding have been highlighted in} \textcolor{red}{red color}.** 
+# Read me
 
-# Task description
+The texts that reflect my understanding/questions/doubts have been highlighted in \textcolor{red}{red color}.
+The texts that describes important steps/results or that corresponds to certain exercise requirement have been highlighted in \textcolor{blue}{blue color}.
 
-The first section is task description, which is copied from the assignment5.rmd. It is for communicating with future "me". Please skip it.
-
+```{r, echo = F}
 ## Exercise 5.1
-
-Specify and estimate the initial baseline models for the two groups. 
-
-Present a brief summary of the model fit and make the first step of the modification by including **(exceptionally, at the same time!)** all the four parameters known to be required for improving the model fit of both models.
-
-Fine-tune the models step by step following the guidelines given in the lecture material, i.e., implement the modifications **(as usually, one change at a time)** testing and studying each step. 
-
-Present the final baseline models of each group and draw the graphs
+# 
+# Specify and estimate the initial baseline models for the two groups. 
+# 
+# Present a brief summary of the model fit and make the first step of the modification by including **(exceptionally, at the same time!)** all the four parameters known to be required for improving the model fit of both models.
+# 
+# Fine-tune the models step by step following the guidelines given in the lecture material, i.e., implement the modifications **(as usually, one change at a time)** testing and studying each step. 
+# 
+# Present the final baseline models of each group and draw the graphs
+# 
+# ## Exercise 5.2: 
+# 
+# **Now we are getting to the point of this Assignment: testing the invariance.** See slide #14.
+# 
+# *Note:* To continue you have to combine the two data sets into one data set, so that it includes a variable for identifying the two groups.
+# 
+# As soon as you have the new data, go ahead and specify the *common baseline (configural) model*, and then begin the **invariance testing** by estimating that configural model and studying its output. See below! A lot of ready R code given! :)
+# 
+# ## Exercise 5.3
+# 
+# Summarize the whole invariance testing concisely, preferably with a summary table that displays the key results of each phase. 
+# 
+# **Also write a brief conclusion of the whole testing process using your own words.**
+```
 
 # Preparation
 
 ## Read in the data set:
 
-Start by downloading the **two data files** from Moodle to your Project folder!
-xie
 ```{r}
 #install the necessary pakages
 if (!require("pacman")) install.packages("pacman")
@@ -80,7 +93,7 @@ mbi.sec <- #secondary school
 
 ## Write functions
 
-To control length of reports, codes already shown in the previous homework were not showing in the current report. Yet they are available in .rmd report.
+To control length of reports, codes of fucntions were not showing in the current report. Yet they are available in .rmd report.
 
 ### To generate a function for calculating chi square difference was defined.
 
@@ -227,7 +240,7 @@ cfa.tab.d <- variance |>
 
 ### Write a function to simplify plotting of merged tables for multi-group fit indicies
 
-```{r}
+```{r, echo=F}
 multi.fit.tab <- function(data, title, more.footnote = NULL){
 data <- data |> 
   rename(p = 'p value',
@@ -280,20 +293,29 @@ data |>
 }
 ```
 
-
 ### Write a function to simplify plotting of merged tables for multi-group fit indicies with chi square difference statistics
 
-```{r}
-delta.fit.tab <- function(data, title, more.footnote = NULL){
+```{r, echo=F}
+delta.fit.tab <- function(data, title, more.footnote = NULL, 
+                          compare = "configural",
+                          row.correction = 0){
+  if (compare == "configural"){
+    compare <- "inv1.fit"
+  } else {compare <- paste0(compare, ".fit")}
+  
+  
   data$'ΔChi-square(df,p)*' <- rep(NA, nrow(data))
   for (i in 2:nrow(data)){
-    nested <- paste0("inv", i, ".fit")
-    diff<- as.numeric(chisq_mlm(eval(parse(text = nested)), inv1.fit)[1])
-    diff.df <-  as.numeric(chisq_mlm(eval(parse(text = nested)), inv1.fit)[2])
-    diff.p<- as.numeric(chisq_mlm(eval(parse(text = nested)), inv1.fit)[3])                 
+    nested <- paste0("inv", sum(i, row.correction), ".fit")
+    diff<- as.numeric(chisq_mlm(eval(parse(text = nested)), 
+                                eval(parse(text = compare)))[1])
+    diff.df <-  as.numeric(chisq_mlm(eval(parse(text = nested)), 
+                                     eval(parse(text = compare)))[2])
+    diff.p<- as.numeric(chisq_mlm(eval(parse(text = nested)), 
+                                  eval(parse(text = compare)))[3])                 
     data$'ΔChi-square(df,p)*'[i] <-  paste0(diff, "(", diff.df,", ", diff.p, ")")
   }
-  
+ 
 
 data <- data |> 
   rename(p = 'p value',
@@ -334,7 +356,10 @@ data |>
         ) |> 
   kable_styling(full_width = T) |> 
   footnote(symbol = 
-             c("Chi square differece statistics of model of the row compared to configural model", 
+             c(paste(
+               "Chi square differece statistics of model of the row compared to", 
+               compare, 
+               "model"), 
                more.footnote)
            ) |>
   column_spec(1, width = "2.8cm") |> 
@@ -350,7 +375,7 @@ data |>
 
 ### Write a function to simplify plotting aligned residual variance and co-variance tables
 
-```{r}
+```{r, echo=F}
 align.table <- function(data, num.no.header.col, title){
 
 data  |> 
@@ -569,7 +594,7 @@ corr.density <- function(data, fig.num = 1, group){
 
 ### Write a function to generate dot distribution plot
 
-```{r}
+```{r, echo=F}
 dot.dist <- 
   function(data, type, title){
     data |>
@@ -590,7 +615,7 @@ dot.dist <-
 
 ### Write a fuction to generate correlation matrix with statistical test
 
-```{r}
+```{r, echo=F}
 mycor <- 
   function(data, cols, title){
   mbi.elm |> 
@@ -606,7 +631,7 @@ mycor <-
 
 # Inspect the data
 
-## Distribution
+## Distribution of values
 
 ```{r,fig.width= 8, fig.height = 13}
 #generate the plots, by subgroup of teachers
@@ -626,24 +651,23 @@ p.dist.sec <-
 library(patchwork); p.dist.elm/p.dist.sec
 ```
 
+## Distributions of Item statistics (median)
  
 ```{r,fig.width= 8, fig.height = 5}
 #generate plot by subgroups of teachers
 p.dot.elm <- 
   dot.dist(
-    data = mbi.elm, 
-    type = "median", 
+    data = mbi.elm, type = "median", 
     title = "(a) Elementary school teacher"
     )
 p.dot.sec <- 
   dot.dist(
-    data = mbi.sec, 
-    type = "median", 
+    data = mbi.sec,  type = "median", 
     title = "(b) Secondary school teacher"
     )
 #plot layout
 patchwork <- p.dot.elm|p.dot.sec
-#print the plot with a genral title
+#print the plot with a general title
 patchwork+plot_annotation(
     title = 
       'Figure 2 Distributions of median rating for each item',
@@ -658,6 +682,7 @@ patchwork+plot_annotation(
     )
 ```
 
+## Correlation
 
 ```{r,fig.width= 10, fig.height = 15}
 fa.ee <- c("ITEM1", "ITEM3", "ITEM6", "ITEM8", "ITEM13", "ITEM14", "ITEM16", "ITEM20")
@@ -666,43 +691,37 @@ fa.pa <- c("ITEM4", "ITEM7", "ITEM9", "ITEM12", "ITEM17", "ITEM18", "ITEM19", "I
 #generate 6 plots, 3 factors X 2 subgroups of teachers
 p.cor.elm.ee <- 
        mycor(
-         data= mbi.elm, 
-         cols = fa.ee, 
+         data= mbi.elm, cols = fa.ee, 
          "(a) Items on emotional exhaustion, 
          elementary school teacher"
          )
 p.cor.sec.ee <- 
        mycor(
-         data = mbi.sec, 
-         cols = fa.ee, 
+         data = mbi.sec,  cols = fa.ee, 
          "(b) Items on emotional exhaustion, 
           secondary school teacher"
          )
 p.cor.elm.dp <- 
        mycor(
-         data = mbi.elm, 
-         cols = fa.dp, 
+         data = mbi.elm, cols = fa.dp, 
          "(c) Items on depersonalization,
           elementary school teacher"
          )
 p.cor.sec.dp <- 
        mycor(
-         data = mbi.sec, 
-         cols = fa.dp, 
+         data = mbi.sec, cols = fa.dp, 
          "(d) Items on depersonalization,
           secondary school teacher"
          )
 p.cor.elm.pa <- 
        mycor(
-         data = mbi.elm, 
-         cols = fa.pa, 
+         data = mbi.elm, cols = fa.pa, 
          "(e) Items on personal accomplishment,
          secondary school teacher"
          )
 p.cor.sec.pa <- 
        mycor(
-         data = mbi.sec ,
-         cols = fa.pa, 
+         data = mbi.sec, cols = fa.pa, 
          "(f) Items on personal accomplishment,
           secondary school teacher"
          )
@@ -716,19 +735,14 @@ patchwork+
       'Figure 3 Correlalogram for items on each factor for two groups of teachers',
     theme = 
       theme(plot.title = 
-              element_text(
-                size = 16,
-                face = "bold",
-                vjust = -1.5,
-                hjust =0.5)
-            )
-    )
-
+              element_text(size = 16, face = "bold", vjust = -1.5, hjust =0.5)))
 ```
 
-# Testing the factorial invariance of MBI inventory between elementary and secondary school teachers  
+# Establishing the baseline model for testing factorial equivalence  
 
-## Define and estimate initial models for both subgroups
+\textcolor{red}{Here is a quick summary of how I understand the section (Not sure if it is correct):  To test factorial in-variance (equivalence), we need a baseline model that fits across the sub-groups, and that does not have any equality constraints. This model represents the best fitting one balanced with parsimony for EACH group. With this baseline models (one for each group) at hand, I could merge them to obtain a configural model, which represents the best fitting model balanced with parsimony for both group simultaneously (also importantly, without any between-group in-variance assumed). This configural model is an important pivot with which every model with some equality constraints on factor loadings should be compared in the following steps. }
+
+## Define and estimate initial models (for both subgroups)
 
 \textcolor{blue}{The postulated three-factor structure of the MBI that was tested in the previous assignments were re-tested as the initial model for establishing a baseline model. }
 
@@ -1047,7 +1061,7 @@ cfa2.sec <-
     )
 ```
 
-### Examine Model 2 
+## Establish Model 2 (for both groups of teachers)
 
 (1) Inspect fit indices of model2 (comparing to initial model)
 
@@ -1162,9 +1176,9 @@ MI2.both    |>
     )
 ```
 
-\textcolor{blue}{See table 7. In reviewing this information for elementary teachers, we observe two MIs larger than all other MIs (ITEM7 with ITEM4; ITEM19 with ITEM18); both represent residual co-variances. I followed Byrne's step in addressing these parameters.} According to Byrne, of the two, only the residual covariance between Items 7 and 4 is substantively viable in that there is a clear overlapping of item content. In contrast, the content of Items 19 and 18 exhibits no such redundancy, and, thus, there is no reasonable justification for including this parameter in a succeeding Model 3.
+\textcolor{blue}{See table 7. In reviewing this information for elementary teachers, we observe two MIs larger than all other MIs (ITEM7 with ITEM4; ITEM19 with ITEM18); both represent residual co-variances. I followed Byrne's step in addressing these parameters (free the first relationship between ITEMs 7 and 4).} According to Byrne, of the two, only the residual covariance between Items 7 and 4 is substantively viable in that there is a clear overlapping of item content. In contrast, the content of Items 19 and 18 exhibits no such redundancy, and, thus, there is no reasonable justification for including this parameter in a succeeding Model 3.
 
-\textcolor{blue}{However, in checking the MI for secondary teachers, the decision was made: more work is needed in establishing an appropriate baseline model.} Two parameters were of special concern due to their large MI and substantive meaningfulness. They are Item 11 cross-loads onto factor EE, and item 19 co-varies with item 9. This time I operated by the good practice of specifying one parameter each time. Given the substantially large MI representing the cross-loading of Item 11 on factor EE, this parameter alone was included in our next post-hoc model (Model 3 for secondary teachers).
+\textcolor{blue}{In checking the MI for secondary teachers, the decision was made: more work is needed in establishing an appropriate baseline model.} Two parameters were of special concern due to their large MI and substantive meaningfulness. They are Item 11 cross-loads onto factor EE, and item 19 co-varies with item 9. This time I operated by the good practice of specifying one parameter each time. Given the substantially large MI representing the cross-loading of Item 11 on factor EE, this parameter alone was included in our next post-hoc model (Model 3 for secondary teachers).
 
 Byrne noted the reasons for making this decision (to further re-specifying model secondary teachers), which I quoted here for future reflection: (a) The model does not yet reflect a satisfactorily good fit to the data (CFI = 0.920); and (b) in reviewing the MIs in Table 7.2, we observe one very large mis-specified parameter representing the loading of Item 11 on Factor 1 (F1 by ITEM11), as well as another substantially large MI representing a residual covariance between Items 19 and 9, both of which can be substantiated as substantively meaningful parameters.
 
@@ -1200,7 +1214,7 @@ cfa3.sec <-
     )
 ```
 
-### Examine Model 3
+## Establish Model 3 (for both groups of teachers)
 
 (1) Inspect fit indices of model3 (comparing to model 2)
 
@@ -1273,7 +1287,6 @@ model3.MI.sec <-
              maximum.number = 10)
 ```
 
-
 MI tables with 10 largest MI parameters was printed in descending order of MI. Potential mis-specification of most concerns were highlighted in red.
 
 ```{r}
@@ -1334,7 +1347,7 @@ cfa4.sec <-
     )
 ```
 
-### Examine Model 4
+## Establish Model 4 (for secondary tearchers only)
 
 \textcolor{blue}{Note that at this point I had taken model 3 as the baseline model for elementary teachers, and model 4 was to achieve the baseline model for secondary teachers.}
 
@@ -1347,17 +1360,13 @@ model4.sec.fit <-
     ) |> 
   t() |> 
   as.data.frame()
-
 names(model4.sec.fit ) <- model4.sec.fit[1,]
-
 model4.sec.fit <- model4.sec.fit [-1,]
 model4.sec.fit  <- 
   model4.sec.fit  |> 
   mutate(Model = "Secondary level") |> 
   select(Model, everything())
-
 rownames(model4.sec.fit ) <- NULL
-
 #combine model 1 and 2 tables
 model3.both[1,1] <- "Elementary level†"
 model4.sec.fit[1,1] <- "Secondary level‡"
@@ -1365,10 +1374,10 @@ compare1234 <-
   rbind(initial.both,
         model2.both, 
         model3.both, 
-        model4.sec.fit )
-
+        model4.sec.fit 
+        )
 #print the table
-multi.fit.tab(compare1234, 
+key.table1 <- multi.fit.tab(compare1234, 
               "Fit indices for two subgroups, model 4, comparing to preceding models",
               c("Baseline model for elementary teachers", 
                 "Baseline model for secondary teachers")) |> 
@@ -1376,12 +1385,12 @@ multi.fit.tab(compare1234,
     "Initial model" = 2,
     "Model 2" = 2,
     "Model 3" =2,
-    "Model 4" =1
-  )
+    "Model 4" =1 )
   ) |> 
   row_spec(c(5,7), 
            color = "red"
            )
+key.table1
 ```
 
 \textcolor{blue}{See table 10. Based on a moderately satisfactory goodness-of-fit (MLM cgi-square[200] = 505.831; CFI = 0.937; RMSEA = 0.047; SRMR = 0.052) and to balance fit with parsimony, I consider Model 4 as the final baseline model for secondary teachers. }
@@ -1392,19 +1401,16 @@ cfa3.elm <-
     model3.elm, 
     data = mbi.elm,  
     estimator = "MLM"
-    #mimic = "Mplus"
     )
-
 cfa4.sec <- 
   cfa(
     model4.sec, 
     data = mbi.elm,  
     estimator = "MLM"
-    #mimic = "Mplus"
     )
 ```
 
-### Visualize the final baseline models for each group
+## Visualize the final baseline models for each group
 
 ```{r, fig.width= 9, fig.height= 12, fig.align='center'}
 library(semPlot)
@@ -1413,16 +1419,13 @@ grps <- list(EE = c("ITEM1", "ITEM2", "ITEM3", "ITEM6", "ITEM8",
         DP = c("ITEM5", "ITEM10", "ITEM11", "ITEM15","ITEM22"),
         PA = c("ITEM4", "ITEM7", "ITEM9", "ITEM12",
                "ITEM17", "ITEM18", "ITEM19", "ITEM21"))
-
 order.manifest <- c("ITEM4", "ITEM7", "ITEM9", "ITEM12",
         "ITEM17", "ITEM18", "ITEM19", "ITEM21",
         "ITEM5", "ITEM10", "ITEM11", "ITEM15","ITEM22",
         "ITEM1", "ITEM2", "ITEM3", "ITEM6", "ITEM8", 
         "ITEM13", "ITEM14",  "ITEM16", "ITEM20")
-
 order.latent <- c("PA", "DP", "EE")
 par(mfrow=c(1,2))
-
 semPaths(cfa3.elm, 
          "col", #un-weighted edges
          "no", #edge label is standarized
@@ -1476,10 +1479,15 @@ semPaths(cfa4.sec,
          )
 title(main = list("Secondary School Teachers",
                   cex = 1, font =1), outer = F, line = -3)
-mtext("Figure 1 Hypothesized configural model", cex = 1.5, side = 1, line = -5, outer = TRUE)
+mtext("Figure 1 Baseline MBI models for two groups of teacher",
+      cex = 1.5, side = 1, line = -5, outer = TRUE)
 ```
 
-\textcolor{blue}{The the plot of baseline model for each group of teachers was created. See pciture 1}  There are three parameters (two residual co-variances [Item 4 with Item 7; Item 9 with Item 19] and one cross-loading [Item 11 on F1]) that were not part of the originally postulated model and that differ across the two groups of teachers. They have the same number of factors and the same factor-loading pattern (\textcolor{red} {A question: Is there any standard for such a pattern? The current baseline models have one cross-loading that differs across the groups so they are not exactaly same.})
+\textcolor{blue}{The the plot of baseline model for each group of teachers was created. See pciture 1.}  There are three parameters (two residual co-variances [Item 4 with Item 7; Item 9 with Item 19] and one cross-loading [Item 11 on F1]) that were not part of the originally postulated model and that differ across the two groups of teachers. (\textcolor{red} { According to slides, they (the diagrams) have the same number of factors and the same factor-loading pattern. A question: Is there any standard for such a pattern? The current baseline models have one cross-loading that differs across the groups so they are not exactaly same.})
+
+## Section Summary
+
+I this section I started by defining an initial model for each group of teacher (nested model). Then I fine-tuned the model into several less and less restrictive models. Evolving into model3, I found the best fitting balanced with parsimony model for elementary teachers. One more model later, I also decided upon the one for secondary teachers. They served as the baseline models, from which the configural model were generated in next section.
 
 # Testing factorial equivalence of MBI between elementary and secondary shcool teachers
 
@@ -1568,9 +1576,9 @@ multi.fit.tab(
 
 See table 11. Results for this configural model (inv1.model) were as follows: MLM chi-square(401) = 939.696, CFI = 0.939, RMSEA = 0.046, and SRMR = 0.051.
 
-## Impose equality constraints on factor loadings of configural model
+## Impose and relax equality constraints on factor loadings of configural model
 
-### Constrain common factor loadings equal step by step(inv2.model)
+### Constrain all common factor loadings (inv2.model)
 
 (1) Define and inspect the fit indices of model 2 (inv2.model)
 
@@ -1716,9 +1724,11 @@ rbind(inv2.model.MI.elm, inv2.model.MI.sec) |>
              "Rows highlighted in red are of special concerns") 
 ```
 
-\textcolor{blue}{See table 13. Of all the eligible parameters, the factor loading of Item 11 on DP appears to be the most problematic in terms of its equivalence across elementary and secondary teachers. I relaxed this factor loading(Item 11 by DP) for establishing the the next model, model3 (inv3.model)}
+\textcolor{blue}{See table 13. Of all the eligible parameters, the factor loading of Item 11 on DP appears to be the most problematic in terms of its equivalence across elementary and secondary teachers. I relaxed this factor loading(Item 11 by DP) from constraint for establishing the the next model, model3 (inv3.model)}
 
-(3) Re-specify model2 to fit model 3 (inv3.model)
+(3) Re-specify model2 to fit model 3 (inv3.model) by relaxing a parameter
+
+   \textcolor{blue}{Equality constraint on Parameter "DP by ITEM11" was relaxed. }
 
 ```{r}
 inv3.fit <- 
@@ -1727,15 +1737,19 @@ inv3.fit <-
       estimator = "MLM", 
       group = "group",
       group.equal = c("loadings"),
-      group.partial = c(#"EE =~ ITEM11",
+      group.partial = c("EE =~ ITEM11",
                         "DP =~ ITEM11"
                         )
   )
 ```
 
-### Constrain common factor loadings equal step by step(inv3.model)
+### Relax common factor loadings one by one(inv3.model)
+
+\textcolor{red}{Here is a quick summary of how I understand the section (Not sure if it is correct): In the previous sub-section, I imposed equality constraint on all the commonly-estimated factor loading (inv2.model) and the results showed poor fit in comparing to configural model (inv1.model), providing evidence of non-invariance (if they are really equivalent, the statistics should look good when and especially whenwe forced these factor loadings to be equivalent). Then I inspected the MI table and identified a potential source of non-invariance (Parameter DP BY ITEM11). Lastly, I relaxed it and refit the data. In the current sub-section, I continued by inspecting how fit indices and estimates of the re-fit model looks like. The plan was to repeat the parameter relaxing work in a similar way, one parameter a time, until I get a model that is NOT statistically different from the configural model. This done, I could conclude between-group equivalence except for the parameters whose equality constraint I relaxed. In other word, these relaxed parameters are the source of non-invariance, and I find them.}
 
 (1) Inspect fit indices of model 3 (inv3.model)
+
+This is to get the fit indices and estimates for the model I fit in the last part of the previous section (inv3.model).
 
 ```{r}
 #extract the key indicators
@@ -1765,24 +1779,67 @@ delta.fit.tab(fit.indices.123,
                 "Inv2.model + a parameter(DP By Item11) set relaxed"))
 ```
 
-\textcolor{blue} {The fit statistics of inv3.model: MLM chi-square[420] 969.990, CFI 0.937, RMSEA 0.045, SRMR 0.054. The difference in model fit between InvModel 3 and and the configural model (InvModel 1) is, though not significiant, approaching to significance at 0.05 level (p = 0.057). Hence, I decide to make further improvment to the model}
+```{r}
+inv3.fit |> 
+  parameterEstimates(standardized=TRUE) |> 
+  filter(
+    lhs == "DP", 
+    op == "=~" ,
+    rhs == "ITEM11"
+    ) |> 
+  mutate(
+    group = case_when(group == 1~"Elementary teachers",
+                      group == 2~"Secondary teachers"),
+    Parameter = paste0(lhs, "→", rhs,"(", group, ")"),
+    pvalue = case_when(pvalue >= 0.001 ~ as.character(pvalue),
+                  pvalue <0.001 ~ "<0.001")
+  ) |> 
+  select( "Parameter (level)" = Parameter,
+          "Estimates*" = est,
+          SE = se,
+          "Z-statistics" = z,
+          "p-value" = pvalue
+  ) |> 
+  kable(
+    digits = 3,
+    booktabs = T,
+    caption = "Re-estimates for relaxed parameter 'DP =~ ITEM11'"
+  ) |> 
+  kable_styling () |> 
+  column_spec(1, width = "6.5cm") |> 
+  column_spec(2, width = "1.8cm", color = "red") |> 
+  column_spec(3, width = "1.2cm") |> 
+  column_spec(4, width = "1.8cm") |> 
+  column_spec(5, width = "1.2cm") |> 
+  footnote(symbol = "Estimates with parameter parameter 'DP =~ ITEM11' set relaxed")
+```
 
-\textcolor{red} {In this step, my results were substantially different from the slides. Here in the slides the p value should be 0.048, base on which the decision was that we should make further improvement. Yet, I got a insiginificant p already. I tried several different possibilities. I found if I set "group.partial = c("DP =~ ITEM11")" instead of "group.partial = c("EE =~ ITEM11","DP =~ ITEM11" )" , I would have seen a significant p value very close to the slides. Yet the degree of freedom would turn to 421 instead of 420. I suppose there should be something I have done wrong. }
+\textcolor{blue} {See table 14.} The fit statistics of inv3.model: MLM chi-square[420] 969.990, CFI 0.937, RMSEA 0.045, SRMR 0.054. \textcolor{blue} {The difference in model fit between InvModel 3 and and the configural model (InvModel 1) is, though not significiant, approaching to significance at 0.05 level (p = 0.057).} Moreover, a review of the estimated parameters reveals a fairly substantial difference for the specified parameter (1.095 for elementary and 0.581 for secondary teachers, see table 15). \textcolor{blue} {Hence, I decide to make further improvement to the model.}
+
+\textcolor{red} {In this step, my results were substantially different from the slides. Here in the slides the p value should be 0.048, base on which the decision was that we should make further improvement. Yet, I got a insiginificant p for chi-square difference already (0.057, see table 14). I tried several different possibilities. I found if I set "group.partial = c("DP =~ ITEM11")" instead of "group.partial = c("EE =~ ITEM11","DP =~ ITEM11" )" , I would have seen a significant p value very close to the slides. Yet the degree of freedom would turn to 421 instead of 420 (And plus it isn't the correct appraoch). I suppose there should be something I have done wrong. Furthuremore, starting from this step, I saw more and more big inconsistency with the slides, which I also highlighted in red. I hope these could be solved in next class}
  
 (2) Examine the modification indices for inv3.model
 
 I extract MI table with relevant parameters.
 
 ```{r}
-inv3.model.MI <- modindices(inv3.fit, 
-           standardized = TRUE, 
-           minimum.value = 3.84, 
-           free.remove = FALSE,
-           op = "=~", 
-           sort. = TRUE) |> 
-  mutate(Parameter = paste(lhs, "→", rhs)) |> 
-  filter(Parameter %in% relevant.items) |> 
+inv3.model.MI <- 
+  modindices(inv3.fit, 
+             standardized = TRUE, 
+             minimum.value = 1.00, 
+             free.remove = FALSE,
+             op = "=~", 
+             sort. = TRUE
+             ) |> 
+  mutate(
+    Parameter = 
+      paste(lhs, "→", rhs)
+    ) |> 
+  filter(
+    Parameter %in% relevant.items
+    ) |> 
   arrange(group)
+
 ```
 
 Then, MI tables with relevant parameters was printed in descending order of MI. 
@@ -1791,20 +1848,22 @@ Then, MI tables with relevant parameters was printed in descending order of MI.
 inv3.model.MI.elm <- 
   inv3.model.MI  |> 
   filter(group == 1) |> 
-  select(Parameter, 
-         MI = mi, 
-         EPC = epc, 
-         "std EPC" = sepc.all
-         )
+  select(
+    Parameter, 
+    MI = mi,
+    EPC = epc, 
+    "std EPC" = sepc.all
+    )
 
 inv3.model.MI.sec <- 
   inv3.model.MI  |>  
   filter(group == 2) |> 
-  select(Parameter, 
-         MI = mi, 
-         EPC = epc, 
-         "std EPC" = sepc.all
-         )
+  select(
+    Parameter, 
+    MI = mi, 
+    EPC = epc, 
+    "std EPC" = sepc.all
+    )
 
 
 rbind(inv3.model.MI.elm, inv3.model.MI.sec) |> 
@@ -1816,22 +1875,28 @@ rbind(inv3.model.MI.elm, inv3.model.MI.sec) |>
   kable_styling(
     latex_options = "striped"
     ) |>
-  pack_rows(index = c("Elementary teachers" = nrow(inv3.model.MI.elm),
-                      "Secondary teachers" = nrow(inv3.model.MI.sec)
-                      )
+  pack_rows(index = 
+              c("Elementary teachers" = 
+                  nrow(inv3.model.MI.elm),
+                "Secondary teachers" = 
+                  nrow(inv3.model.MI.sec)
+                )
             )|>
   row_spec(
-    c(1:2), 
+    c(1,3,6,8), 
     color = "red"
     ) |> 
   footnote(general = 
              "Rows highlighted in red are of special concerns") 
 ```
-Potential parameters that are very possibly undermining equivalence across elementary and secondary teachers were highlighted in red. \textcolor{blue}{Actually, other than DP measured by ITEM5, none of the other parameters were both of concern and present simultaneously in two groups. I only had one candidate. }
 
-\textcolor{red} {In this step AGAIN, my results were dramatically inconsistent with the slides, I was not able to get the parameter "DP measured by Item15" in the MI table. }
+Potential parameters that are very possibly undermining equivalence across elementary and secondary teachers were highlighted in red. \textcolor{blue}{Actually, other than DP measured by ITEM5 and DP by ITEM15, none of the other parameters were both of concern and present simultaneously in two groups. I only had one candidate. }
+
+\textcolor{red} {See table 16. In this step AGAIN, my results were dramatically inconsistent with the slides, I was not able to get the parameter "DP measured by Item15" from MI table until I removed the constraint of minimum MI value of 3.84.  Even this way, the results still pointed me to another tract--parameter "DP by ITEM5" came up in MI table across both groups, and it had MIs larger than the large MI parameter "DP by ITEM15" in slides (Actually, it was not even the second largest on my MI table, see table 16). I don't think the difference of algrithmns between Mplus and lavaan could be so big. I suppose I had done something wrongly which I examined quite hard but failed to identify. Still, I hope I could find out the reason in the next class. Yet, albeit the statistics directed me towards other roads, I still follow the steps of the sildes by relaxing "DP =~ ITEM15". }
 
 (3) Re-specify model2 to fit model 3 (inv3.model)
+
+\textcolor{blue}{Constraint on Parameter "DP =~ ITEM15" was relaxed. }
 
 ```{r}
 inv4.fit <- 
@@ -1842,13 +1907,12 @@ inv4.fit <-
       group.equal = c("loadings"),
       group.partial = c("EE =~ ITEM11",
                         "DP =~ ITEM11",
-                        "DP =~ ITEM5"
+                        "DP =~ ITEM15"
                         ))
 
 ```
 
-
-### Constrain common factor loadings equal step by step(inv4.model)
+### Relax common factor loadings one by one(inv4.model)
 
 (1) Inspect fit indices of model 3 (inv4.model)
 
@@ -1863,7 +1927,7 @@ inv4.fit.indices <-
 names(inv4.fit.indices) <- inv4.fit.indices[1,]
 inv4.fit.indices <- inv4.fit.indices[-1,]
 rownames(inv4.fit.indices) <- NULL
-inv4.fit.indices$Model <-"Model4 (inv4)**"
+inv4.fit.indices$Model <-"Model4 (inv4)§"
 
 #merge configural model and inv2.model.
 fit.indices.1234 <- # 123 is for inv1, 2, 3 and 4 models
@@ -1875,157 +1939,219 @@ fit.indices.1234 <- # 123 is for inv1, 2, 3 and 4 models
     ) 
 
 #print the table
-delta.fit.tab(fit.indices.1234, 
+key.table2 <- delta.fit.tab(fit.indices.1234, 
               "Comparison Fit indices across the inv1.model through inv3.model",
               c("Configural model + 20 common factor loadings constrained equal across groups",
                 "Inv2.model + a parameter(DP By Item11) set relaxed",
-                "Inv3.model + a parameter(DP By Item5) set relaxed"))
+                "Inv3.model + a parameter(DP By Item15) set relaxed"))
+key.table2
 ```
 
 ```{r}
+inv4.fit |> 
+  parameterEstimates(standardized=TRUE) |> 
+  filter(
+    lhs == "DP", 
+    op == "=~" ,
+    rhs == "ITEM15"
+    ) |> 
+  mutate(
+    group = case_when(group == 1~"Elementary teachers",
+                      group == 2~"Secondary teachers"),
+    Parameter = paste0(lhs, "→", rhs,"(", group, ")"),
+    pvalue = case_when(pvalue >= 0.001 ~ as.character(pvalue),
+                  pvalue <0.001 ~ "<0.001")
+  ) |> 
+  select( "Parameter (level)" = Parameter,
+          "Estimates*" = est,
+          SE = se,
+          "Z-statistics" = z,
+          "p-value" = pvalue
+  ) |> 
+  kable(
+    digits = 3,
+    booktabs = T,
+    caption = "Re-estimates for relaxed parameter 'DP by ITEM15'"
+  ) |> 
+  kable_styling () |> 
+  column_spec(1, width = "6.5cm") |> 
+  column_spec(2, width = "1.8cm", color = "red") |> 
+  column_spec(3, width = "1.2cm") |> 
+  column_spec(4, width = "1.8cm") |> 
+  column_spec(5, width = "1.2cm") |> 
+  footnote(symbol = "Estimates with parameter parameter 'DP by ITEM15' set relaxed")
 ```
 
+See table 17. Inv4.model produced these results: MLM chi-square[419] 961.653, CFI 0.938, RMSEA 0.045, SRMR 0.054. \textcolor{blue}{Comparison of this model with the configural model (see table 17, 3rd column) yielded a corrected MLM chi-square difference of 20.964 (p = 0.281), which is n.s.} A review of the estimated parameters revealed a fairly substantial difference for the specified parameter (0.684 for elementary and 0.963 for secondary teachers). See table 18.
+
+### sub-section summary
+
+All items on the MBI, except for items 11 and 15, both of which load on Factor2, are operating equivalently across the two groups of teachers.
+
+## Impose equality constraints on residual covariance of configural model
+
+\textcolor{blue}{In this section, I further imposed equality constraints on residual co-variances to test the multi-group in-variance, in addition to the contraints on inv4.model.}
+
+In total, 21 parameters in this model (Inv5.Model) were constrained equal across groups: 17 factor loadings, 1 cross-loading, and 3 residual co-variances. 
 
 ```{r}
+inv5.model <- '
+# EE: EmotionalExhaustion
+# EP: Depersonalization
+# PA: PersonalAccomplishment
+
+    EE =~ 1*ITEM1 + ITEM2 + ITEM3 + ITEM6 + ITEM8 + ITEM13 + ITEM14 + ITEM16 + ITEM20
+    DP =~ 1*ITEM5 + ITEM10 + ITEM11 + ITEM15 + ITEM22
+    PA =~ 1*ITEM4 + ITEM7 + ITEM9 + ITEM12 + ITEM17 + ITEM18 + ITEM19 + ITEM21
+
+# Common modifications (from baseline models)
+    EE =~ ITEM12 # common cross-loading
+
+# Residual covariances (in both groups) - NOW THE FOCUS is on these three:
+ ITEM1 ~~ c(a, a)*ITEM2
+ ITEM6 ~~ c(b, b)*ITEM16
+ITEM10 ~~ c(c, c)*ITEM11
+
+# Group-specific parameters for elementary teachers:
+ ITEM4 ~~ c(NA, 0)*ITEM7
+
+# Group-specific parameters for secondary teachers:
+    EE =~ c(0, NA)*ITEM11
+ ITEM9 ~~ c(0, NA)*ITEM19
+'
+
+inv5.fit <- 
+  cfa(inv5.model, 
+      data = mbi.both,
+      estimator = "MLM", 
+      group = "group",
+      group.equal = c(
+        "loadings"
+        ),
+      group.partial = c(
+        "EE =~ ITEM11",
+        "DP =~ ITEM11",
+        "DP =~ ITEM15"
+        )
+      ) 
 ```
 
+In defining the model with code, the co-variance of the pair of items get distinct coefficient letter, and this is to ensure that each of these parameters will be constrained equal across the two groups and NOT to each other.
 
 ```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-(1) Inspect fit indices of model 3 (inv3.model)
-(2) Examine the modification indices for inv3.model
-(3) Re-specify model2 to fit model 3 (inv3.model)
-
-```{r}
-```
-xie
-
-```{r}
-inv1.fit.indices <- 
-  cfa.summary.mlm.a(inv1.fit) |> 
+#extract the key indicators
+inv5.fit.indices <- 
+  cfa.summary.mlm.a(inv5.fit) |> 
   t() |> 
   as.data.frame()
 
-initial.sec.fit <- 
-  cfa.summary.mlm.a(cfa.sec) |> 
-  t() |> 
-  as.data.frame()
-
-initial.both <- 
+#define column and row names for the indicator table
+names(inv5.fit.indices) <- inv5.fit.indices[1,]
+inv5.fit.indices <- inv5.fit.indices[-1,]
+rownames(inv5.fit.indices) <- NULL
+inv5.fit.indices$Model <-"Model5 (inv5)*"
+inv4.fit.indices$Model <-"Model4 (inv4)"
+#merge configural model and inv2.model.
+fit.indices.45 <- # 45 is for inv4 and 5 models
   rbind(
-    initial.elm.fit[2,], 
-    initial.sec.fit[2,]
+    inv4.fit.indices,
+    inv5.fit.indices
     ) 
 
-names(initial.both) <- 
-  initial.elm.fit[1,]
+#print the table
+key.table3 <- delta.fit.tab(fit.indices.45, 
+              "Fit indices for the Inv5.model and Inv4.model",
+              c("Inv4.model + 3 residual co-variance constrained euqal across groups"),
+              compare = "inv4",
+              row.correction = 3)
+key.table3 
+```
 
-rownames(initial.both) <- NULL
+See table 19. Model fit results deviated little from Inv4.model and were as follows: MLM chi-square(422) = 973.378, CFI = 0.937, RMSEA = 0.045, and SRMR = 0.054. Comparison of this model with the previous one (InvModel.4) representing the final model in the test for invariant factor loadings yielded a corrected chi-square difference value of 11.123 (*p* = 0.011), which was statistically significant. (We want it non-significant so that the conclusion that specified residual co-variances between Items 6 and 16, Items 1 and 2, and Items 10 and 11 are operating equivalently across elementary and secondary teachers.)
 
-initial.both <- 
-  initial.both |> 
-  mutate(Model = c("Elementary level",
-    "Secondary level")) |> 
-  select(Model, everything())
+\textcolor{red}{Yes, Here I got a p value (0.011) indicative of significance, albeit the value was not exactly the same with that on slides (0.014). I suppose this was becasue of the different tools. Besides, "However, we must continue as it was n.s."}
+
+\textcolor{red}{One question here: what is the common procedure for a significant p here? To deal with it, do we do something here? (or go back to factor loading section and make more/less relaxation of parameters),  or do we just get the conclusion that multi-group in-variance do not hold in terms of residual variance?}
+
+### Section summary
+
+Specified residual co-variances between Items 6 and 16, Items 1 and 2, and Items 10 and 11 are operating equivalently across elementary and secondary teachers.
+
+## Impose equality constraints on structural parameters (i.e., factor variances and covariances)
+
+```{r}
+inv6.fit <- 
+  cfa(inv5.model, 
+      data = mbi.both, 
+      estimator = "MLM", 
+      group = "group",
+      group.equal = c(
+        "loadings",
+        "lv.variances",
+        "lv.covariances"
+        ),
+      group.partial = c(
+        "EE =~ ITEM11",
+        "DP =~ ITEM11",
+        "DP =~ ITEM15"
+        )
+              ) 
+```
+
+```{r}
+inv6.fit.indices <- 
+  cfa.summary.mlm.a(inv6.fit) |> 
+  t() |> 
+  as.data.frame()
+
+#define column and row names for the indicator table
+names(inv6.fit.indices) <- inv6.fit.indices[1,]
+inv6.fit.indices <- inv6.fit.indices[-1,]
+rownames(inv6.fit.indices) <- NULL
+inv6.fit.indices$Model <-"Model6 (inv6)*"
+inv5.fit.indices$Model <-"Model5 (inv5)"
+#merge configural model and inv2.model.
+fit.indices.56 <- # 56 is for inv6 and 5 models
+  rbind(
+    inv5.fit.indices,
+    inv6.fit.indices
+    ) 
 
 #print the table
-multi.fit.tab(initial.both, "Fit indices for two subgroups, basline models")
-```
+key.table4 <- delta.fit.tab(fit.indices.56, 
+              "Fit indices for the Inv6.model and Inv5.model",
+              c("Inv5.model + factor variance and co-variance constrained euqal across groups"),
+              compare = "inv5",
+              row.correction = 4)
+key.table4
 ```
 
+See table 20. The goodness-of-fit statistics for inv6.model were: MLM chi-square[428] 986.389, CFI 0.937, RMSEA 0.045, SRMR 0.059. Comparison with inv5.model yielded a corrected MLM chi-square difference of 12.941 (*p* = 0.044). 
 
+\textcolor{red}{Here I got a MLM chi-square difference of 12.941. Though it only deviated from the value on slides (12.117), the samll difference made p value fell significant (p = 0.044, vs p= 0.059 on slides). I hope this is due to the difference in algorithmns. However, if this were true, we would be surprised by how different tools leads to different conclusions in the areas using SEM.}
+
+### Section summary
+
+Factor variances and co-variances are operating equivalently across elementary and secondary teachers.
+
+# Summarize the whole invariance testing
+
+To summarize, I categorize the testing for factorial in-variance into the following steps:
+
+&nbsp;&nbsp;&nbsp;(1) Establish a baseline model for each group. The baseline model can be different across groups, so it might require different number of post-hoc re-specification. The "gold-standard" for a good baseline model is good-fitting and parsimony. \textcolor{red}{See table 21 below, which presents my searching for baseline models from initial model to model 4.  }
+
+&nbsp;&nbsp;&nbsp;(2) Merge the baseline models into one. We call it configural model. It represent the multi-group version of the baseline models. All the following models with some equality constraints on factor loadings will be compared with it. \textcolor{red}{See the first row of table 22 below, which tabulates the fit indices of configural model.}  
+&nbsp;&nbsp;&nbsp;(3) Constrain all the factor loadings equal across groups at one time adn see how the model fits. Good fitting indicates multi-group in-variances in factor loadings. Bad fitting gives us evidence that there is some source of non-invariance, and we should find them. \textcolor{red}{See the second row of table 22 below, which tabulates the fit indices of a model with all factor loadings constrained equal across groups (the fit isn't good comparing to configural model so we can further search for source of non-invariance). }
+
+&nbsp;&nbsp;&nbsp;(4) Relax the constraint on factor loadings one parameter a time (according to the value of MIs of equality constrained parameters), and see how does the fit goes. More importantly, inspect the MLM chi square difference between the newly fitted model and (always) configural model. We want to repeat it until seeing non-significance, which indicates that except for the factor loadings we have relaxed from equality constraints, multi-group in-variance of factor loadings is proven. \textcolor{red}{See the third and fourth rows of table 22 below (especially take note of third column where p for chi-difference is presented), which demonstrates how our less and less restrictive models finally reach non-significant chi-square difference p value. }
+
+&nbsp;&nbsp;&nbsp;(5) Use the last model we established in last step (I will call it FL reference model) and, this time, further constrain equal across groups all the residual co-variances we have specified in configural model and fit it. Comparing this model to FL reference model, if the MLM chi-square difference yields non-significance, we can conclude that the multi-group in-variance assumption also holds for residual co-variances. \textcolor{red}{See table 23 below: residual-covariance-constrained model (lower) is compared to FL reference model (upper).}
+
+&nbsp;&nbsp;&nbsp;(5) Use the last model we established in last step (I will call it COV reference model) and, this time, further constrain equal across groups all the factor variances and co-variances and fit it. Comparing this model to COV reference model, if the MLM chi-square difference yields non-significance, we can conclude that the multi-group in-variance assumption also holds for factor variances and co-variances. \textcolor{red}{See table 23 below: factor-variance/covariance-constrained model (lower) is compared to COV reference model (upper).}
+
+If the comparison yields significant result, 
 
 ```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
+key.table1;key.table2;key.table3;key.table4
 ```
 
