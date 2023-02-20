@@ -1940,7 +1940,7 @@ fit.indices.1234 <- # 123 is for inv1, 2, 3 and 4 models
 
 #print the table
 key.table2 <- delta.fit.tab(fit.indices.1234, 
-              "Comparison Fit indices across the inv1.model through inv3.model",
+              "Comparison Fit indices across the inv1.model through inv4.model",
               c("Configural model + 20 common factor loadings constrained equal across groups",
                 "Inv2.model + a parameter(DP By Item11) set relaxed",
                 "Inv3.model + a parameter(DP By Item15) set relaxed"))
