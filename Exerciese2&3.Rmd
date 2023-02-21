@@ -1,0 +1,156 @@
+---
+title: "SED-917 Writing Scientific Articles into International Educational Journals, Exercise 2&3"
+author: "Rong Guang"
+date: "`r Sys.Date()`"
+output:
+  bookdown::pdf_document2:
+    latex_engine: lualatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F, cache = F, fig.align = 'center')
+```
+
+# Exerciese 2
+
+## Exercise description
+
+This section records the content of exercise 2, copied from Filomena's sildes. It is for reference. Please go to the next section for my answers to this exercise
+
+### Part I-inividual task
+
+Draft a structured abstract to your article (~300-350 words)
+
+• Go through the structure of the article to see what are the sections required by the journal(s) (IMRAD-model)
+
+• Go through the journal article samples you selected:
+
+&nbsp;&nbsp;&nbsp;o What is their focus and what topics do they cover?
+
+&nbsp;&nbsp;&nbsp;o Identify similarities and differences among the article samples and identify key criteria for such similarities/differences
+
+### Part II-small group activity
+
+• Share your abstract with your colleague(s) o Pitch them your manuscript!
+
+• Ask them what they understood to be the key message of your article o HUOM:Provideconstructivefeedback!
+
+• Let them know the journal(s) you selected for submitting the manuscript the abstract relates to
+
+&nbsp;&nbsp;&nbsp;o Familiarize yourselves with each other’s selection of journals
+
+&nbsp;&nbsp;&nbsp;o Provide your colleague(s) feedback on their choices of journal(s)
+
+## Answers to this exercise
+
+### Structured abstract
+
+Title:
+
+**Mistakes and Quality issues specific to reporting meta-analysis of traditional Chinese medicine prescriptions: a protocol for systematic review**
+
+**ABSTRACT:** \textcolor{red}{(346 words, key words not included)}
+
+**Background**
+
+Adequately conducted meta-analyses are considered the highest level of evidence and thus directly defines many clinical guidelines. Domain-specific suboptimal reporting (DSSR) of meta-analysis have been reported in many areas. The number of meta-analyses on traditional Chinese medicine prescriptions (TCMP) published in English language journals has increasing rapidly and used extensively for clinical and policy decisions across the world. Notably, the majority of readers, editors and peer-reviewers of these medical journals are often from English-speaking countries. Due to backgroup and/or cultural descrepancy, they can easily overlook or even be misled by the DSSRs in TCMP meta-analyses, which will lead to over-estimation of the quality of evidence. It is important to identify what are the features and prevalence of these issues.
+
+**Methods**  *(Guang's note for teammates: The article I am writing is a peer-reviewed protocol, which is a structured plan for how to do my next study. So the "methods" part might include not only past tense. This is a common practice for similar studies)*
+
+The current protocol describes a systematic review aimed to review the English-language medical journals and identify the feature and prevalance of DSSRs in TCMP meta-analyses. We started by discussing and identifying three important reporting quality issues specific to ACMP. Then we proposed an inventory to rate the severity of each issue for an individual ACMP. We plan to retrieve and include all TCMP meta-analyses published from January 2018 to January 2023. Two independent reviewers will screen titles and abstracts, include relevant full text articles, extract data from the studies into a predefined checklist (including general information of the studies), and evaluate the reproting quality of the studies using the AMSTAR 2 checklist (A Measurement Tool to Assess Systematic Reviews) and the inventory we created. The data extracted will be used to determine/estimate the prevlance/severity of and correlating factors to the DSSRs in TCMP meta-analyses. 
+
+**Discussion**
+
+This protocol follows the Preferred Reporting Items for Systematic Reviews and Meta-Analysis Protocols (PRISMA-P). We will carry out a systematic reveiw per this protocol and seek to publish it in a peer-review journal. We highlight the fact that reporting TCMP meta-analyses should bear some special concerns specific to the area in topic and the importance to re-examine the validity of all the published TCMP meta-analyses. Also, we hope the result could contribute to a quality improvement for future TCMP meta-analyses.
+
+**Key words:** Domain-specific suboptimal reporting, Meta-analyis, Traditional Chinese Medicine, Systematic review, Protocol
+
+### Target journal
+
+My target journal is *Systematic Reviews* (HomePage: https://systematicreviewsjournal.biomedcentral.com). I chose it since a. The study will be carried out as a quantitative review, which falls in the scope of the journal. b. The aim of my review is to explore domain-specific suboptimal reporting practices in traditional Chinese medicine meta-analyses, and meta-analyses are considered a type of quantitative systematic review. c. This journal is open to publishing peer-reviewed protocol, and during the timespan of the course, I might only manage to finish the protocol. In other words, I am doing a protocol of systematic review for addressing problems in systematic reviews.
+
+### Article samples from *Systematic Reviews*
+
+I purposively sampled two articles from my target journal, and they are *Major mistakes and errors in the use of Trial Sequential Analysis in systematic reviews or meta-analyses – protocol for a systematic review* (Article #1, for more information: https://systematicreviewsjournal.biomedcentral.com/articles/10.1186/s13643-022-01987-4); and *Defining publication bias: protocol for a systematic review of highly cited articles and proposal for a new framework* (Article #2, for more information: https://systematicreviewsjournal.biomedcentral.com/articles/10.1186/2046-4053-2-34). 
+
+They were not randomly sampled and bear some resemblence with my study: Article #1 also tried to point out some common mistakes in conducting (instead of reporting) meta-analyses; Artile #2 planed to establish a framework related to evaluating publication bias (In my article I propose an inventory for evluating some domain-specific reporting quality issues).  
+
+### Sections of the journal
+
+I went through the two articles and found the sections required by the journal(s) for a protocol are Abstract, keywords, background, method/design, discussion and abbreviations.
+
+### Topics of the sampled articles
+
+Article #1 looked at the misuse of a new statistical method in meta-analyses. The method in topic is a way to deal with multiple comparison problems commonly found in medical studies. The authors pointed out why and how it is misusing. The author planned to review the relevant studies published within a 5-year time window and found out the prevalance and severity of such misuse.
+
+Article #1 looked at the misuse of the term "publication bias" in publications. Over the past years, some tyeps of bias previously seens as "publication bias" has been re-categorized into some newly-proposed bias types. Nontheless, some authors still used the term "publication bias" in old way, which can be misleading. The authors planned to review the relevant articles's correctness of using "publication bias" and also plan to propose a framework to improve the good practice. 
+
+As the name of the journal **Systematic Reviews** has already implied, it covers a wide range of topic with the only limitation that the type of study should be systematic review or protocol of systematic review (meta-analysis is a type of systematic review). Article #1's topic relates to statistics and medicine. Article #2 is pertinent to study quality and research methodolgy. They were exactly the same structure as was explicitly required by the journal. Authors from both were interested in the sub-optimal practices in published studies, albeit being from distinct areas. Article #1 included more quantitative methods in its data analysis strategy (No doubts, the authors are statisticans). Article #2 was more ambitious in terms of the authors' planning to propose a framework based on the results (Authors are licensed doctors, notwithstanding the topic seems irrelevant to their carreer).
+
+# Exerciese 3
+
+See next Page.
+
+```{r, echo = F}
+library(knitr)
+library(kableExtra)
+checklist <- 
+  matrix(
+    "-", 
+    ncol = 6, 
+    nrow = 8
+    ) |> 
+  as.data.frame()
+
+names(checklist) <- 
+  c(
+    "Ask yourself",
+    "No = 1",
+    "2",
+    "3",
+    "4",
+    "Yes = 5"
+    )
+
+checklist[,1] <- 
+  c(
+    "Does this manuscript add to our knowledge in an important way?",
+    "Are the theoretical aspects of this work clearly developed 
+    and relevant to the empirical findings reported?",
+    "Are the empirical aspects of the work appropriate given its theoretical context?",
+    "Have the empirical aspects of this work been properly carried out?",
+    "Is the statistical treatment of the data appropriate?",
+    "Are the data appropriately interpreted?",
+    "Are alternative interpretations of the data identified, discussed and/or 
+    appropriately controlled?",
+    "Is relevant literature cited and appropriately discussed?"
+  )
+
+checklist[c(1, 3, 4,5), 6] <- "√"
+checklist[c(2,7,8), 5] <- "√"
+checklist |> 
+  kable(
+    booktab = T,
+    #format = "markdown",
+    linesep = "",
+    caption = "What editors/reviewers are looking for",
+    align = "lccccc"
+  ) |> 
+  kable_styling(
+    latex_options = "striped"
+  ) |> 
+  column_spec(1, width = "8.5cm") |> 
+  column_spec(2, width = "2.7cm") |> 
+  column_spec(3, width = "1cm") |> 
+  column_spec(4, width = "1cm") |> 
+  column_spec(5, width = "1cm") |> 
+  column_spec(6, width = "2.7cm") |> 
+  footnote(general = 'Row without ticking is due to "not applicalbe"') |> 
+  landscape()
+```
+
+
+
+
+
+

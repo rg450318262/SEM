@@ -1473,11 +1473,11 @@ semPaths(cfa4.sec,
          )
 title(main = list("Secondary School Teachers",
                   cex = 1, font =1), outer = F, line = -3)
-mtext("Figure 1 Baseline MBI models for two groups of teacher",
+mtext("Figure 4 Baseline MBI models for two groups of teacher",
       cex = 1.5, side = 1, line = -5, outer = TRUE)
 ```
 
-\textcolor{blue}{The the plot of baseline model for each group of teachers was created. See pciture 1.}  There are three parameters (two residual co-variances [Item 4 with Item 7; Item 9 with Item 19] and one cross-loading [Item 11 on F1]) that were not part of the originally postulated model and that differ across the two groups of teachers. (\textcolor{red} { According to slides, they (the diagrams) have the same number of factors and the same factor-loading pattern. A question: Is there any standard for such a pattern? The current baseline models have one cross-loading that differs across the groups so they are not exactaly same.})
+\textcolor{blue}{The the plot of baseline model for each group of teachers was created. See figure 4.}  There are three parameters (two residual co-variances [Item 4 with Item 7; Item 9 with Item 19] and one cross-loading [Item 11 on F1]) that were not part of the originally postulated model and that differ across the two groups of teachers. (\textcolor{red} { According to slides, they (the diagrams) have the same number of factors and the same factor-loading pattern. A question: Is there any standard for such a pattern? The current baseline models have one cross-loading that differs across the groups so they are not exactaly same.})
 
 ## Section Summary
 
@@ -2134,8 +2134,6 @@ To summarize, I categorize the testing for factorial in-variance into the follow
 &nbsp;&nbsp;&nbsp;(5) Use the last model we established in last step (I will call it FL reference model) and, this time, further constrain equal across groups all the residual co-variances we have specified in configural model and fit it. Comparing this model to FL reference model, if the MLM chi-square difference yields non-significance, we can conclude that the multi-group in-variance assumption also holds for residual co-variances. \textcolor{red}{See table 23 below: residual-covariance-constrained model (lower) is compared to FL reference model (upper).}
 
 &nbsp;&nbsp;&nbsp;(5) Use the last model we established in last step (I will call it COV reference model) and, this time, further constrain equal across groups all the factor variances and co-variances and fit it. Comparing this model to COV reference model, if the MLM chi-square difference yields non-significance, we can conclude that the multi-group in-variance assumption also holds for factor variances and co-variances. \textcolor{red}{See table 24 below: factor-variance/covariance-constrained model (lower) is compared to COV reference model (upper).}
-
-If the comparison yields significant result, 
 
 ```{r}
 key.table1;key.table2;key.table3;key.table4
