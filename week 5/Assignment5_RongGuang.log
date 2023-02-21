@@ -1,4 +1,4 @@
-This is LuaHBTeX, Version 1.15.0 (TeX Live 2022)  (format=lualatex 2023.2.19)  20 FEB 2023 19:39
+This is LuaHBTeX, Version 1.15.0 (TeX Live 2022)  (format=lualatex 2023.2.19)  21 FEB 2023 10:47
  restricted system commands enabled.
 **Assignment5_RongGuang.tex
 (./Assignment5_RongGuang.tex
@@ -934,62 +934,62 @@ LaTeX Font Info:    Font shape `TU/lmtt/bx/n' in size <10> not available
 <Assignment5_RongGuang_files/figure-latex/unnamed-chunk-16-1.pdf, id=132, 578.16pt x 939.51pt>
 File: Assignment5_RongGuang_files/figure-latex/unnamed-chunk-16-1.pdf Graphic file (type pdf)
 <use Assignment5_RongGuang_files/figure-latex/unnamed-chunk-16-1.pdf>
-Package luatex.def Info: Assignment5_RongGuang_files/figure-latex/unnamed-chunk-16-1.pdf  used on input line 269.
+Package luatex.def Info: Assignment5_RongGuang_files/figure-latex/unnamed-chunk-16-1.pdf  used on input line 266.
 (luatex.def)             Requested size: 400.26295pt x 650.4273pt.
 [3] [4<./Assignment5_RongGuang_files/figure-latex/unnamed-chunk-16-1.pdf>]
 <Assignment5_RongGuang_files/figure-latex/unnamed-chunk-17-1.pdf, id=179, 578.16pt x 361.35pt>
 File: Assignment5_RongGuang_files/figure-latex/unnamed-chunk-17-1.pdf Graphic file (type pdf)
 <use Assignment5_RongGuang_files/figure-latex/unnamed-chunk-17-1.pdf>
-Package luatex.def Info: Assignment5_RongGuang_files/figure-latex/unnamed-chunk-17-1.pdf  used on input line 305.
+Package luatex.def Info: Assignment5_RongGuang_files/figure-latex/unnamed-chunk-17-1.pdf  used on input line 302.
 (luatex.def)             Requested size: 469.75385pt x 293.59616pt.
 [5<./Assignment5_RongGuang_files/figure-latex/unnamed-chunk-17-1.pdf>]
 <Assignment5_RongGuang_files/figure-latex/unnamed-chunk-18-1.pdf, id=192, 722.7pt x 1084.05pt>
 File: Assignment5_RongGuang_files/figure-latex/unnamed-chunk-18-1.pdf Graphic file (type pdf)
 <use Assignment5_RongGuang_files/figure-latex/unnamed-chunk-18-1.pdf>
-Package luatex.def Info: Assignment5_RongGuang_files/figure-latex/unnamed-chunk-18-1.pdf  used on input line 366.
+Package luatex.def Info: Assignment5_RongGuang_files/figure-latex/unnamed-chunk-18-1.pdf  used on input line 363.
 (luatex.def)             Requested size: 433.63437pt x 650.45157pt.
 [6] [7<./Assignment5_RongGuang_files/figure-latex/unnamed-chunk-18-1.pdf>] [8]
-Overfull \hbox (0.99725pt too wide) in paragraph at lines 499--499
+Overfull \hbox (0.99725pt too wide) in paragraph at lines 496--496
  []\TU/lmr/m/n/10 SRMR|
  []
 
 
-Overfull \hbox (12.5835pt too wide) in paragraph at lines 491--500
+Overfull \hbox (12.5835pt too wide) in paragraph at lines 488--497
  [][] 
  []
 
 [9] [10] [11]
-Overfull \hbox (23.89499pt too wide) in paragraph at lines 665--700
+Overfull \hbox (23.89499pt too wide) in paragraph at lines 662--697
  [][] 
  []
 
 [12] [13] [14] [15] [16] [17]
-Overfull \hbox (0.99725pt too wide) in paragraph at lines 1003--1003
+Overfull \hbox (0.99725pt too wide) in paragraph at lines 1000--1000
  []\TU/lmr/m/n/10 SRMR|
  []
 
 
-Overfull \hbox (12.5835pt too wide) in paragraph at lines 989--1004
+Overfull \hbox (12.5835pt too wide) in paragraph at lines 986--1001
  [][] 
  []
 
 [18] [19] [20] [21]
-Overfull \hbox (0.99725pt too wide) in paragraph at lines 1250--1250
+Overfull \hbox (0.99725pt too wide) in paragraph at lines 1244--1244
  []\TU/lmr/m/n/10 SRMR|
  []
 
 
-Overfull \hbox (12.5835pt too wide) in paragraph at lines 1232--1251
+Overfull \hbox (12.5835pt too wide) in paragraph at lines 1226--1245
  [][] 
  []
 
 [22] [23] [24]
-Overfull \hbox (0.99725pt too wide) in paragraph at lines 1475--1475
+Overfull \hbox (0.99725pt too wide) in paragraph at lines 1469--1469
  []\TU/lmr/m/n/10 SRMR|
  []
 
 
-Overfull \hbox (12.5835pt too wide) in paragraph at lines 1452--1476
+Overfull \hbox (12.5835pt too wide) in paragraph at lines 1446--1470
  [][] 
  []
 
@@ -997,105 +997,105 @@ Overfull \hbox (12.5835pt too wide) in paragraph at lines 1452--1476
 <Assignment5_RongGuang_files/figure-latex/unnamed-chunk-50-1.pdf, id=334, 650.43pt x 867.24pt>
 File: Assignment5_RongGuang_files/figure-latex/unnamed-chunk-50-1.pdf Graphic file (type pdf)
 <use Assignment5_RongGuang_files/figure-latex/unnamed-chunk-50-1.pdf>
-Package luatex.def Info: Assignment5_RongGuang_files/figure-latex/unnamed-chunk-50-1.pdf  used on input line 1573.
+Package luatex.def Info: Assignment5_RongGuang_files/figure-latex/unnamed-chunk-50-1.pdf  used on input line 1567.
 (luatex.def)             Requested size: 469.76817pt x 626.35759pt.
 [27] [28<./Assignment5_RongGuang_files/figure-latex/unnamed-chunk-50-1.pdf>] [29]
-Overfull \hbox (0.99725pt too wide) in paragraph at lines 1692--1692
+Overfull \hbox (0.99725pt too wide) in paragraph at lines 1686--1686
  []\TU/lmr/m/n/10 SRMR|
  []
 
 
-Overfull \hbox (12.5835pt too wide) in paragraph at lines 1685--1693
+Overfull \hbox (12.5835pt too wide) in paragraph at lines 1679--1687
  [][] 
  []
 
 [30]
-Overfull \hbox (0.99725pt too wide) in paragraph at lines 1768--1768
+Overfull \hbox (0.99725pt too wide) in paragraph at lines 1762--1762
  []\TU/lmr/m/n/10 SRMR|
  []
 
 
-Overfull \hbox (12.5835pt too wide) in paragraph at lines 1759--1769
+Overfull \hbox (12.5835pt too wide) in paragraph at lines 1753--1763
  [][] 
  []
 
 [31] [32] [33] [34]
-Overfull \hbox (0.99725pt too wide) in paragraph at lines 1994--1994
+Overfull \hbox (0.99725pt too wide) in paragraph at lines 1988--1988
  []\TU/lmr/m/n/10 SRMR|
  []
 
 
-Overfull \hbox (26.80988pt too wide) in paragraph at lines 1983--1995
+Overfull \hbox (26.80988pt too wide) in paragraph at lines 1977--1989
  [][] 
  []
 
 [35] [36] [37] [38]
-Overfull \hbox (0.99725pt too wide) in paragraph at lines 2251--2251
+Overfull \hbox (0.99725pt too wide) in paragraph at lines 2245--2245
  []\TU/lmr/m/n/10 SRMR|
  []
 
 
-Overfull \hbox (26.80988pt too wide) in paragraph at lines 2238--2252
+Overfull \hbox (26.80988pt too wide) in paragraph at lines 2232--2246
  [][] 
  []
 
 [39] [40] [41]
-Overfull \hbox (0.99725pt too wide) in paragraph at lines 2410--2410
+Overfull \hbox (0.99725pt too wide) in paragraph at lines 2399--2399
  []\TU/lmr/m/n/10 SRMR|
  []
 
 
-Overfull \hbox (26.80988pt too wide) in paragraph at lines 2401--2411
+Overfull \hbox (26.80988pt too wide) in paragraph at lines 2390--2400
  [][] 
  []
 
 [42]
-Overfull \hbox (0.99725pt too wide) in paragraph at lines 2491--2491
+Overfull \hbox (0.99725pt too wide) in paragraph at lines 2479--2479
  []\TU/lmr/m/n/10 SRMR|
  []
 
 
-Overfull \hbox (26.80988pt too wide) in paragraph at lines 2482--2492
+Overfull \hbox (26.80988pt too wide) in paragraph at lines 2470--2480
  [][] 
  []
 
 [43]
-Overfull \hbox (0.99725pt too wide) in paragraph at lines 2554--2554
+Overfull \hbox (0.99725pt too wide) in paragraph at lines 2539--2539
  []\TU/lmr/m/n/10 SRMR|
  []
 
 
-Overfull \hbox (12.5835pt too wide) in paragraph at lines 2531--2555
+Overfull \hbox (12.5835pt too wide) in paragraph at lines 2516--2540
  [][] 
  []
 
 
-Overfull \hbox (0.99725pt too wide) in paragraph at lines 2574--2574
+Overfull \hbox (0.99725pt too wide) in paragraph at lines 2559--2559
  []\TU/lmr/m/n/10 SRMR|
  []
 
 
-Overfull \hbox (26.80988pt too wide) in paragraph at lines 2561--2575
+Overfull \hbox (26.80988pt too wide) in paragraph at lines 2546--2560
  [][] 
  []
 
 
-Overfull \hbox (0.99725pt too wide) in paragraph at lines 2590--2590
+Overfull \hbox (0.99725pt too wide) in paragraph at lines 2576--2576
  []\TU/lmr/m/n/10 SRMR|
  []
 
 
-Overfull \hbox (26.80988pt too wide) in paragraph at lines 2581--2591
+Overfull \hbox (26.80988pt too wide) in paragraph at lines 2567--2577
  [][] 
  []
 
 
-Overfull \hbox (0.99725pt too wide) in paragraph at lines 2606--2606
+Overfull \hbox (0.99725pt too wide) in paragraph at lines 2593--2593
  []\TU/lmr/m/n/10 SRMR|
  []
 
 
-Overfull \hbox (26.80988pt too wide) in paragraph at lines 2597--2607
+Overfull \hbox (26.80988pt too wide) in paragraph at lines 2584--2594
  [][] 
  []
 
@@ -1108,19 +1108,19 @@ Package rerunfilecheck Info: File `Assignment5_RongGuang.out' has not changed.
 )
 
 Here is how much of LuaTeX's memory you used:
- 20524 strings out of 478294
+ 20515 strings out of 478294
  156265,1977958 words of node,token memory allocated
  574 words of node memory still in use:
    7 hlist, 2 vlist, 3 rule, 2 glue, 4 kern, 1 glyph, 8 attribute, 64 glue_spec, 8 attribute_list, 1 write, 1 user_defined nodes
-   avail lists: 2:2893,3:582,4:697,5:1137,6:274,7:12320,8:77,9:1924,10:12,11:598
- 39736 multiletter control sequences out of 65536+600000
- 67 fonts using 19599743 bytes
- 86i,15n,121p,1168b,516s stack positions out of 10000i,1000n,20000p,200000b,200000s
+   avail lists: 2:2893,3:588,4:697,5:1139,6:278,7:12328,8:78,9:1926,10:12,11:653
+ 39733 multiletter control sequences out of 65536+600000
+ 67 fonts using 19599819 bytes
+ 86i,15n,121p,1151b,516s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmroman7-regular.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmroman10-italic.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmmono10-regular.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmmonolt10-bold.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmmono10-italic.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmroman10-regular.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmroman10-bold.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmroman12-bold.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmroman12-regular.otf></Users/rongguang/Library/TinyTeX/texmf-dist/fonts/opentype/public/lm/lmroman17-regular.otf>
-Output written on Assignment5_RongGuang.pdf (45 pages, 407854 bytes).
+Output written on Assignment5_RongGuang.pdf (45 pages, 408178 bytes).
 
-PDF statistics: 540 PDF objects out of 1000 (max. 8388607)
- 444 compressed objects within 5 object streams
- 189 named destinations out of 1000 (max. 131072)
+PDF statistics: 534 PDF objects out of 1000 (max. 8388607)
+ 438 compressed objects within 5 object streams
+ 183 named destinations out of 1000 (max. 131072)
  169 words of extra memory for PDF output out of 10000 (max. 100000000)
 
