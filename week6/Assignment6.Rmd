@@ -1,0 +1,419 @@
+---
+title: "COS-D419 Factor Analysis and Structural Equation Models 2023, Assignment 6"
+author: "write your name here"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# SEM invariance & teacher burnout
+
+## Exercise 6.1
+
+Establish a well-fitting and parsimonious baseline model for the calibration group.
+
+Although lavaan does not care about the extra items in the model (as Mplus does, see slide #16), you should remove the unnecessary factors and the related items in order to have the same number of the degrees of freedom in the consequent models as in the material. The revised (restructured) model (slide #17) consists of only **9 factors and their relations**.
+
+Draw the graphs of the hypothesized, modified, and restructured baseline models.
+
+### Read in the data set:
+
+Start by downloading the **two data files** from Moodle to your Project folder!
+
+```{r}
+library(tidyverse)
+library(readr)
+
+# calibration sample:
+ELEMIND1 <- read_csv("ELEMIND1.CSV", show_col_types = FALSE)
+glimpse(ELEMIND1)
+
+# validation sample:
+ELEMIND2 <- read_csv("ELEMIND2.CSV", show_col_types = FALSE)
+glimpse(ELEMIND2)
+```
+
+### Explore the data (always do that!):
+
+```{r}
+
+# (copy and modify your earlier R codes)
+
+```
+
+### Define and estimate the baseline model for the calibration group:
+
+OBS! Would be easier NOT to use the factor NUMBERS at all! Renumbering is a bit stupid... (but I had to follow Byrne's book somehow...)
+
+Go ahead and edit this if you want to use different names.
+
+```{r}
+library(lavaan)
+
+BLmodel <- '
+# Initial baseline model for the calibration data:
+# Burnout Factors:
+# EE: EmotionalExhaustion
+# DP: Depersonalization
+# PA: PersonalAccomplishment
+# (other factors: see Figure 9.1, slide #5)
+ROLEA_F1 =~ ROLEA1 + ROLEA2
+ROLEC_F2 =~ ROLEC1 + ROLEC2
+WORK_F3  =~ WORK1 + WORK2
+CLCL_F4  =~ CCLIM1 + CCLIM2 + CCLIM3 + CCLIM4
+DEC_F5   =~ DEC1 + DEC2
+SUPS_F6  =~ SSUP1 + SSUP2
+PEERS_F7 =~ PSUP1 + PSUP2
+SELF_F8  =~ SELF1 + SELF2 + SELF3
+ELC_F9   =~ ELC1 + ELC2 + ELC3 + ELC4 + ELC5
+EE_F10   =~ EE1 + EE2 + EE3
+DP_F11   =~ DP1 + DP2
+PA_F12   =~ PA1 + PA2 + PA3
+
+# Regression paths:
+SELF_F8   ~ DEC_F5 + SUPS_F6 + PEERS_F7
+ELC_F9    ~ DEC_F5
+EE_F10    ~ ROLEC_F2 + WORK_F3 + CLCL_F4
+DP_F11    ~ ROLEC_F2 + EE_F10
+PA_F12    ~ ROLEA_F1 + SELF_F8 + ELC_F9 + EE_F10 + DP_F11
+'
+```
+
+### Visualize the initial (hypothesized) baseline model
+
+```{r}
+library(semPlot)
+
+# (copy and modify your earlier R codes)
+
+```
+
+Continue as usual (by estimating the fit of the model)...
+
+```{r}
+
+# note: now we again use the sem() function instead of cfa()
+
+BLfit1 <- sem(BLmodel, data = ELEMIND1, estimator = "MLM")
+
+# see the lavaan ERROR MESSAGE (and slide #7)!
+
+fitcorlv <- lavInspect(BLfit1, "cor.lv")
+fitcorlv # can you spot the problematic estimate?
+fitcorlv[3,2] # here it is: the estimate of the factor correlation (ROLEC_F2 and WORK_F3) exceeds one!
+
+```
+
+These two factors (ROLEC_F2 and WORK_F3) must be combined, as they represent the same construct.
+
+A NEW model, where also the factors F4-F12 are renumbered ALL OVER THE MODEL FORMULA:
+
+(Remember what I said about the renumbering?)
+
+```{r}
+library(lavaan)
+
+BLmodel <- '
+# Restructured baseline model for the calibration data:
+# Burnout Factors:
+# EE: EmotionalExhaustion
+# DP: Depersonalization
+# PA: PersonalAccomplishment
+# (other factors: see Figure 9.1, slide #5)
+ROLEA_F1  =~ ROLEA1 + ROLEA2
+ROLECWORK_F2  =~ ROLEC1 + ROLEC2 + WORK1 + WORK2
+CLCL_F3   =~ CCLIM1 + CCLIM2 + CCLIM3 + CCLIM4
+DEC_F4    =~ DEC1 + DEC2
+SUPS_F5   =~ SSUP1 + SSUP2
+PEERS_F6  =~ PSUP1 + PSUP2
+SELF_F7   =~ SELF1 + SELF2 + SELF3
+ELC_F8    =~ ELC1 + ELC2 + ELC3 + ELC4 + ELC5
+EE_F9     =~ EE1 + EE2 + EE3
+DP_F10    =~ DP1 + DP2
+PA_F11    =~ PA1 + PA2 + PA3
+
+# Regression paths:
+SELF_F7   ~ DEC_F4 + SUPS_F5 + PEERS_F6
+ELC_F8    ~ DEC_F4
+EE_F9     ~ ROLECWORK_F2 + CLCL_F3
+DP_F10    ~ ROLECWORK_F2 + EE_F9
+PA_F11    ~ ROLEA_F1 + SELF_F7 + ELC_F8 + EE_F9 + DP_F10
+'
+
+```
+
+### Visualize the restructured baseline model
+
+```{r}
+library(semPlot)
+
+# (copy and modify your earlier R codes)
+
+```
+
+Continue as usual...
+
+```{r}
+
+# continue as usual (by estimating the fit, studying the model summary and modification indices)
+
+# (copy and modify your earlier R codes)
+
+```
+
+Implement the two changes *(one at a time)* mentioned in the lecture material.
+
+```{r}
+
+# continue as usual (by estimating the fit, studying the model summary and modification indices)
+
+# (copy and modify your earlier R codes)
+
+```
+
+Fit will be OK, but there are 5 n.s. paths. **Delete them!** The model will be simplified to:
+
+```{r}
+# Modified, restructured baseline model for the calibration data:
+BLmodel <- '
+# Burnout Factors:
+# EE: EmotionalExhaustion
+# DP: Depersonalization
+# PA: PersonalAccomplishment
+# (other factors: see Figure 9.1, slide #5)
+ROLEA_F1      =~ ROLEA1 + ROLEA2
+ROLECWORK_F2  =~ ROLEC1 + ROLEC2 + WORK1 + WORK2
+CLCL_F3       =~ CCLIM1 + CCLIM2 + CCLIM3 + CCLIM4
+DEC_F4        =~ DEC1 + DEC2
+SUPS_F5       =~ SSUP1 + SSUP2
+PEERS_F6      =~ PSUP1 + PSUP2
+SELF_F7       =~ SELF1 + SELF2 + SELF3
+ELC_F8        =~ ELC1 + ELC2 + ELC3 + ELC4 + ELC5
+EE_F9         =~ EE1 + EE2 + EE3
+DP_F10        =~ DP1 + DP2
+PA_F11        =~ PA1 + PA2 + PA3
+
+# Regression paths:
+SELF_F7        ~ DEC_F4 + SUPS_F5
+ELC_F8         ~ ROLECWORK_F2
+EE_F9          ~ ROLECWORK_F2 + CLCL_F3
+DP_F10         ~ EE_F9
+PA_F11         ~ SELF_F7 + EE_F9 + DP_F10
+
+# Residual covariances:
+EE1 ~~ EE2
+'
+
+```
+
+### Visualize the modified, restructured baseline model
+
+```{r}
+library(semPlot)
+
+# (copy and modify your earlier R codes)
+
+```
+
+Continue as usual...
+
+```{r}
+# continue as usual (by estimating the fit, studying the model summary and modification indices)
+
+# (copy and modify your earlier R codes)
+
+```
+
+All significant, but **some factors and items are not needed.**
+
+NOTE that lavaan does NOT complain, but we follow the Byrne story and remove all unnecessary stuff from the model. 
+
+Let us simplify the model by removing all unnecessary bits and bytes (and, following Byrne, renumbering the factors again - sigh):
+
+```{r}
+# Modified, restructured and simplified baseline model for the calibration data:
+BLmodel <- '
+# Burnout Factors:
+# EE: EmotionalExhaustion
+# DP: Depersonalization
+# PA: PersonalAccomplishment
+# (other factors: see Figure 9.1, slide #5)
+ROLECWORK_F1  =~ ROLEC1 + ROLEC2 + WORK1 + WORK2
+CLCL_F2       =~ CCLIM1 + CCLIM2 + CCLIM3 + CCLIM4
+DEC_F3        =~ DEC1 + DEC2
+SUPS_F4       =~ SSUP1 + SSUP2
+SELF_F5       =~ SELF1 + SELF2 + SELF3
+ELC_F6        =~ ELC1 + ELC2 + ELC3 + ELC4 + ELC5
+EE_F7         =~ EE1 + EE2 + EE3
+DP_F8         =~ DP1 + DP2
+PA_F9         =~ PA1 + PA2 + PA3
+
+# Regression paths:
+SELF_F5        ~ DEC_F3 + SUPS_F4
+ELC_F6         ~ ROLECWORK_F1
+EE_F7          ~ ROLECWORK_F1 + CLCL_F2
+DP_F8          ~ EE_F7
+PA_F9          ~ SELF_F5 + EE_F7 + DP_F8
+
+# Residual covariances:
+EE1 ~~ EE2
+'
+```
+
+Continue as usual...
+
+```{r}
+
+# continue as usual (by estimating the fit, studying the model summary and modification indices)
+
+# (copy and modify your earlier R codes)
+
+```
+
+# Surprise (see slide #19, book p.272): estimated residual covariance of F6 and F9 appears!
+
+```
+Covariances:
+                   Estimate  Std.Err  z-value  P(>|z|)   Std.lv  Std.all
+.ELC_F6 ~~                                                             
+   .PA_F9            -0.016    0.011   -1.458    0.145   -0.078   -0.078
+```
+
+# Extra modification
+
+Let us modify the model by fixing that covariance to zero.
+
+(done here using the paste() function instead of rewriting the whole model again)
+
+```{r}
+
+elmadd <- '
+ELC_F6    ~~ 0*PA_F9
+'
+
+BLmodel <- paste(BLmodel, elmadd, sep = "\n ")
+
+# continue as usual (by estimating the fit, studying the model summary and modification indices)
+
+# (copy and modify your earlier R codes)
+
+```
+
+"At last, we have established a well-fitting and parsimonious baseline model for the calibration group."
+
+GOOD! Time to go on.
+
+
+## Exercise 6.2
+
+Form and test the multigroup configural model with no parameter constraints.
+
+Note that here you have to combine the two data sets (see previous week).
+
+### Combine the data sets and establish the group variable accordingly
+
+```{r}
+
+# for example, using the merge() function, compare with Assignment 5:
+CVdata <- merge(data.frame(ELEMIND1, sample = "calibration"),
+                data.frame(ELEMIND2, sample = "validation"), 
+                all = TRUE, sort = FALSE)
+```
+
+### Configural model for cross-validation across the calibration and validation data:
+
+```{r}
+CV1model <- '
+# Burnout Factors:
+# EE: EmotionalExhaustion
+# DP: Depersonalization
+# PA: PersonalAccomplishment
+# (other factors: see Figure 9.1, slide #5)
+ROLECWORK_F1  =~ ROLEC1 + ROLEC2 + WORK1 + WORK2
+CLCL_F2       =~ CCLIM1 + CCLIM2 + CCLIM3 + CCLIM4
+DEC_F3        =~ DEC1 + DEC2
+SUPS_F4       =~ SSUP1 + SSUP2
+SELF_F5       =~ SELF1 + SELF2 + SELF3
+ELC_F6        =~ ELC1 + ELC2 + ELC3 + ELC4 + ELC5
+EE_F7         =~ EE1 + EE2 + EE3
+DP_F8         =~ DP1 + DP2
+PA_F9         =~ PA1 + PA2 + PA3
+
+# Regression paths:
+SELF_F5        ~ DEC_F3 + SUPS_F4
+ELC_F6         ~ ROLECWORK_F1
+EE_F7          ~ ROLECWORK_F1 + CLCL_F2
+DP_F8          ~ EE_F7
+PA_F9          ~ SELF_F5 + EE_F7 + DP_F8
+
+# Residual covariances:
+EE1 ~~ EE2 
+# Exception:
+ELC_F6 ~~ 0*PA_F9
+'
+
+# configural model estimation now using the `group` argument of sem()
+
+# (copy and modify your earlier R codes)
+
+```
+
+Check the fit, the indices etc. Compare with the lecture material (slide #23). 
+
+Should be OK!
+
+
+## Exercise 6.3
+
+Proceed with testing for the equivalence of the calibration and validation groups, by implementing the parameter constraints (factor loadings, observed variable intercepts, and structural regression paths).
+
+```{r}
+
+# just add the `group.equal` argument to sem(), with options
+# "loadings", intercepts", and "regressions"
+
+# CV2fit <- sem(CV1model...)
+
+# summary(CV2fit, fit.measures = TRUE, standardized = TRUE)
+
+# OBS! To achieve the corresponding results that are explained on the slides #25 and #26,
+#      ADD two more things: 1) meanstructure = TRUE and 2) option "means" to `group.equal`!
+
+# CV2fit <- sem(CV1model...)
+
+# summary(CV2fit, fit.measures = TRUE, standardized = TRUE)
+
+# You may even go further than Byrne and constrain equal also the factor variances and covariances.
+# Just ADD the options "lv.variances" and "lv.covariances" to `group.equal`.
+
+# CV2fit <- sem(CV1model...)
+
+# summary(CV2fit, fit.measures = TRUE, standardized = TRUE)
+
+# you may also use the generic anova() function for the MLM chi-square difference test:
+# (for testing any of the constrained models above - or any nested lavaan models)
+#anova(CV2fit, CV1fit)
+
+# The anova() function for lavaan objects simply calls the lavTestLRT() function,
+# that includes a few additional arguments (the help page gives the details):
+#lavTestLRT(CV2fit, CV1fit)
+
+```
+
+The result (the difference between [any of] those two models) should be n.s. (non-significant).
+
+Describe in your own words: *What does it mean that the result above is n.s.?*
+
+Finally, report *the last burnout model of the course* and conclude. 
+
+**Well done!!!**
+
+
+## Exercise 6.4
+
+This is an *Extra Exercise for Everyone*. Details with a special schedule are given in Moodle!
+
+                                        **THE END**

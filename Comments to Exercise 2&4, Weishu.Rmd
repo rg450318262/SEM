@@ -1,0 +1,32 @@
+---
+title: "Comment on Weishu's Exerciese2&3"
+author: "Rong Guang"
+date: "2023-02-22"
+output:
+  bookdown::pdf_document2:
+    latex_engine: lualatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F, cache = F, fig.align = 'center')
+```
+
+# Comments on the abstract
+
+Inspiration is a condition for designing. It is important for designers to cultivate new inspirational sources. Culture could be a fair candidate. I like the idea that bringing minority culture into designing class and see how well it could facilitate learner's designing creativity. This could be a study with substantive meaningfulness.
+
+The general picture is no doubt very intriguing. Several aspects I could come up with to improve the abstract are: 
+
+&nbsp;&nbsp;&nbsp; I got the important message that designers is searching for inspiration from local cultural. The information would have been much more powerful if it were introduced with a bit of quantification, even better also a bit of the current state of studies in the area (what pushes you to do the current study). Like, "Designers are increasingly seeking for incorporating elements of regional cultures into designs. Yet, it is still unclear if and how shortly exposing college-level design students to such cultures would benefit their creativity"
+
+&nbsp;&nbsp;&nbsp;The study purpose has been implicitly delivered to readers. I feel like it is a blending of a. how combining culture as an inspirational source and designing will benefit the design-majored students; b. what type(s) of culture best serve this facilitating role; c. what are the influencing factors to the effect size. Nonetheless, I feel like it would be much powerful if the purpose(s) was more explicitly clarified. 
+
+&nbsp;&nbsp;&nbsp;The method part is very succinct. It explained what data had been collected and the way to analyze it, in one sentence. Yet I would be much better informed if more information were presented, such as how long the workshop lasted, when the data was collected (before, in the middle, right after or days after the workshop), how many students responded (or what is your plan sample size if it has yet to be collected), what kind of design the students majored in (Industrial design, graphical design, fashion design, UI design or a blending of all). These could be well-introduced with one or two sentences, at most. 
+
+# Comments on the journal
+
+*Design Journal* looks very proper for your study.
+
+Here I propose another one : *International journal of design* (http://www.ijdesign.org/index.php/IJDesign)
+
+The reason I recommned it is that in its journal introduction (same page with the above link), it says *"It aims to provide an international forum for the exchange of ideas and findings from researchers across different cultures and encourages research on the impact of cultural factors on design theory and practice."* So cultural factors are what they welcome, which happens to be your study focus. 

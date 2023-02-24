@@ -756,7 +756,6 @@ To approximate the visual effect on slides, the coordinates for each nodes were 
 ```{r}
 #generate a matrix
 m <- matrix(NA, 60, 72)
-
 #define positions of the factors
 m[12, 68] <- "F1ROLA"
 m[12, 40] <- "F2ROLC"
@@ -770,7 +769,6 @@ m[52,40] <-"F9ELC"
 m[37,48] <-"F10EE"
 m[26,60] <-"F11DP"
 m[48,64] <-"F12PA"
-
 #define the posiitions of the indicators (parcelled items)
 m[4, 72] <- "ROLEA1"
 m[4, 64] <- "ROLEA2"

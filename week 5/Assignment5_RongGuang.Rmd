@@ -13,8 +13,7 @@ knitr::opts_chunk$set(echo = TRUE, warning = F, message = F, cache = F, fig.alig
 
 # Read me
 
-The texts that reflect my understanding/questions/doubts have been highlighted in \textcolor{red}{red color}.
-The texts that describes important steps/results or that corresponds to certain exercise requirement have been highlighted in \textcolor{blue}{blue color}.
+The texts that reflect my understanding/questions/doubts have been highlighted in \textcolor{red}{red color}. The texts that describes important steps/results or that corresponds to certain exercise requirement have been highlighted in \textcolor{blue}{blue color}.
 
 ```{r, echo = F}
 ## Exercise 5.1
@@ -649,7 +648,7 @@ library(patchwork); p.dist.elm/p.dist.sec
 ```
 
 ## Distributions of Item statistics (median)
- 
+
 ```{r,fig.width= 8, fig.height = 5}
 #generate plot by subgroups of teachers
 p.dot.elm <- 
@@ -735,15 +734,15 @@ patchwork+
               element_text(size = 16, face = "bold", vjust = -1.5, hjust =0.5)))
 ```
 
-# Establishing the baseline model for testing factorial equivalence  
+# Establishing the baseline model for testing factorial equivalence
 
-Here is a quick summary of how I understand the section (Not sure if it is correct):  To test factorial in-variance (equivalence), we need a baseline model that fits across the sub-groups, and that does not have any equality constraints. This model represents the best fitting one balanced with parsimony for EACH group. With this baseline models (one for each group) at hand, I could merge them to obtain a configural model, which represents the best fitting model balanced with parsimony for both group simultaneously (also importantly, without any between-group in-variance assumed). This configural model is an important pivot with which every model with some equality constraints on factor loadings should be compared in the following steps. 
+Here is a quick summary of how I understand the section (Not sure if it is correct): To test factorial in-variance (equivalence), we need a baseline model that fits across the sub-groups, and that does not have any equality constraints. This model represents the best fitting one balanced with parsimony for EACH group. With this baseline models (one for each group) at hand, I could merge them to obtain a configural model, which represents the best fitting model balanced with parsimony for both group simultaneously (also importantly, without any between-group in-variance assumed). This configural model is an important pivot with which every model with some equality constraints on factor loadings should be compared in the following steps.
 
 ## Define and estimate initial models (for both subgroups)
 
 \textcolor{blue}{The postulated three-factor structure of the MBI that was tested in the previous assignments were re-tested as the initial model for establishing a baseline model. }
 
-### Define the initial model 
+### Define the initial model
 
 ```{r}
 library(lavaan)
@@ -761,7 +760,7 @@ initial.model <- '
 
 Cited from Byrne: *It is important to note that measuring instruments are often group specific in the way they operate, and, thus, it is possible that baseline models may not be completely identical across groups.*
 
-### Estimate indices to examine factorial validity 
+### Estimate indices to examine factorial validity
 
 (1) Estimate factorial validity for the elementary teacher subgroup
 
@@ -885,7 +884,7 @@ fl.both |>
 
 the cross-loading involved the loading of Item 12 on Factor 1 (Emotional Exhaustion) in addition to its targeted Factor 3 (Personal Accomplishment)
 
-(3) Variance 
+(3) Variance
 
 Variance of elementary level were extracted.
 
@@ -954,7 +953,7 @@ align.table(data = cov.both,
 
 (1) Search for mis-specified parameters
 
-Last step, although I didn't find parameters of strongly aberrant estimates,un-satisfactory fit indices still indicated model misfit. \textcolor{blue}{ Hence, in the current section I performed model re-specification in searching for better-fitting models. } Specifically, to establish baseline models for both panels of teachers that represent good model fit and parsimony, I further investigated the modification indices of the hypothesized models, respectively for two levels. 
+Last step, although I didn't find parameters of strongly aberrant estimates,un-satisfactory fit indices still indicated model misfit. \textcolor{blue}{ Hence, in the current section I performed model re-specification in searching for better-fitting models. } Specifically, to establish baseline models for both panels of teachers that represent good model fit and parsimony, I further investigated the modification indices of the hypothesized models, respectively for two levels.
 
 MIs of elementary level panel were calculated.
 
@@ -1018,9 +1017,9 @@ MI.both    |>
 
 \textcolor{blue}{See table 5. Three exceptionally large residual co-variances and one cross-loading contributed to the misfit of the model for both teacher panels.} The residual co-variances involved Items 1 and 2, Items 6 and 16, and Items 10 and 11; the cross-loading involved the loading of Item 12 on Factor 1 (Emotional Exhaustion) in addition to its targeted Factor 3 (Personal Accomplishment).
 
- In reviewing both the MIs and expected parameter change (EPC) statistics for elementary teachers (table 5, upper part), it is clear that all four parameters are contributing substantially to model misfit, with the residual covariance between Item 6 and Item 16 exhibiting the most profound effect.
- 
- We see precisely the same pattern on secondary teachers, albeit the effect would appear to be even more pronounced than it was for elementary teachers. One slight difference between the two groups of teachers regards the impact of these four parameters on model misfit. Whereas the residual covariance between Items 6 and 16 was found to be the most seriously misfitting parameter for elementary teachers; for secondary teachers, the residual covariance between Items 1 and 2 was most pronounced. 
+In reviewing both the MIs and expected parameter change (EPC) statistics for elementary teachers (table 5, upper part), it is clear that all four parameters are contributing substantially to model misfit, with the residual covariance between Item 6 and Item 16 exhibiting the most profound effect.
+
+We see precisely the same pattern on secondary teachers, albeit the effect would appear to be even more pronounced than it was for elementary teachers. One slight difference between the two groups of teachers regards the impact of these four parameters on model misfit. Whereas the residual covariance between Items 6 and 16 was found to be the most seriously misfitting parameter for elementary teachers; for secondary teachers, the residual covariance between Items 1 and 2 was most pronounced.
 
 (2) Re-specify initial model to model 2
 
@@ -1321,7 +1320,7 @@ MI3.both    |>
 
 (3) Re-specification of model 3 to model 4 (only for secondary teacher)
 
-The parameter ITEM9 ~~ ITEM19 was relaxed for estimation.
+The parameter ITEM9 \~\~ ITEM19 was relaxed for estimation.
 
 ```{r}
 respecified4.sec <- 'ITEM9 ~~ ITEM19
@@ -1477,7 +1476,7 @@ mtext("Figure 4 Baseline MBI models for two groups of teacher",
       cex = 1.5, side = 1, line = -5, outer = TRUE)
 ```
 
-\textcolor{blue}{The the plot of baseline model for each group of teachers was created. See figure 4.}  There are three parameters (two residual co-variances [Item 4 with Item 7; Item 9 with Item 19] and one cross-loading [Item 11 on F1]) that were not part of the originally postulated model and that differ across the two groups of teachers. (\textcolor{red} { According to slides, they (the diagrams) have the same number of factors and the same factor-loading pattern. A question: Is there any standard for such a pattern? The current baseline models have one cross-loading that differs across the groups so they are not exactaly same.})
+\textcolor{blue}{The the plot of baseline model for each group of teachers was created. See figure 4.} There are three parameters (two residual co-variances [Item 4 with Item 7; Item 9 with Item 19] and one cross-loading [Item 11 on F1]) that were not part of the originally postulated model and that differ across the two groups of teachers. (\textcolor{red} { According to slides, they (the diagrams) have the same number of factors and the same factor-loading pattern. A question: Is there any standard for such a pattern? The current baseline models have one cross-loading that differs across the groups so they are not exactaly same.})
 
 ## Section Summary
 
@@ -1509,7 +1508,7 @@ mbi.both <-
 
 ### Define the configural model
 
- No equality constraints are imposed for this model. 
+No equality constraints are imposed for this model.
 
 ```{r}
 inv1.model <- '
@@ -1534,7 +1533,7 @@ ITEM10 ~~ ITEM11
 
 ### Estimate the configural model
 
-The model fit results derived from this model represent a multi-group version of the combined baseline models for elementary and secondary teacher. 
+The model fit results derived from this model represent a multi-group version of the combined baseline models for elementary and secondary teacher.
 
 ```{r}
 inv1.fit <- 
@@ -1576,7 +1575,7 @@ See table 11. Results for this configural model (inv1.model) were as follows: ML
 
 (1) Define and inspect the fit indices of model 2 (inv2.model)
 
-\textcolor{blue}{All the common factor loadings were constrained equal across groups.} If the results show significant improvement from configural model, we get the evidence about multi-group in-variance. If not, we need to further explore which parameter(s) bring about the difference observed. 
+\textcolor{blue}{All the common factor loadings were constrained equal across groups.} If the results show significant improvement from configural model, we get the evidence about multi-group in-variance. If not, we need to further explore which parameter(s) bring about the difference observed.
 
 ```{r}
 inv2.fit <- 
@@ -1623,7 +1622,7 @@ See table 12. As indicated by the very slightly higher MLM chi-square value (939
 
 MIs of inv2.model were calculated. In seeking evidence of non-invariance, we focus only on the factor loadings that were constrained equal across the groups. In addition, in testing for invariance, only those parameters that were constrained equal, are of relevance. Hence, only the parameter statement that meets these requirements were extracted.
 
-First, to simplify the searching for relevant parameters, I defined an object including all parameters were relevant, so that what parameters were shown in MI table were automatically controlled. 
+First, to simplify the searching for relevant parameters, I defined an object including all parameters were relevant, so that what parameters were shown in MI table were automatically controlled.
 
 ```{r}
 #create the parameter statements of relevancy
@@ -1722,7 +1721,7 @@ rbind(inv2.model.MI.elm, inv2.model.MI.sec) |>
 
 (3) Re-specify model2 to fit model 3 (inv3.model) by relaxing a parameter
 
-   quality constraint on Parameter "DP by ITEM11" was relaxed. 
+quality constraint on Parameter "DP by ITEM11" was relaxed.
 
 ```{r}
 inv3.fit <- 
@@ -1811,7 +1810,7 @@ inv3.fit |>
 \textcolor{blue} {See table 14.} The fit statistics of inv3.model: MLM chi-square[420] 969.990, CFI 0.937, RMSEA 0.045, SRMR 0.054. \textcolor{blue} {The difference in model fit between InvModel 3 and and the configural model (InvModel 1) is, though not significiant, approaching to significance at 0.05 level (p = 0.057).} Moreover, a review of the estimated parameters reveals a fairly substantial difference for the specified parameter (1.095 for elementary and 0.581 for secondary teachers, see table 15). \textcolor{blue} {Hence, I decide to make further improvement to the model.}
 
 \textcolor{red} {In this step, my results were substantially different from the slides. Here in the slides the p value is 0.048, base on which the decision was that we should make further improvement. Yet, I got a insiginificant p for chi-square difference already (0.057, see table 14). I tried several different possibilities. I found if I set "group.partial = c("DP =~ ITEM11")" instead of "group.partial = c("EE =~ ITEM11","DP =~ ITEM11" )" , I would have seen a significant p value very close to the slides. Yet the degree of freedom would turn to 421 instead of 420 (And plus it isn't the correct appraoch, so I didn't really do that). I suppose there should be something I have done wrong. Furthuremore, starting from this step, I saw more big inconsistency with the slides, which I also highlighted in red. I hope these could be solved in next class}
- 
+
 (2) Examine the modification indices for inv3.model
 
 I extract MI table with relevant parameters.
@@ -1836,7 +1835,7 @@ inv3.model.MI <-
 
 ```
 
-Then, MI tables with relevant parameters was printed in descending order of MI. 
+Then, MI tables with relevant parameters was printed in descending order of MI.
 
 ```{r}
 inv3.model.MI.elm <- 
@@ -1886,7 +1885,7 @@ rbind(inv3.model.MI.elm, inv3.model.MI.sec) |>
 
 Potential parameters that are very possibly undermining equivalence across elementary and secondary teachers were highlighted in red. \textcolor{blue}{Actually, other than DP measured by ITEM5, which had the largest MI value in both groups of teachers, there are several ohter candidates. }
 
-\textcolor{red} {See table 16. In this step AGAIN, my results were dramatically inconsistent with the slides, I was not able to get the parameter "DP measured by Item15" from MI table until I removed the constraint of minimum MI value of 3.84.  Even this way, the results still pointed me to another tract--parameter "DP by ITEM5" came up in MI table across both groups, and it had MIs larger than the large MI parameter "DP by ITEM15" in slides (Actually, it was not even the second largest on my MI table, see table 16).} I don't think the difference of algorithms between Mplus and lavaan could be so big. I suppose I had done something wrongly which I examined quite hard but failed to identify. Still, I hope I could find out the reason in the next class. Yet, albeit the statistics directed me towards other roads, I still follow the steps of the sildes by relaxing "DP =~ ITEM15". 
+\textcolor{red} {See table 16. In this step AGAIN, my results were dramatically inconsistent with the slides, I was not able to get the parameter "DP measured by Item15" from MI table until I removed the constraint of minimum MI value of 3.84.  Even this way, the results still pointed me to another tract--parameter "DP by ITEM5" came up in MI table across both groups, and it had MIs larger than the large MI parameter "DP by ITEM15" in slides (Actually, it was not even the second largest on my MI table, see table 16).} I don't think the difference of algorithms between Mplus and lavaan could be so big. I suppose I had done something wrongly which I examined quite hard but failed to identify. Still, I hope I could find out the reason in the next class. Yet, albeit the statistics directed me towards other roads, I still follow the steps of the sildes by relaxing "DP =\~ ITEM15".
 
 (3) Re-specify model2 to fit model 3 (inv3.model)
 
@@ -1984,7 +1983,7 @@ The conclusion is--All items on the MBI, except for items 11 and 15, both of whi
 
 \textcolor{blue}{In this section, I further imposed equality constraints on residual co-variances to test the multi-group in-variance, in addition to the contraints on inv4.model.}
 
-In total, 21 parameters in this model (Inv5.Model) were constrained equal across groups: 17 factor loadings, 1 cross-loading, and 3 residual co-variances. 
+In total, 21 parameters in this model (Inv5.Model) were constrained equal across groups: 17 factor loadings, 1 cross-loading, and 3 residual co-variances.
 
 ```{r}
 inv5.model <- '
@@ -2114,7 +2113,7 @@ key.table4 <-
 key.table4
 ```
 
-See table 20. The goodness-of-fit statistics for inv6.model were: MLM chi-square[428] 986.389, CFI 0.937, RMSEA 0.045, SRMR 0.059. Comparison with inv5.model yielded a corrected MLM chi-square difference of 12.941 (*p* = 0.044). 
+See table 20. The goodness-of-fit statistics for inv6.model were: MLM chi-square[428] 986.389, CFI 0.937, RMSEA 0.045, SRMR 0.059. Comparison with inv5.model yielded a corrected MLM chi-square difference of 12.941 (*p* = 0.044).
 
 \textcolor{red}{Here I got a MLM chi-square difference of 12.941. Though it only deviated slightly from the value on slides (12.117), the small difference made p value fall significant (p = 0.044, vs p= 0.059 on slides). I hope this is due to the difference in algorithms. However, if this were true, we would be surprised by how different tools leads to different conclusions in the areas using SEM.}
 
@@ -2124,18 +2123,17 @@ The conclusion is--Factor variances and co-variances are operating equivalently 
 
 To summarize, I categorize the testing for factorial in-variance into the following steps:
 
-&nbsp;&nbsp;&nbsp;(1) Establish a baseline model for each group. The baseline model can be different across groups, so it might require different number of post-hoc re-specification. The "gold-standard" for a good baseline model is good-fitting and parsimony. \textcolor{red}{See table 21 below, which presents my searching for baseline models from initial model to model 4.  }
+   (1) Establish a baseline model for each group. The baseline model can be different across groups, so it might require different number of post-hoc re-specification. The "gold-standard" for a good baseline model is good-fitting and parsimony. \textcolor{red}{See table 21 below, which presents my searching for baseline models from initial model to model 4.  }
 
-&nbsp;&nbsp;&nbsp;(2) Merge the baseline models into one. We call it configural model. It represents the multi-group version of the baseline models. All the following models with some equality constraints on factor loadings will be compared with it. \textcolor{red}{See the first row of table 22 below, which tabulates the fit indices of configural model.}  
-&nbsp;&nbsp;&nbsp;(3) Constrain all the factor loadings equal across groups at one time and see how the model fits. Good fitting indicates multi-group in-variances in factor loadings. Bad fitting gives us evidence that there is some source of non-invariance, and we should find them. \textcolor{red}{See the second row of table 22 below, which tabulates the fit indices of a model with all factor loadings constrained equal across groups (the fit isn't good comparing to configural model so we can further search for source of non-invariance). }
+   (2) Merge the baseline models into one. We call it configural model. It represents the multi-group version of the baseline models. All the following models with some equality constraints on factor loadings will be compared with it. \textcolor{red}{See the first row of table 22 below, which tabulates the fit indices of configural model.}\
+   (3) Constrain all the factor loadings equal across groups at one time and see how the model fits. Good fitting indicates multi-group in-variances in factor loadings. Bad fitting gives us evidence that there is some source of non-invariance, and we should find them. \textcolor{red}{See the second row of table 22 below, which tabulates the fit indices of a model with all factor loadings constrained equal across groups (the fit isn't good comparing to configural model so we can further search for source of non-invariance). }
 
-&nbsp;&nbsp;&nbsp;(4) Relax the constraint on factor loadings one parameter a time (according to the value of MIs of equality constrained parameters), and see how does the fit goes. More importantly, inspect the MLM chi square difference between the newly fitted model and (always) configural model. We want to repeat it until seeing non-significance, which indicates that except for the factor loadings we have relaxed from equality constraints, multi-group in-variance of factor loadings is proven. \textcolor{red}{See the third and fourth rows of table 22 below (especially take note of third column where p for chi-difference is presented), which demonstrates how our less and less restrictive models finally reach non-significant chi-square difference p value. }
+   (4) Relax the constraint on factor loadings one parameter a time (according to the value of MIs of equality constrained parameters), and see how does the fit goes. More importantly, inspect the MLM chi square difference between the newly fitted model and (always) configural model. We want to repeat it until seeing non-significance, which indicates that except for the factor loadings we have relaxed from equality constraints, multi-group in-variance of factor loadings is proven. \textcolor{red}{See the third and fourth rows of table 22 below (especially take note of third column where p for chi-difference is presented), which demonstrates how our less and less restrictive models finally reach non-significant chi-square difference p value. }
 
-&nbsp;&nbsp;&nbsp;(5) Use the last model we established in last step (I will call it FL reference model) and, this time, further constrain equal across groups all the residual co-variances we have specified in configural model and fit it. Comparing this model to FL reference model, if the MLM chi-square difference yields non-significance, we can conclude that the multi-group in-variance assumption also holds for residual co-variances. \textcolor{red}{See table 23 below: residual-covariance-constrained model (lower) is compared to FL reference model (upper).}
+   (5) Use the last model we established in last step (I will call it FL reference model) and, this time, further constrain equal across groups all the residual co-variances we have specified in configural model and fit it. Comparing this model to FL reference model, if the MLM chi-square difference yields non-significance, we can conclude that the multi-group in-variance assumption also holds for residual co-variances. \textcolor{red}{See table 23 below: residual-covariance-constrained model (lower) is compared to FL reference model (upper).}
 
-&nbsp;&nbsp;&nbsp;(5) Use the last model we established in last step (I will call it COV reference model) and, this time, further constrain equal across groups all the factor variances and co-variances and fit it. Comparing this model to COV reference model, if the MLM chi-square difference yields non-significance, we can conclude that the multi-group in-variance assumption also holds for factor variances and co-variances. \textcolor{red}{See table 24 below: factor-variance/covariance-constrained model (lower) is compared to COV reference model (upper).}
+   (5) Use the last model we established in last step (I will call it COV reference model) and, this time, further constrain equal across groups all the factor variances and co-variances and fit it. Comparing this model to COV reference model, if the MLM chi-square difference yields non-significance, we can conclude that the multi-group in-variance assumption also holds for factor variances and co-variances. \textcolor{red}{See table 24 below: factor-variance/covariance-constrained model (lower) is compared to COV reference model (upper).}
 
 ```{r}
 key.table1;key.table2;key.table3;key.table4
 ```
-

@@ -809,4 +809,53 @@ a <- readRDS(file = "modeltable.rds")
 ```
 
 
+```{r}
+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
+```
+
+
+
+
+```{r}
+
+```
+
+
+```{r}
+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
+```
+
+```{r}
+require(devtools)
+install.packages("devtools")
+library(devtools)
+install_github("MichelNivard/gptstudio")
+```
+
+
+```{r}
+#set the environment variable for the openai api key
+Sys.setenv(OPENAI_API_KEY = "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")
+
+```
+
+I want to try if that is correct.
+
+Is is good enough?
+
+I am trying to rewrite this text in the active voice
+
+
+
+```{r}
+1+1
+
+Sys.setenv(OPENAI_API_KEY = 
+             "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")
+```
+
+1+1
+```{r}
+1+1
+```
 

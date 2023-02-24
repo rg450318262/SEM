@@ -937,7 +937,7 @@ semPaths(cfa.modified.3,
          title = T,
          curve =1.5,
          legend = F,
-         asize = 1,
+         asize = 1, #arrow size
          style = "ram",
          #layoutSplit= T,
          fixedStyle = c("red",3),

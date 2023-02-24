@@ -1,0 +1,85 @@
+---
+title: "COURSE INFORMATION: Methods Lounge Seminar"
+author: "Benjamin Cowley, Miika Leminen, (guests to be confirmed)"
+output:
+  bookdown::pdf_document2:
+    latex_engine: lualatex
+---
+
+#Target group and approximate number of students
+
+Doctoral students of Faculty of Education (CLIC and SEDUCE), also welcome Doctoral students from other doctoral programmes and disciplines including Computer Science, Psychology, Cognitive Science, Biology. However, proportion of students from educational science will be no less than 70%. The maximum number of students should be no more than the number of sessions throughout the teaching periods, which is approximately 20~21 students.
+
+#Timing and timetable of the course
+
+Period II to Period IV. One contact session per week, 3 hours.
+
+# Learning objectives for the course.
+
+*Please specify also how the objectives for the course are related to the learning outcomes expected by the Curriculum (the specific study unit you selected from the list above). ?*
+
+Learning objective 1: The lectuers will examplify solutions to difficult problems encountered by each inividual student in their physilogical data processing and analysis. 
+
+Learning outcome 1: The students can understand the solutions theoretically and reproduce solutions practically. 
+
+Learning objective 2: The seminar will explain principles of analysing human physiological data and combining it with other data whenever applicable to the questioning students' dataset. 
+
+Learning outcome 2: The students can reliably describe what principles they have followed in their data processing/analysis and why these principles are necessary.
+
+Learning objective 3: The training activity will demonstrate proficient procedures in operating the analysis software and methods of their choice.
+
+Learning outcome 3: The students can operate the statistical tool(s) and execute the data processing/analyses relevant to their studies in a more efficient manner. 
+
+Learning objective 4: The lecturer will give succinct description on the features of some competing methods/solutions to the one that will be chosen in the students' study.  
+
+Learning outcome 4: The students will be able to make methodogical arguments for the methods they will choose, and describe their limitations. 
+
+Learning objective 5: The teaching team will review and give feedback on the students' learning diary of the demonstrated solutions.
+
+Learning outcome 5: The students can be informed if their understanding and reflections of the learning process are on correct track. 
+
+
+# Content and description of the course
+
+Students fill out a sheet that describes their data analysis needs related to the methods problem that they currently have with their PhD data set. The sheet are filled out prior to the beginning of the second period. The teachers will group the questions so that one topic (consisting of one or several similar questions) is allocated per week, advertised to all registrants, and the questioning student plus all other interested students bring their data and tools. Teachers then tackle the problem with the questioner, while demonstrating the solution to all interested, and other students will join in those sessions that are most relevant to their work, choosing at least most interesting 5 sessions.
+
+# Completion and evaluation
+
+To complete the course, the student needs to:
+
+1. Fill in a structured sheet describing his/her question with descriptions of the data sets, plan of analysis and specification of the problems prior to the start of the 2nd period. Find the sheet at https://educationhelsinki.eu.qualtrics.com/jfe/form/SV_0dEeW2pj4S56ZL0
+
+2. Prior to the session dedicated to this problem, the student will prepare the data sets and plans ready for the analysis.
+
+3. The student will attend the session where his/her specific problem is tackled. After the session, the student will write a 1-2 page learning diary of the process, listing the misconceptions or lack of knowledge that he/she had prior to the session and briefly listing the solutions to the problem.
+
+4. In addition, the student will attend other sessions that are of interest to him/her and write a 3-5-sentence feedback on his/her learning on each of these sessions. The student will attend at least 5 sessions in addition to his/her specific session.
+
+
+# Realisation and working methods
+
+Practicum: students bring own data and tools (laptop computer, analysis software). A prepared question is tackled with teachers in a max. 3 hour session.
+
+# Study material and literature
+
+Students provide data and problems. Literature on each specific problem is identified when available.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,1744 @@
+---
+title: "COS-D419 Factor Analysis and Structural Equation Models 2023, Assignment 6"
+author: "Rong Guang"
+output:
+  bookdown::pdf_document2:
+    latex_engine: lualatex
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F, cache = F, fig.align = 'center')
+```
+
+```{r, echo = F}
+## Exercise 6.1
+
+#Establish a well-fitting and parsimonious baseline model for the calibration group.
+
+#Although lavaan does not care about the extra items in the model (as Mplus does, see slide #16), you should remove the unnecessary factors and the related items in order to have the same number of the degrees of freedom in the consequent models as in the material. The revised (restructured) model (slide #17) consists of only **9 factors and their relations**.
+
+#Draw the graphs of the hypothesized, modified, and restructured baseline models.
+```
+
+# Read me
+
+The texts that reflect my understanding/questions/doubts have been highlighted in \textcolor{red}{red color}. The texts that describes important steps/results or that corresponds to certain exercise requirement have been highlighted in \textcolor{blue}{blue color}.
+
+# Preparation
+
+## Read in the data set
+
+```{r}
+library(tidyverse)
+library(readr)
+library(here)
+
+#This week's file name
+latest.name1 <- "ELEMIND1.CSV"
+latest.name2 <- "ELEMIND2.CSV"
+#read in the data
+ele.cali <-  #elementary school
+  read_csv(
+    file.path(
+      here(),
+      'data',
+      latest.name1
+      ),
+      show_col_types = FALSE
+    )
+
+ele.vali <- #secondary school
+  read_csv(
+    file.path(
+      here(),
+      'data',
+      latest.name2
+      ),
+      show_col_types = FALSE
+    )
+```
+
+## Write functions
+
+To control length of reports, codes of fucntions were not showing in the current report. Yet they are available in .rmd report.
+
+### To generate a function for calculating chi square difference was defined.
+
+```{r, echo = F}
+chisq_mlm <- function(fit_nested, fit_parent) {
+    # scaling correction factors
+      c0 <- fitMeasures(fit_nested, "chisq.scaling.factor") %>% as.numeric()
+      c1 <- fitMeasures(fit_parent, "chisq.scaling.factor") %>% as.numeric()
+    # scaling correction of the difference test
+      d0 <- fitMeasures(fit_nested, "df") %>% as.numeric()
+      d1 <- fitMeasures(fit_parent, "df") %>% as.numeric()
+      cd <- ((d0 * c0) - (d1 * c1))/(d0 - d1)
+    # MLM chi-square difference test
+      T0 <- fitMeasures(fit_nested, "chisq.scaled") %>% as.numeric()
+      T1 <- fitMeasures(fit_parent, "chisq.scaled") %>% as.numeric()
+      TRd <- (T0*c0 - T1*c1)/cd
+    # degrees of freedom
+      df = d0 - d1
+    return(c("TR_d" = TRd |> round(3), 
+             "df" = df |> round(0), 
+             "p_value" = pchisq(TRd, df, lower.tail = FALSE) |> round(3)))
+}
+```
+
+### Write a function to print a table with concerned parameters
+
+```{r, echo = F}
+#write a function for minus calculation
+minus <- function(x,y) {x - y}
+#write a function to print a table with concerned parameters
+concern.table <- function(sem, nofpath, nofpredictor, model){
+options(scipen = 999)
+#This is for structural path residual variance
+##regression path estimates
+sem.parameter <- parameterEstimates(sem, standardized=TRUE) |>  # obtain estimates
+  filter(op == "~") |>   #select "is measured by" rows
+  mutate(Parameter = paste0(rhs, "→", lhs)) |>
+  select(Parameter,
+         'B'=est, #estimates
+         'Beta'=std.all,#estimates standardized
+         SE=se, #standard error
+         Z=z, #z statistics
+         'p-value'=pvalue #p value
+         )
+nofpath <- nrow(sem.parameter)
+##round the p-value column
+sem.parameter$`p-value` <- sem.parameter$`p-value` |>
+  round(3)
+
+##add a conditional logic to the p-value column that >0.05 cell shows in red
+sem.parameter$`p-value` <- cell_spec(sem.parameter$`p-value`,
+                                     color = ifelse(
+                                       sem.parameter$`p-value` > 0.05,
+                                       "red",
+                                       "black")
+                                     )
+
+#This is for the residual variance of dependence variable
+##obtain estimates
+variance <- parameterEstimates(sem, standardized=TRUE)  |>
+  filter(op == "~~") #select "is correlated with" rows
+##subset needed rows (variance row)
+variance <- variance %>%
+  filter(str_detect(rhs, "SELF$|ELC$|EE$|DP$|PA$"))
+
+n.dep <- nrow(variance)
+
+#variance[minus(sum(32,nofpath), 5-1):sum(32,nofpath),] #32 is the n of indicators;
+                                             #12 is the number of factors;
+                                             #5 is the new of row I plan to show
+##select&rename columns
+sem.tab.variance <- variance |> select(
+                   Parameter=rhs, #right hand side column
+                   'B'=est, #estimates
+                   'Beta'=std.all, #standardized estimates
+                   SE=se,#standard error
+                   Z=z, #z statistics
+                   'p-value'=pvalue #p value
+                   )
+##remove the row names
+rownames(sem.tab.variance) <- NULL
+##round the p-value column
+sem.tab.variance$`B` <- sem.tab.variance$`B` |>
+  round(3)
+##add a conditional logic to the beta column that <0 cell shows in red
+sem.tab.variance$`B` <- cell_spec(sem.tab.variance$`B`,
+                                     color = ifelse(
+                                       sem.tab.variance$`B` < 0,
+                                       "red",
+                                       "black")
+                                     )
+
+
+covariance <- parameterEstimates(sem, standardized=TRUE)  |>
+  filter(op == "~~", lhs != rhs)
+
+n.cov <- nrow(covariance)
+
+sem.tab.covariance <- covariance |>
+  mutate(Parameter = paste0(rhs, "←→", lhs)) |>
+  select(
+    Parameter,
+    #right hand side column
+    'B' = est,
+    #estimates
+    'Beta' = std.all,
+    #standardized estimates
+    SE = se,
+    #standard error
+    Z = z,
+    #z statistics
+    'p-value' = pvalue #p value
+  )
+
+##remove the row names
+rownames(sem.tab.covariance) <- NULL
+##round the std estimate column
+sem.tab.covariance$`Beta` <- sem.tab.covariance$`Beta` |>
+  round(3)
+##add a conditional logic to the p-value column that >0.05 cell shows in red
+sem.tab.covariance$`Beta` <- cell_spec(sem.tab.covariance$`Beta`,
+                                     color = ifelse(
+                                       sem.tab.covariance$`Beta` > 1,
+                                       "red",
+                                       "black")
+                                     )
+
+#bind the three tables
+concern.table <- rbind(sem.parameter, sem.tab.variance, sem.tab.covariance)
+
+
+concern.table[1:nofpath, 2] <-
+  as.character(round(as.numeric(concern.table[1:nofpath, 2]),3))
+
+concern.table[sum(nofpath, n.dep, 1):sum(nofpath, n.cov,n.dep), 2] <-
+  as.character(round(as.numeric(concern.table[sum(nofpath, n.dep, 1):sum(nofpath, n.cov,n.dep), 2]),3))
+
+concern.table[sum(nofpath,1):sum(nofpath, n.cov, n.dep),6] <-
+  as.character(round(
+    as.numeric(
+      concern.table[sum(nofpath,1):sum(nofpath, n.cov, n.dep),6]
+      ),
+    3)
+    )
+
+concern.table[1:sum(nofpath, 5),3] <-
+  as.character(round(
+    as.numeric(
+      concern.table[1:sum(nofpath, 5),3]
+      ),
+    3)
+    )
+
+#further aesthetics
+concern.table |>
+  select("Parameter*" = Parameter,
+         'B†' = B, #estimates
+         'Beta‡' = Beta,#estimates standardized
+         SE, #standard error
+         Z, #z statistics
+         'p-value') |> #p value
+  kable(digits = 3, #rounded to 3
+        #format="latex", #Latex markdown
+        booktabs=TRUE, #Latex booktabs
+        linesep = "",
+        align = "lrrrrr",
+        caption=
+          paste(
+            "Residual variance of structural regression path and select factors for",
+            model),
+        escape = F) |> #caption
+  kable_styling(latex_options = "striped") |> #gray every other row
+  pack_rows("Regression paths (Residual variance)",
+            1,nofpath) |>
+  pack_rows("Endogenous factors(Residual variance)",
+            sum(nofpath,1), sum(nofpath,5)) |>
+  pack_rows("Exogenous factors (Residual covariance)",
+            sum(nofpath, 6), sum(nofpath, 5, n.cov)) |>
+  footnote(general = "Values highlighted in red should be taken note of",
+           symbol = c("→ indicates regression path",
+                      "Crude estimates",
+                      "Standardized estimates"))
+}
+```
+
+
+
+############3
+
+### Write a function to print a table with concerned parameters
+
+```{r, echo = F, eval=F}
+#write a function for minus calculation
+minus <- function(x,y) {x - y}
+#write a function to print a table with concerned parameters
+concern.table <- function(sem, nofpath, nofpredictor, n_new_cov,model){
+options(scipen = 999)
+#This is for structural path residual variance
+##regression path estimates
+sem.parameter <- parameterEstimates(sem4, standardized=TRUE) |>  # obtain estimates
+  filter(op == "~") |>   #select "is measured by" rows
+  mutate(Parameter = paste0(rhs, "→", lhs)) |>
+  select(Parameter,
+         'B'=est, #estimates
+         'Beta'=std.all,#estimates standardized
+         SE=se, #standard error
+         Z=z, #z statistics
+         'p-value'=pvalue #p value
+         )
+
+##round the p-value column
+sem.parameter$`p-value` <- sem.parameter$`p-value` |>
+  round(3)
+
+##add a conditional logic to the p-value column that >0.05 cell shows in red
+sem.parameter$`p-value` <- cell_spec(sem.parameter$`p-value`,
+                                     color = ifelse(
+                                       sem.parameter$`p-value` > 0.05,
+                                       "red",
+                                       "black")
+                                     )
+
+#This is for the residual variance of dependence variable
+##obtain estimates
+variance <- parameterEstimates(sem4, standardized=TRUE)  |>
+  filter(op == "~~") #select "is correlated with" rows
+##subset needed rows (variance row)
+variance <- variance %>%
+  filter(str_detect(rhs, "SELF$|ELC$|EE$|DP$|PA$"))
+
+#variance[minus(sum(32,nofpath), 5-1):sum(32,nofpath),] #32 is the n of indicators;
+                                             #12 is the number of factors;
+                                             #5 is the new of row I plan to show
+##select&rename columns
+sem.tab.variance <- variance |> select(
+                   Parameter=rhs, #right hand side column
+                   'B'=est, #estimates
+                   'Beta'=std.all, #standardized estimates
+                   SE=se,#standard error
+                   Z=z, #z statistics
+                   'p-value'=pvalue #p value
+                   )
+##remove the row names
+rownames(sem.tab.variance) <- NULL
+##round the p-value column
+sem.tab.variance$`B` <- sem.tab.variance$`B` |>
+  round(3)
+##add a conditional logic to the beta column that <0 cell shows in red
+sem.tab.variance$`B` <- cell_spec(sem.tab.variance$`B`,
+                                     color = ifelse(
+                                       sem.tab.variance$`B` < 0,
+                                       "red",
+                                       "black")
+                                     )
+
+
+covariance <- parameterEstimates(sem4, standardized=TRUE)  |>
+  filter(op == "~~", lhs != rhs)
+
+n.cov <- nrow(covariance)
+
+sem.tab.covariance <- covariance |>
+  mutate(Parameter = paste0(rhs, "←→", lhs)) |>
+  select(
+    Parameter,
+    #right hand side column
+    'B' = est,
+    #estimates
+    'Beta' = std.all,
+    #standardized estimates
+    SE = se,
+    #standard error
+    Z = z,
+    #z statistics
+    'p-value' = pvalue #p value
+  )
+
+##remove the row names
+rownames(sem.tab.covariance) <- NULL
+##round the std estimate column
+sem.tab.covariance$`Beta` <- sem.tab.covariance$`Beta` |>
+  round(3)
+##add a conditional logic to the p-value column that >0.05 cell shows in red
+sem.tab.covariance$`Beta` <- cell_spec(sem.tab.covariance$`Beta`,
+                                     color = ifelse(
+                                       sem.tab.covariance$`Beta` > 1,
+                                       "red",
+                                       "black")
+                                     )
+
+#bind the three tables
+concern.table <- rbind(sem.parameter, sem.tab.variance, sem.tab.covariance)
+
+concern.table[1:nofpath, 2] <-
+  as.character(round(as.numeric(concern.table[1:nofpath, 2]),3))
+
+concern.table[sum(nofpath, 6):sum(nofpath, nofpredictor*(nofpredictor-1)/2, 5), 2] <-
+  as.character(round(as.numeric(concern.table[sum(nofpath, 6):sum(nofpath, nofpredictor*(nofpredictor-1)/2, 5), 2]),3))
+
+concern.table
+
+concern.table[sum(nofpath,1):sum(nofpath, nofpredictor*(nofpredictor-1)/2, 5),6] <-
+  as.character(round(
+    as.numeric(
+      concern.table[sum(nofpath,1):sum(nofpath, nofpredictor*(nofpredictor-1)/2, 5),6]
+      ),
+    3)
+    )
+
+concern.table[1:sum(nofpath, 5),3] <-
+  as.character(round(
+    as.numeric(
+      concern.table[1:sum(nofpath, 5),3]
+      ),
+    3)
+    )
+
+#further aesthetics
+concern.table |>
+  select("Parameter*" = Parameter,
+         'B†' = B, #estimates
+         'Beta‡' = Beta,#estimates standardized
+         SE, #standard error
+         Z, #z statistics
+         'p-value') |> #p value
+  kable(digits = 3, #rounded to 3
+        #format="latex", #Latex markdown
+        booktabs=TRUE, #Latex booktabs
+        linesep = "",
+        align = "lrrrrr",
+        caption=
+          paste(
+            "Residual variance of structural regression path and select factors for",
+            model),
+        escape = F) |> #caption
+  kable_styling(latex_options = "striped") |> #gray every other row
+  pack_rows("Regression paths (Residual variance)",
+            1,nofpath) |>
+  pack_rows("Endogenous factors(Residual variance)",
+            sum(nofpath,1), sum(nofpath,5)) |>
+  pack_rows("Exogenous factors (Residual covariance)",
+            sum(nofpath, 6), sum(nofpath, n.cov)) |>
+  footnote(general = "Values highlighted in red should be taken note of",
+           symbol = c("→ indicates regression path",
+                      "Crude estimates",
+                      "Standardized estimates"))
+}
+```
+
+###############
+
+
+
+
+
+
+### to generate CFA results with improved readability
+
+```{r, echo = F}
+#goodness of fit indicators for ml
+cfa.summary.mlm.a <- function(fit){
+  options(scipen = 999)
+  cfa.measure <- fitMeasures(fit,    #obtain specified measured.
+                            c("chisq.scaled", 
+                              "df.scaled", 
+                              "pvalue.scaled", 
+                              "cfi.scaled", 
+                              "tli.scaled",
+                              "rmsea.scaled",
+                              "rmsea.pvalue.scaled",
+                              "srmr_bentler",
+                              "chisq.scaling.factor")) 
+  names(cfa.measure) <- c("chi square", "df", "p value", "CFI", "TLI", "RMSEA", "RMSEA p value", "SRMR", "CSF")
+  #turn named vector to data frame
+cfa.tab.a <- cfa.measure %>%  
+  tibble(name= names(cfa.measure), value = cfa.measure) %>% # vector to df
+  select(Measure = name, Value = value) %>%  #select and rename columns
+  mutate(Value = round(as.numeric(Value),3)) 
+}
+#factor loading
+cfa.summary.b <- function(fit, fa.num, item.num, estimator){
+  options(scipen = 999)
+  #factor loading
+  cfa.tab.b <- parameterEstimates(fit, standardized=TRUE) %>% # obtain estimates
+  filter(op == "=~") %>%  #select "is measured by" rows
+  mutate(Parameter = paste0(lhs, "→", rhs),
+         pvalue = case_when(as.numeric(pvalue)<0.001~"<0.001", 
+                            as.numeric(pvalue)>=0.001~as.character(pvalue)
+                            )
+         ) |> 
+  select(Parameter,
+         Beta=std.all, #std estimates
+         SE=se, #standard error
+         Z=z, #z statistics
+         'p-value'=pvalue #p value
+         ) 
+  # %>%  
+  # kable(digits = 3, #rounded to 3
+  #       format="markdown", #Latex markdown
+  #       booktabs=TRUE, #Latex booktabs
+  #       caption=paste("Factor Loadings for",fa.num,"factor CFA model estimated by ", estimator)) %>% #caption
+  # kable_styling(latex_options = "striped") %>% #gray every other row
+  # row_spec(0, background = "#9999CC") # color the first row
+  # cfa.tab.b
+  }
+
+#Variance
+cfa.summary.c <- function(fit, fa.num, item.num, estimator){
+  options(scipen = 999)
+  #Variance
+  type <- rep(c("Residual", "Total"), 
+            time = c(item.num, fa.num)) #create a new row clarifying types of variance
+
+variance <- parameterEstimates(fit, standardized=TRUE) %>% #obtain estimates
+  filter(op == "~~") #select "is correlated with" rows
+variance <- variance[1:sum(item.num,fa.num),] #subset 1:18 rows (variance row)
+variance <- cbind(type, variance) #add column
+cfa.tab.c <- variance |> 
+  mutate(pvalue = case_when(as.numeric(pvalue)<0.001~"<0.001", 
+                            as.numeric(pvalue)>=0.001~as.character(pvalue)
+                            )) |> 
+  select(Parameter = type, #select and rename variables
+                   Indicator=rhs, #right hand side column
+                   B=est, #estimates
+                   "Beta*"=std.all,#std estimates
+                   SE=se,#standard error
+                   Z=z, #z statistics
+                   'p-value'=pvalue #p value
+                   ) 
+
+# %>% 
+#   kable(digits = 3, #rounded
+#         format="markdown",  #Latex markdown
+#         booktabs=TRUE, #Latex booktabs
+#         caption=paste("Variances for", fa.num, "factor model estimated by ", estimator)) %>% #caption
+#   kable_styling(latex_options = "striped") %>% # gray every other row
+#   row_spec(0, background = "#9999CC") # color the variable row
+#   cfa.tab.c
+}
+
+#Covariance
+cfa.summary.d <- function(fit, fa.num, item.num, estimator){
+  options(scipen = 999)
+  #covariance
+  variance <- parameterEstimates(fit, standardized=TRUE) %>%
+  filter(op == "~~")
+  covar.num = (fa.num+(fa.num-1))/2
+variance <- variance[sum(item.num,fa.num,1):sum(item.num,fa.num,covar.num),]
+type <- paste(variance$lhs, "←→", variance$rhs) 
+variance <- cbind(type, variance)
+rownames(variance) <- NULL
+cfa.tab.d <- variance |> 
+  mutate(pvalue = case_when(as.numeric(pvalue)<0.001~"<0.001", 
+                            as.numeric(pvalue)>=0.001~as.character(pvalue)
+                            )) |> 
+  select(Parameter=type,
+         B=est, 
+         Beta=std.all,
+         SE=se,
+         Z=z, 
+         'p-value'=pvalue 
+         )
+# %>% 
+#   kable(digits = 3, 
+#         format="markdown", 
+#         booktabs=TRUE, 
+#         caption=paste("Covariances for", fa.num, 
+#                       "factor model estimated by ", 
+#                       estimator)) %>% 
+#   kable_styling(latex_options = "striped") %>% 
+#   row_spec(0, background = "#9999CC")
+#   cfa.tab.d
+}
+
+```
+
+### Write a function to simplify plotting of merged tables for multi-group fit indicies
+
+```{r, echo=F}
+multi.fit.tab <- function(data, title, more.footnote = NULL){
+data <- data |> 
+  rename(p = 'p value',
+         p2 = 'RMSEA p value',
+         chi = 'chi square') |> 
+  mutate(df = as.numeric(df) |> round(0),
+         p = case_when(
+           as.numeric(p) < 0.001 ~ "<0.001",
+           as.numeric(p) >= 0.001 ~ p
+           ),
+         p2 = case_when(
+           as.numeric(p2) < 0.001 ~ "<0.001",
+           as.numeric(p2) >= 0.001 ~ p2
+           )
+         ) |>
+  mutate('Chi square (df, p)' = 
+           paste0(chi, "(", df,", ", p, ")"),
+         'RMSEA(p)'           = 
+           paste0(RMSEA, "(", p2, ")"
+                  )
+         ) |> 
+  select(
+    Model,
+    'Chi square (df, p)', 
+    CFI, TLI,
+    'RMSEA(p)', 
+    SRMR, 
+    'CSF*'= CSF
+    ) 
+#print the combined table with adjustment of aesthetics
+data |> 
+  kable(booktabs = T, 
+        #format = "markdown", 
+        caption = 
+          title,
+        align = "lrrrrrr"
+        ) |> 
+  kable_styling(full_width = T) |> 
+  footnote(symbol = 
+             c("Chi square scaling factor", 
+               more.footnote)
+           ) |>
+  column_spec(1, width = "3.0cm") |> 
+  column_spec(2, width = "4cm")|> 
+  column_spec(3, width = "1cm")|> 
+  column_spec(4, width = "1cm")|> 
+  column_spec(5, width = "2.5cm")|> 
+  column_spec(6, width = "1cm") |> 
+  column_spec(7, width = "1cm") 
+}
+```
+
+### Write a function to simplify plotting of merged tables for multi-group fit indicies with chi square difference statistics
+
+```{r, echo=F}
+delta.fit.tab <- function(data, title, more.footnote = NULL, 
+                          compare = "configural",
+                          row.correction = 0){
+  if (compare == "configural"){
+    compare <- "inv1.fit"
+  } else {compare <- paste0(compare, ".fit")}
+  
+  
+  data$'ΔChi-square(df,p)*' <- rep(NA, nrow(data))
+  for (i in 2:nrow(data)){
+    nested <- paste0("inv", sum(i, row.correction), ".fit")
+    diff<- as.numeric(chisq_mlm(eval(parse(text = nested)), 
+                                eval(parse(text = compare)))[1])
+    diff.df <-  as.numeric(chisq_mlm(eval(parse(text = nested)), 
+                                     eval(parse(text = compare)))[2])
+    diff.p<- as.numeric(chisq_mlm(eval(parse(text = nested)), 
+                                  eval(parse(text = compare)))[3])                 
+    data$'ΔChi-square(df,p)*'[i] <-  paste0(diff, "(", diff.df,", ", diff.p, ")")
+  }
+ 
+
+data <- data |> 
+  rename(p = 'p value',
+         p2 = 'RMSEA p value',
+         chi = 'chi square') |> 
+  mutate(df = as.numeric(df) |> round(0),
+         p = case_when(
+           as.numeric(p) < 0.001 ~ "<0.001",
+           as.numeric(p) >= 0.001 ~ p
+           ),
+         p2 = case_when(
+           as.numeric(p2) < 0.001 ~ "<0.001",
+           as.numeric(p2) >= 0.001 ~ p2
+           )
+         ) |>
+  mutate('Chi square (df, p)' = 
+           paste0(chi, "(", df,", ", p, ")"),
+         'RMSEA(p)'           = 
+           paste0(RMSEA, "(", p2, ")"
+              )
+         ) |> 
+  select(
+    Model,
+    'Chi square (df, p)', 
+    'ΔChi-square(df,p)*',
+    CFI, TLI,
+    'RMSEA(p)', 
+    SRMR
+    ) 
+data[1,3] <- "__"
+#print the combined table with adjustment of aesthetics
+data |> 
+  kable(booktabs = T, 
+        #format = "markdown", 
+        caption = 
+          title,
+        align = "lrrrrrr"
+        ) |> 
+  kable_styling(full_width = T) |> 
+  footnote(symbol = 
+             c(paste(
+               "Chi square differece statistics of model of the row compared to", 
+               compare, 
+               "model"), 
+               more.footnote)
+           ) |>
+  column_spec(1, width = "2.8cm") |> 
+  column_spec(2, width = "3.5cm")|> 
+  column_spec(3, width = "3cm")|> 
+  column_spec(4, width = "1cm")|> 
+  column_spec(5, width = "1cm")|> 
+  column_spec(6, width = "2.2cm") |> 
+  column_spec(7, width = "1cm") 
+}
+
+```
+
+### Write a function to simplify plotting aligned residual variance and co-variance tables
+
+```{r, echo=F}
+align.table <- function(data, num.no.header.col, title){
+
+data  |> 
+  kable(
+    digits = 3,
+    booktabs = T,
+    #format = "markdown",
+    caption = title,
+    linesep = ""
+    ) |>  
+  add_header_above(c(" " = num.no.header.col, 
+                     "Elementary level" = 5,
+                     "Secondary level" = 5
+                     )
+                   ) |> 
+  kable_styling(
+    latex_options = "striped"
+  ) |> 
+  footnote(
+           symbol = c(
+             "Un-standardized estimates",
+             "Standardized estimates"
+                      )
+           )
+}
+```
+
+### Write a function for correlation matrix with numbers
+
+```{r, echo = F}
+mymatrix <- function(data, fig.num = 3){
+  library(GGally)
+ggcorr(data, 
+       geom = "blank", 
+       label = TRUE, 
+       hjust = 0.9, 
+       color = "red", 
+       face = "bold", 
+       method = c("pairwise","pearson"),
+       digits = 2,
+       size= 2.5,
+       label_size = 2.5,
+       label_round = 2,
+       layout.exp =1) +
+  geom_point(size = 7, 
+             aes(color = "steelblue", 
+                 alpha = abs(coefficient) > 0.3)) +
+  scale_alpha_manual(values = c("TRUE" = 0.4, 
+                                "FALSE" = 0)) +
+    geom_point(size = 8, 
+               aes(color = "red", 
+                   alpha = abs(coefficient) > 0.6)) +
+  scale_alpha_manual(values = c("TRUE" = 0.4, 
+                                "FALSE" = 0)) +
+  guides(color = FALSE, 
+         alpha = FALSE) +
+  labs(title = paste("Figure ", fig.num," Pearson correlation matrix of the indicators"),
+       caption = 
+         " Red circles indicates the absolute of correlation coefficient >= 0.6 
+        green circle indicates >= 0.3")+
+  theme(plot.title = element_text(size = 12,
+                                  face = "bold",
+                                  hjust = 0.5),
+        plot.caption = element_text(color = "red"))
+}
+
+```
+
+### to generate a function for histogram overlapping with density plot
+
+```{r, echo = F}
+corr.density <- function(data, fig.num = 1){
+  data %>% 
+  pivot_longer(everything()) %>%  #longer format
+  ggplot(aes(x = value)) + #x axis used variable "value" (a default of pivot)
+  geom_histogram(binwidth = 1, aes(y = ..density..), #match ys of density and histogram plots
+                 color = "black",  fill = "#9999CC")+  # adjust aesthetics for hist
+  geom_density(fill = "pink", alpha = 0.25)+ #adjust aesthetics for density plot
+  facet_wrap(~name, scales = "free", ncol =4) + #wrap by name variable
+  theme(panel.grid.major = element_blank(), #get rid of the  grids
+        panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = "white",#adjust the background
+                                        color = "black"),
+        strip.background = element_rect(color = "black",#adjust the strips aes
+                                        fill = "steelblue"),
+        strip.text = element_text(size =8, color = "white"), #adjust strip text
+        axis.title.x = element_text(size = 3), #adjust the x text
+        axis.title.y = element_text(size = 3), # adjust the y text
+        plot.title = element_text(size = 12, 
+                                  face = "bold",
+                                  hjust = 0.5))+ #adjust the title
+  labs(title = paste("Figure ", fig.num," Distribution of the indicators")) #title it
+  }
+
+```
+
+### to generate a function for violin overlapping with box plot
+
+```{r, echo = F}
+violin.box <- function(data, fig.num = 2){
+  mbi.long <- data %>% pivot_longer(everything(), names_to = "item", values_to = "score")
+
+mbi.long %>% 
+  ggplot(aes(x = item, y = score)) +
+  geom_violin(trim=F, fill = "#9999CC") +
+  theme(legend.position = "none", 
+        axis.text.x = element_text(angle = 45, hjust =1),
+        axis.title = element_text(size = 12),
+        panel.background = element_rect(fill = "white", color = "black"),
+        plot.title = element_text(face="bold",
+                                  hjust = 0.5),
+        axis.title.x = element_blank())+
+  labs(x = "Item", 
+       y = "Score",
+       title = paste("Figure 2 ", fig.num, " Violin plot of the indicators"))+
+  geom_boxplot(width = 0.1, fill = "white")
+}
+```
+
+### To generate a function describing continuous data set
+
+```{r, echo=F}
+descriptive <- function(data){
+  library(finalfit)
+library(kableExtra)
+inspect.table <- ff_glimpse(data)$Continuous
+inspect.table$label <- NULL
+inspect.table %>% 
+  mutate('Q1Q3' = paste(quartile_25, 
+                        quartile_75, 
+                        sep = " ~ ")) %>% 
+  select(n, 
+         'n of NA' = missing_n, 
+         'Mean' = mean, 
+         'Median' = median,
+         'SD' = sd, 
+         'Min' = min, 
+         'Max' = max,
+         'Q1~Q3' = Q1Q3) %>%
+  kable(booktabs = T,  
+        align = "r",
+        longtable = T,
+        linesep = "",
+        caption = "Descriptive statistics for measurements") %>% 
+  add_header_above(c(" ", 
+                     " " = 2,
+                     "Central tendency" = 2, 
+                     "Dispersion tendency" = 4)) %>% 
+  kable_styling(latex_options = c("striped", 
+                                  "repeat_header")) %>% 
+  column_spec(1, width = "3cm")
+}
+```
+
+### Write a function describing continuous data set
+
+```{r, echo=F}
+descriptive <- function(data){
+  library(finalfit)
+library(kableExtra)
+inspect.table <- ff_glimpse(data)$Continuous
+inspect.table$label <- NULL
+inspect.table %>%
+  mutate('Q1Q3' = paste(quartile_25,
+                        quartile_75,
+                        sep = " ~ ")) %>%
+  select(n,
+         'n of NA' = missing_n,
+         'Mean' = mean,
+         'Median' = median,
+         'SD' = sd,
+         'Min' = min,
+         'Max' = max,
+         'Q1~Q3' = Q1Q3) %>%
+  kable(booktabs = T,
+        align = "r",
+        longtable = T,
+        linesep = "",
+        caption = "Descriptive statistics for measurements") %>%
+  add_header_above(c(" ",
+                     " " = 2,
+                     "Central tendency" = 2,
+                     "Dispersion tendency" = 4)) %>%
+  kable_styling(latex_options = c("striped",
+                                  "repeat_header")) %>%
+  column_spec(1, width = "3cm")
+}
+```
+
+### Write a function for histogram overlapping with density plot
+
+```{r, echo = F}
+corr.density <- function(data, fig.num = 1, group){
+  data %>%
+  pivot_longer(everything()) %>%  #longer format
+  ggplot(aes(x = value)) + #x axis used variable "value" (a default of pivot)
+  geom_histogram(binwidth = 1, aes(y = ..density..), #match ys of density and histogram plots
+                 color = "black",  fill = "#9999CC")+  # adjust aesthetics for hist
+  geom_density(fill = "pink", alpha = 0.25)+ #adjust aesthetics for density plot
+  facet_wrap(~name, scales = "free", ncol =5) + #wrap by name variable
+  theme(panel.grid.major = element_blank(), #get rid of the  grids
+        panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = "white",#adjust the background
+                                        color = "black"),
+        strip.background = element_rect(color = "black",#adjust the strips aes
+                                        fill = "steelblue"),
+        strip.text = element_text(size =8, color = "white"), #adjust strip text
+        axis.title.x = element_text(size = 3), #adjust the x text
+        axis.title.y = element_text(size = 3), # adjust the y text
+        plot.title = element_text(size = 12,
+                                  face = "bold",
+                                  hjust = 0.5))+ #adjust the title
+  labs(title = paste("Figure", fig.num," Distribution of the indicators for", group)) #title it
+  }
+```
+
+### Write a function to generate dot distribution plot
+
+```{r, echo=F}
+dot.dist <- 
+  function(data, type, title){
+    data |>
+      t() |> 
+      as.data.frame() %>% 
+      mutate(Item = rownames(.)) |> 
+      rowwise() |> 
+      mutate(Median = eval(parse(text = type))(V1:V580)) |> 
+      ggstatsplot::ggdotplotstats(
+        point.args = list(color = "red", size = 3, shape = 13),
+        xlab = paste(type, "ratings"),
+        title = title,
+        x = Median,
+        y = Item
+      )
+    }
+```
+
+### Write a fuction to generate correlation matrix with statistical test
+
+```{r, echo=F}
+mycor <- 
+  function(data, cols, title){
+  data |> 
+      select(all_of(cols)) |> 
+      ggstatsplot::ggcorrmat(
+        colors = c("#B2182B", "white", "#4D4D4D"),
+        title = title,
+        matrix.type  = "lower"
+      )
+    }
+```
+
+# Inspect the data
+
+## Distribution of values
+
+```{r,fig.width= 8, fig.height = 13}
+#generate the plots, by subgroup of teachers
+p.dist.elm <- 
+  corr.density(
+    ele.cali, 
+    fig.num = "1(a)", 
+    group = "calibration dataset"
+    )
+
+p.dist.sec <- 
+  corr.density(
+    ele.vali, 
+    fig.num = "1(b)",
+    group = "validation dataset"
+    )
+#print the plot
+library(patchwork); p.dist.elm/p.dist.sec
+```
+
+## Distributions of Item statistics (median)
+
+```{r,fig.width= 8, fig.height = 7}
+#generate plot by subgroups of teachers
+p.dot.elm <- 
+  dot.dist(
+    data = ele.cali, type = "median", 
+    title = "(a) Calibration dataset"
+    )
+p.dot.sec <- 
+  dot.dist(
+    data = ele.vali,  type = "median", 
+    title = "(b) Validation dataset"
+    )
+#plot layout
+patchwork <- p.dot.elm|p.dot.sec
+#print the plot with a general title
+patchwork+plot_annotation(
+    title = 
+      'Figure 2 Distributions of median rating for each item',
+    theme = 
+      theme(plot.title = 
+              element_text(
+                size = 16,
+                face = "bold",
+                vjust = -1.5,
+                hjust =0.5)
+            )
+    )
+```
+
+## Correlation
+
+```{r,fig.width= 10, fig.height = 15}
+#save variable names of MBI indicators to object
+indi.EE <- paste0("EE", 1:3)
+indi.DP <- paste0("DP", 1:2)
+indi.PA <- paste0("PA", 1:3)
+scale.MBI <- 
+  c(indi.EE, 
+    indi.DP, 
+    indi.PA)
+#save variable names of TSS indicators to object
+indi.ROLEC <- paste0("ROLEC", 1:2)
+indi.ROLEA <- paste0("ROLEA", 1:2)
+indi.WORK <- paste0("WORK", 1:2)
+indi.CLC <- paste0("CCLIM", 1:4)
+indi.DEC <- paste0("DEC", 1:2)
+indi.SUPS <- paste0("SSUP", 1:2)
+indi.PEERS <- paste0("PSUP", 1:2)
+scale.TSS <- 
+  c(indi.ROLEC, 
+    indi.ROLEA, 
+    indi.WORK, 
+    indi.CLC, 
+    indi.DEC, 
+    indi.SUPS, 
+    indi.PEERS)
+```
+
+```{r,fig.width= 10, fig.height = 15}
+#save variable names of other indicators to object
+scale.SE <- paste0("SELF", 1:3)
+scale.ELC <- paste0("ELC", 1:5)
+
+#generate the correlation plots scale-wise
+p.cor.MBI.cali <- 
+       mycor(
+         data = ele.cali, 
+         cols = scale.MBI, 
+         "(a1) Indicators on MBI, 
+         calibration dataset"
+         )
+
+p.cor.MBI.vali <- 
+       mycor(
+         data = ele.vali, 
+         cols = scale.MBI, 
+         "(a2) Indicators on MBI, 
+         validation dataset"
+         )
+
+p.cor.TSS.cali <- 
+       mycor(
+         data = ele.cali, 
+         cols = scale.TSS, 
+         "(b1) Indicators on TSS, calibration dataset"
+         )
+
+p.cor.TSS.vali <- 
+       mycor(
+         data = ele.vali, 
+         cols = scale.TSS, 
+         "(b2) Indicators on TSS, validation dataset"
+         )
+
+p.cor.SE.cali <- 
+       mycor(
+         data = ele.cali, 
+         cols = scale.SE, 
+         "(c1) Indicators on SE, 
+         calibration dataset"
+         )
+
+p.cor.SE.vali <- 
+       mycor(
+         data = ele.vali, 
+         cols = scale.SE, 
+         "(c2) Indicators on SE, 
+         validation dataset"
+         )
+
+p.cor.ELC.cali <- 
+       mycor(
+         data = ele.cali, 
+         cols = scale.ELC, 
+         "(d1) Indicators on SE, 
+         calibration dataset"
+         )
+
+p.cor.ELC.vali <- 
+       mycor(
+         data = ele.vali, 
+         cols = scale.ELC, 
+         "(d2) Indicators on SE, 
+         validation dataset"
+         )
+```
+
+```{r,fig.width= 10, fig.height = 15}
+#plot sub-figure layout
+patchwork1 <- 
+  p.cor.MBI.cali/p.cor.SE.cali/p.cor.ELC.cali|
+  p.cor.MBI.vali/p.cor.SE.vali/p.cor.ELC.vali
+
+
+patchwork2 <- 
+  p.cor.TSS.cali/p.cor.TSS.vali
+
+patchwork1+
+  plot_annotation(
+    title = 
+      'Figure 3-1 Correlalogram for indicators of TSS scale',
+    theme = 
+      theme(plot.title = 
+              element_text(
+                size = 16, 
+                face = "bold", 
+                vjust = -1.5, 
+                hjust =0.5
+                )
+            )
+    )
+
+
+patchwork2+
+  plot_annotation(
+    title = 
+      'Figure 3-2 Correlalogram for indicators of MBI, self-esteem, external 
+    locus of control scales',
+    theme = 
+      theme(plot.title = 
+              element_text(
+                size = 16, 
+                face = "bold", 
+                vjust = -1.5, 
+                hjust =0.5
+                )
+            )
+    )
+```
+
+# Test the equivalence of causal structure involving the impact of organizational and personality factors on three facets of burnout for elementray teachers between calibration and validation datasets
+
+This involves three steps:
+
+(a) Define, modify and estimate a baseline model for the calibration group:
+
+(b) Form and test the multi-group configural model with no parameter constraints.
+
+(c) to test for the in-variance of common structural regression (or causal) paths across calibration and validation groups. 
+
+## Define and estimate the baseline model for the calibration group
+
+### Establish and modify the hypothesized model (initial model) for calibration group 
+
+(1) Define the initial model for calibration group
+
+```{r}
+initial.model <- '
+# Burnout Factors:
+# EE: EmotionalExhaustion;DP: Depersonalization;PA: PersonalAccomplishment
+ F1ROLA =~ ROLEA1 + ROLEA2
+ F2ROLC =~ ROLEC1 + ROLEC2
+ F3WORK =~ WORK1 + WORK2
+ F4CLIM =~ CCLIM1 + CCLIM2 + CCLIM3 + CCLIM4
+ F5DEC =~ DEC1 + DEC2
+ F6SSUP =~ SSUP1 + SSUP2
+ F7PSUP =~ PSUP1 + PSUP2
+ F8SELF =~ SELF1 + SELF2 + SELF3
+ F9ELC =~ ELC1 + ELC2 + ELC3 + ELC4 + ELC5
+ F10EE =~ EE1 + EE2 + EE3
+ F11DP =~ DP1 + DP2
+ F12PA =~ PA1 + PA2 + PA3
+# Regression paths:
+ F8SELF ~ F5DEC + F6SSUP + F7PSUP
+ F9ELC ~ F5DEC
+ F10EE ~ F2ROLC + F3WORK + F4CLIM
+ F11DP ~ F2ROLC + F10EE
+ F12PA ~ F1ROLA + F8SELF + F9ELC + F10EE + F11DP
+'
+```
+
+(2) Visualize the initial model for calibration group
+
+To approximate the visual effect on slides, the coordinates for each nodes were defined on a 60 by 72 matrix.
+
+```{r}
+library(semPlot)
+#generate a matrix
+m <- matrix(NA, 60, 72)
+#define positions of the factors
+m[12, 68] <- "F1ROLA"
+m[12, 40] <- "F2ROLC"
+m[12, 28] <- "F3WORK"
+m[12,12] <- "F4CLIM"
+m[21,12] <-"F5DEC"
+m[40,12] <-"F6SSUP"
+m[53,9] <-"F7PSUP"
+m[44,24] <-"F8SELF"
+m[52,40] <-"F9ELC"
+m[37,48] <-"F10EE"
+m[26,60] <-"F11DP"
+m[48,64] <-"F12PA"
+#define the positions of the indicators (parcelled items)
+m[4, 72] <- "ROLEA1"
+m[4, 64] <- "ROLEA2"
+m[4, 48] <- "ROLEC1"
+m[4, 40] <- "ROLEC2"
+m[4, 32] <- "WORK1"
+m[4, 24] <- "WORK2"
+m[4, 16] <- "CCLIM1"
+m[5, 10] <- "CCLIM2"
+m[10, 4] <- "CCLIM3"
+m[15, 4] <- "CCLIM4"
+m[20, 4] <- "DEC1"
+m[27, 6] <- "DEC2"
+m[36, 4] <- "SSUP1"
+m[40, 4] <- "SSUP2"
+m[59, 6] <- "PSUP1"
+m[59, 13] <- "PSUP2"
+m[48, 32] <- "SELF1"
+m[52, 28] <- "SELF2"
+m[51, 21] <- "SELF3"
+m[56, 50] <- "ELC1"
+m[60, 48] <- "ELC2"
+m[60, 42] <- "ELC3"
+m[60, 35] <- "ELC4"
+m[56, 31] <- "ELC5"
+m[43, 45] <- "EE1"
+m[39, 40] <- "EE2"
+m[35, 38] <- "EE3"
+m[20, 64] <- "DP1"
+m[20, 58] <- "DP2"
+m[52, 71] <- "PA1"
+m[56, 64] <- "PA2"
+m[53, 57] <- "PA3"
+```
+
+The diagram of the initial model was generated.
+
+```{r, fig.height =  10, fig.width = 14, cache=TRUE}
+semPaths(semPlotModel(initial.model),
+         style = "lisrel",
+         rotation = 2,
+         sizeLat = 6,
+         sizeLat2 = 5,
+         sizeMan = 5,
+         sizeMan2 = 2,
+         residScale = 4,
+         shapeMan = "rectangle",
+         edge.color = c(rep("black", 32), #34 
+                        rep("blue", 14),
+                        rep("gray", 32),
+                        rep("red", 5)), 
+         residuals = T,  
+         layout = m,
+         nCharNodes=0,
+         optimizeLatRes = T,
+         exoVar = F)
+title(main = list("Figure 4. Hypothesized model of elementary teacher burnout",
+                  cex = 1.5, font =1),
+     outer = F, line = -1)
+title(
+  sub = 
+  "Notes: Red arrow indicates factor residuals; gray arrow indicates error residuals;
+  blue arrow indicates regression path; black arrow indicates factor loading",
+  ine = 0, adj = 0.7
+  )
+```
+
+(3) Estimate the initial model for calibration group
+
+```{r}
+library(lavaan)
+library(knitr)
+library(kableExtra)
+model1 <- initial.model # defined above
+# Estimate the model with the robust (MLM) estimator:
+sem1 <- 
+  sem(
+    model1,
+    data = ele.cali,
+    estimator = "MLM",
+    mimic = "Mplus"
+  )
+# Numerical summary of the model:
+sem1.fit <-
+  cfa.summary.mlm.a(sem1) |>
+  t() |>
+  as.data.frame() 
+
+names(sem1.fit) <- sem1.fit[1,]
+sem1.fit <- sem1.fit[-1,]
+rownames(sem1.fit) <- NULL
+
+sem1.fit <- 
+  sem1.fit |> 
+  mutate(Model = "Initial model") |> 
+  select(Model, everything())
+#print the table
+multi.fit.tab(sem1.fit, "Fit indices for calibration dataset(initial model)")
+```
+
+The values of fit indices were basically acceptable, though most of them were still fell a little below/above the required cutoff. See table 1. However, residual variance and co-variance still needed to be checked for any anomaly. 
+
+```{r}
+#print concern table for model 1
+concern.table(sem1, 
+              nofpath = 14, 
+              nofpredictor = 7, 
+              "model1")
+```
+
+See table 2. I can readily see a couple of structural regression paths were not significant. I left these aberrant parameters untreated for the current stage.
+
+The correlation between Factors 3 (workload) and 2 (role conflict) exceeds a value of 1.00, which are Heywood cases. This finding indicated a definite overlapping of variance between the factors of Role Conflict and Work Overload such that divergent (i.e., discriminant) validity between these two constructs is in-distinctive. It needed to be addressed.
+
+(4) Re-specification of initial model to model 2
+
+Given the two factors in the Heywood case are different factors comprising TSS construct, one approach is to combine these two factors into one, leading to 12-1=11 factors in the structure. I did this and refit the model (model 2). 
+
+
+```{r}
+#replace the old parameters with new one
+library(stringr)
+model2 <- 
+  initial.model |> 
+  str_replace(".F3WORK.=~.WORK1.+.WORK2\n", "") |> 
+  str_replace(".F2ROLC.=~.ROLEC1.+.ROLEC2", 
+              " F2ROWO =~ ROLEC1 + ROLEC2 + WORK1 + WORK2") |> 
+  str_replace_all("F3WORK", "F2ROWO") |> 
+  str_replace_all("F2ROLC", "F2ROWO") |> 
+  str_replace_all("F2ROWO.+.F2ROWO", "F2ROWO")
+
+#update the factor indexing
+for (i in 4:12){
+  original <- paste0("\\sF", i) # \\s is  regex for white-space
+  new <- paste0(" F", i-1)
+  model2 <- model2 |> 
+    str_replace_all(original, new)
+}
+```
+
+### Establish and modify the model 2 for calibration group 
+
+(1) Visualize model 2
+
+```{r}
+m[12, 40] <- NA
+m[12, 28] <- NA
+m[12, 35] <- "F2ROWO"
+m[12,12] <- "F3CLIM"
+m[21,12] <-"F4DEC"
+m[40,12] <-"F5SSUP"
+m[53,9] <-"F6PSUP"
+m[44,24] <-"F7SELF"
+m[52,40] <-"F8ELC"
+m[37,48] <-"F9EE"
+m[26,60] <-"F10DP"
+m[48,64] <-"F11PA"
+m[4, 24] <- NA
+m[4, 48] <- NA
+m[7, 26] <- "WORK2"
+m[7, 46] <- "ROLEC1"
+```
+
+```{r, fig.height =  10, fig.width = 14, cache=TRUE}
+grps <- list(
+  c("F2ROWO"),
+  c(
+    "F3CLIM",
+    "F4DEC",
+    "F5SSUP",
+    "F6PSUP",
+    "F7SELF",
+    "F8ELC",
+    "F9EE",
+    "F10DP",
+    "F11PA",
+    "F1ROLA"
+  )
+)
+semPaths(semPlotModel(model2),
+         style = "lisrel",
+         rotation = 2,
+         sizeLat = 6,
+         sizeLat2 = 5,
+         sizeMan = 5,
+         sizeMan2 = 2,
+         residScale = 4,
+         shapeMan = "rectangle",
+         edge.color = c(rep("black", 32), #34 
+                        rep("blue", 13),
+                        rep("gray", 32),
+                        rep("red", 5)), 
+         residuals = T,
+         layout = m,
+         nCharNodes=0,
+         optimizeLatRes = T,
+         exoVar = F,
+         group = grps,
+         color = c("orange", "white"))
+title(main = list("Figure 5. Model 2 of teacher burnout, modified from initial model",
+                  cex = 1.5, font =1),
+     outer = F, line = -1)
+title(sub = 
+"Notes: Red arrow indicates factor residuals; gray arrow indicates error residuals;
+        Blue arrow indicates regression path; black arrow indicates factor loading;
+                                         Newly merged factor is highlighted in orange",
+     line = 0, adj = 0.7)
+```
+
+(2) Estimate model2 for calibration group
+
+```{r}
+sem2 <- 
+  sem(
+    model2,
+    data = ele.cali,
+    estimator = "MLM",
+    mimic = "Mplus"
+  )
+```
+
+```{r}
+# Numerical summary of the model:
+sem2.fit <-
+  cfa.summary.mlm.a(sem2) |>
+  t() |>
+  as.data.frame() 
+
+#combine with preceding fit indices
+names(sem2.fit) <- sem2.fit[1,]
+sem2.fit <- sem2.fit[-1,]
+rownames(sem2.fit) <- NULL
+
+sem2.fit <- 
+  sem2.fit |> 
+  mutate(Model = "Model2") |> 
+  select(Model, everything())
+
+sem12.fit <- rbind(sem1.fit, sem2.fit)
+
+#print the table
+multi.fit.tab(sem12.fit, 
+              "Fit indices for calibration dataset, model2 comparing with preceding model")
+```
+
+See table 3. Goodness-of-fit statistics for this modified model 2 were as follows: chi-square(436) = 955.863, CFI= 0.943, RMSEA = 0.045, suggesting relatively well fit. 
+
+(3) Re-specification of model 2 to model 3&4
+
+```{r}
+#extract needed variables
+MI.model2 <- modindices(sem2,
+                  standardized = TRUE,
+                  sort. = TRUE,
+                  maximum.number = 50) |>
+  filter(op %in% c("~","~~")) 
+
+#adapt to publication style
+MI.model2 <- MI.model2 |>
+  mutate(op = ifelse(op == "~", "→","←→"),
+    Parameter = paste(rhs, op, lhs)) |>
+  select(
+    'Parameter*' = Parameter,
+    MI = mi,
+    EPC = epc,
+    "std EPC" = sepc.all
+  ) |>
+  filter(MI > 30) 
+
+#print the table
+MI.model2 |> 
+  kable(digits = 3,
+        booktab = T,
+        linesep = "",
+        caption = "Selected modification indices for model 2") |>
+  kable_styling(latex_options = "striped") |>
+  row_spec(c(1,2), color = "red") |>
+  footnote(general =
+             "Parameters highlighted in red is of special concern",
+    symbol = c('"→" indicates regression path; "←→" indicates residual covariance'))
+```
+
+See table 4. Two parameters with the highest values were substantively meaningful. They are (a) the structural path of F8 on F2 (External Locus of Control on Role Conflict/Work Overload) and (b) a covariance between residuals associated with the observed variables EE1 and EE2, both of which are highlighted and flagged in red. They were incorporated into the model consecutively. F8 on F2 went first. They were re-specified as follows:
+
+
+```{r}
+model3 <- paste(model2, "F8ELC ~ F2ROWO\n")
+model4 <- paste(model3, "EE1 ~~ EE2\n")
+
+```
+
+### Establish and modify the model 3 and model 4 for calibration group, consecutively
+
+(1) Visualize model 2 and model 3
+
+Model 3 was defined by re-specifying model. After model 3 was estimated, model 4 was defined by re-specifying model 3.
+
+```{r, fig.height =  16, fig.width = 11, cache=TRUE}
+par(mfrow=c(2,1))
+semPaths(semPlotModel(model3),
+         style = "lisrel",
+         rotation = 2,
+         sizeLat = 6,
+         sizeLat2 = 5,
+         sizeMan = 5,
+         sizeMan2 = 2,
+         residScale = 4,
+         shapeMan = "rectangle",
+         edge.color = c(rep("black", 32), #34 
+                        rep("blue", 13),
+                        rep("orange",1),
+                        rep("gray", 32),
+                        rep("red", 5)), 
+         residuals = T,
+         layout = m,
+         nCharNodes=0,
+         optimizeLatRes = T,
+         exoVar = F)
+title(main = list(
+  "Figure 6. Model 3 of elementary teacher burnout, modified from model 2",
+                  cex = 1.5, font =1
+  ),
+     outer = F, line = -1)
+title(sub = "Notes: Red arrow indicates factor residuals; gray arrow indicates error residuals;
+     Blue arrow indicates regression path; black arrow indicates factor loading;
+     Newly incorporated parameter is highlighted in orange",
+     line = 1, adj = 0.7)
+
+semPaths(semPlotModel(model4),
+         style = "lisrel",
+         rotation = 2,
+         covAtResiduals = F,
+         sizeLat = 6,
+         sizeLat2 = 5,
+         sizeMan = 5,
+         sizeMan2 = 2,
+         residScale = 4,
+         shapeMan = "rectangle",
+         edge.color = c(rep("black", 32), #34 
+                        rep("blue", 14),
+                        rep("orange",1),
+                        rep("gray", 32),
+                        rep("red", 5)), 
+         residuals = T,
+         layout = m,
+         nCharNodes=0,
+         optimizeLatRes = T,
+         exoVar = F #if exogenous variables also has variance estimated
+         )
+title(main = list(
+  "Figure 7. Model 4 of elementary teacher burnout, modified from model 3",
+                  cex = 1.5, font =1
+  ),
+     outer = F, line = -1)
+title(sub = "Notes: Red arrow indicates factor residuals; gray arrow indicates error residuals;
+     blue arrow indicates regression path; black arrow indicates factor loading;
+     Newly incorporated covariance is highlighted in orange",
+     line = 1, adj = 0.7)
+```
+
+(3) Estimate model 3 and model 4 for calibration group
+
+```{r}
+sem3 <- 
+  sem(
+    model3,
+    data = ele.cali,
+    estimator = "MLM",
+    mimic = "Mplus"
+  )
+
+sem4 <- 
+  sem(
+    model4,
+    data = ele.cali,
+    estimator = "MLM",
+    mimic = "Mplus"
+  )
+```
+
+```{r}
+# Numerical summary of the model:
+sem3.fit <-
+  cfa.summary.mlm.a(sem3) |>
+  t() |>
+  as.data.frame() 
+
+sem4.fit <-
+  cfa.summary.mlm.a(sem4) |>
+  t() |>
+  as.data.frame()
+
+#combine with preceding fit indices
+#model3
+names(sem3.fit) <- sem3.fit[1,]
+sem3.fit <- sem3.fit[-1,]
+rownames(sem3.fit) <- NULL
+
+sem3.fit <- 
+  sem3.fit |> 
+  mutate(Model = "Model3") |> 
+  select(Model, everything())
+#model4
+names(sem4.fit) <- sem4.fit[1,]
+sem4.fit <- sem4.fit[-1,]
+rownames(sem4.fit) <- NULL
+
+sem4.fit <- 
+  sem4.fit |> 
+  mutate(Model = "Model4") |> 
+  select(Model, everything())
+
+
+sem1234.fit <- rbind(sem1.fit, sem2.fit, sem3.fit, sem4.fit)
+
+#print the table
+multi.fit.tab(sem1234.fit, 
+              "Fit indices for calibration dataset, model 3 and model 4 
+               comparing with preceding models")
+```
+
+See table 5. Model had a chi-square[435] of 907.120, CFI of 0.948 and SRMR of 0.05; Fit of model 4 further improved in comparison to model 3, yielding a chi-square[434] of 866.557 with CFI of 0.953 and SRMR of 0.048, all of which met the numeric requirement for acceptable goodness-of-fit. I hence took model 4 as a well-fitting model.
+ 
+Further, I checked the factor-loading, variance and co-variance residual estimates to check the state of aberrant parameters. 
+
+```{r}
+#print concern table for model 4
+concern.table(sem4, 
+              nofpath = 14, 
+              nofpredictor = 6, 
+              "model4")
+```
+
+See table 6. The 
+
+
+(2) Estimate model2 for calibration group
+
+
+### Establish and modify the model 2 for calibration group 
+(1) Visualize model 2
+(2) Estimate model2 for calibration group
+(3) Re-specification of model2
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+```{r}
+```
+
