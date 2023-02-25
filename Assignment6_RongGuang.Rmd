@@ -92,7 +92,7 @@ chisq_mlm <- function(fit_nested, fit_parent) {
 #write a function for minus calculation
 minus <- function(x,y) {x - y}
 #write a function to print a table with concerned parameters
-concern.table <- function(sem, nofpath, nofpredictor, model){
+concern.table <- function(sem, nofpath = 0, nofpredictor = 0, model){
 options(scipen = 999)
 #This is for structural path residual variance
 ##regression path estimates
@@ -125,7 +125,7 @@ variance <- parameterEstimates(sem, standardized=TRUE)  |>
   filter(op == "~~") #select "is correlated with" rows
 ##subset needed rows (variance row)
 variance <- variance %>%
-  filter(str_detect(rhs, "SELF$|ELC$|EE$|DP$|PA$"))
+  filter(str_detect(rhs, "SELF$|ELC$|EE$|DP$|PA$"), lhs == rhs)
 
 n.dep <- nrow(variance)
 
@@ -192,13 +192,14 @@ sem.tab.covariance$`Beta` <- cell_spec(sem.tab.covariance$`Beta`,
 #bind the three tables
 concern.table <- rbind(sem.parameter, sem.tab.variance, sem.tab.covariance)
 
-
+#round second column B un-standardized, rows of regression paths
 concern.table[1:nofpath, 2] <-
   as.character(round(as.numeric(concern.table[1:nofpath, 2]),3))
-
+#round second column B un-standardized, rows of residual covariance
 concern.table[sum(nofpath, n.dep, 1):sum(nofpath, n.cov,n.dep), 2] <-
   as.character(round(as.numeric(concern.table[sum(nofpath, n.dep, 1):sum(nofpath, n.cov,n.dep), 2]),3))
 
+#round last column p value, all rows
 concern.table[sum(nofpath,1):sum(nofpath, n.cov, n.dep),6] <-
   as.character(round(
     as.numeric(
@@ -206,7 +207,7 @@ concern.table[sum(nofpath,1):sum(nofpath, n.cov, n.dep),6] <-
       ),
     3)
     )
-
+#round third column standardized B, all rows
 concern.table[1:sum(nofpath, 5),3] <-
   as.character(round(
     as.numeric(
@@ -241,183 +242,14 @@ concern.table |>
   pack_rows("Exogenous factors (Residual covariance)",
             sum(nofpath, 6), sum(nofpath, 5, n.cov)) |>
   footnote(general = "Values highlighted in red should be taken note of",
-           symbol = c("→ indicates regression path",
+           symbol = c("→ indicates regression path; ←→ indicates covariance",
                       "Crude estimates",
                       "Standardized estimates"))
 }
 ```
 
 
-
-############3
-
-### Write a function to print a table with concerned parameters
-
-```{r, echo = F, eval=F}
-#write a function for minus calculation
-minus <- function(x,y) {x - y}
-#write a function to print a table with concerned parameters
-concern.table <- function(sem, nofpath, nofpredictor, n_new_cov,model){
-options(scipen = 999)
-#This is for structural path residual variance
-##regression path estimates
-sem.parameter <- parameterEstimates(sem4, standardized=TRUE) |>  # obtain estimates
-  filter(op == "~") |>   #select "is measured by" rows
-  mutate(Parameter = paste0(rhs, "→", lhs)) |>
-  select(Parameter,
-         'B'=est, #estimates
-         'Beta'=std.all,#estimates standardized
-         SE=se, #standard error
-         Z=z, #z statistics
-         'p-value'=pvalue #p value
-         )
-
-##round the p-value column
-sem.parameter$`p-value` <- sem.parameter$`p-value` |>
-  round(3)
-
-##add a conditional logic to the p-value column that >0.05 cell shows in red
-sem.parameter$`p-value` <- cell_spec(sem.parameter$`p-value`,
-                                     color = ifelse(
-                                       sem.parameter$`p-value` > 0.05,
-                                       "red",
-                                       "black")
-                                     )
-
-#This is for the residual variance of dependence variable
-##obtain estimates
-variance <- parameterEstimates(sem4, standardized=TRUE)  |>
-  filter(op == "~~") #select "is correlated with" rows
-##subset needed rows (variance row)
-variance <- variance %>%
-  filter(str_detect(rhs, "SELF$|ELC$|EE$|DP$|PA$"))
-
-#variance[minus(sum(32,nofpath), 5-1):sum(32,nofpath),] #32 is the n of indicators;
-                                             #12 is the number of factors;
-                                             #5 is the new of row I plan to show
-##select&rename columns
-sem.tab.variance <- variance |> select(
-                   Parameter=rhs, #right hand side column
-                   'B'=est, #estimates
-                   'Beta'=std.all, #standardized estimates
-                   SE=se,#standard error
-                   Z=z, #z statistics
-                   'p-value'=pvalue #p value
-                   )
-##remove the row names
-rownames(sem.tab.variance) <- NULL
-##round the p-value column
-sem.tab.variance$`B` <- sem.tab.variance$`B` |>
-  round(3)
-##add a conditional logic to the beta column that <0 cell shows in red
-sem.tab.variance$`B` <- cell_spec(sem.tab.variance$`B`,
-                                     color = ifelse(
-                                       sem.tab.variance$`B` < 0,
-                                       "red",
-                                       "black")
-                                     )
-
-
-covariance <- parameterEstimates(sem4, standardized=TRUE)  |>
-  filter(op == "~~", lhs != rhs)
-
-n.cov <- nrow(covariance)
-
-sem.tab.covariance <- covariance |>
-  mutate(Parameter = paste0(rhs, "←→", lhs)) |>
-  select(
-    Parameter,
-    #right hand side column
-    'B' = est,
-    #estimates
-    'Beta' = std.all,
-    #standardized estimates
-    SE = se,
-    #standard error
-    Z = z,
-    #z statistics
-    'p-value' = pvalue #p value
-  )
-
-##remove the row names
-rownames(sem.tab.covariance) <- NULL
-##round the std estimate column
-sem.tab.covariance$`Beta` <- sem.tab.covariance$`Beta` |>
-  round(3)
-##add a conditional logic to the p-value column that >0.05 cell shows in red
-sem.tab.covariance$`Beta` <- cell_spec(sem.tab.covariance$`Beta`,
-                                     color = ifelse(
-                                       sem.tab.covariance$`Beta` > 1,
-                                       "red",
-                                       "black")
-                                     )
-
-#bind the three tables
-concern.table <- rbind(sem.parameter, sem.tab.variance, sem.tab.covariance)
-
-concern.table[1:nofpath, 2] <-
-  as.character(round(as.numeric(concern.table[1:nofpath, 2]),3))
-
-concern.table[sum(nofpath, 6):sum(nofpath, nofpredictor*(nofpredictor-1)/2, 5), 2] <-
-  as.character(round(as.numeric(concern.table[sum(nofpath, 6):sum(nofpath, nofpredictor*(nofpredictor-1)/2, 5), 2]),3))
-
-concern.table
-
-concern.table[sum(nofpath,1):sum(nofpath, nofpredictor*(nofpredictor-1)/2, 5),6] <-
-  as.character(round(
-    as.numeric(
-      concern.table[sum(nofpath,1):sum(nofpath, nofpredictor*(nofpredictor-1)/2, 5),6]
-      ),
-    3)
-    )
-
-concern.table[1:sum(nofpath, 5),3] <-
-  as.character(round(
-    as.numeric(
-      concern.table[1:sum(nofpath, 5),3]
-      ),
-    3)
-    )
-
-#further aesthetics
-concern.table |>
-  select("Parameter*" = Parameter,
-         'B†' = B, #estimates
-         'Beta‡' = Beta,#estimates standardized
-         SE, #standard error
-         Z, #z statistics
-         'p-value') |> #p value
-  kable(digits = 3, #rounded to 3
-        #format="latex", #Latex markdown
-        booktabs=TRUE, #Latex booktabs
-        linesep = "",
-        align = "lrrrrr",
-        caption=
-          paste(
-            "Residual variance of structural regression path and select factors for",
-            model),
-        escape = F) |> #caption
-  kable_styling(latex_options = "striped") |> #gray every other row
-  pack_rows("Regression paths (Residual variance)",
-            1,nofpath) |>
-  pack_rows("Endogenous factors(Residual variance)",
-            sum(nofpath,1), sum(nofpath,5)) |>
-  pack_rows("Exogenous factors (Residual covariance)",
-            sum(nofpath, 6), sum(nofpath, n.cov)) |>
-  footnote(general = "Values highlighted in red should be taken note of",
-           symbol = c("→ indicates regression path",
-                      "Crude estimates",
-                      "Standardized estimates"))
-}
-```
-
-###############
-
-
-
-
-
-
+####
 ### to generate CFA results with improved readability
 
 ```{r, echo = F}
@@ -542,6 +374,13 @@ cfa.tab.d <- variance |>
 
 ```{r, echo=F}
 multi.fit.tab <- function(data, title, more.footnote = NULL){
+  
+  if (nrow(data)>=4){
+    option <- "'striped'"
+  } else {
+    option <- "NULL"
+  }
+  
 data <- data |> 
   rename(p = 'p value',
          p2 = 'RMSEA p value',
@@ -576,21 +415,26 @@ data |>
         #format = "markdown", 
         caption = 
           title,
-        align = "lrrrrrr"
+        align = "lrrrrrr",
+        linesep =""
         ) |> 
-  kable_styling(full_width = T) |> 
+  kable_styling(#full_width = T,
+                #latex_options = "striped"
+                latex_options =  eval(parse(text = option))
+                ) |> 
   footnote(symbol = 
              c("Chi square scaling factor", 
                more.footnote)
            ) |>
-  column_spec(1, width = "3.0cm") |> 
+  column_spec(1, width = "3.2cm") |> 
   column_spec(2, width = "4cm")|> 
   column_spec(3, width = "1cm")|> 
   column_spec(4, width = "1cm")|> 
-  column_spec(5, width = "2.5cm")|> 
+  column_spec(5, width = "2.3cm")|> 
   column_spec(6, width = "1cm") |> 
   column_spec(7, width = "1cm") 
 }
+
 ```
 
 ### Write a function to simplify plotting of merged tables for multi-group fit indicies with chi square difference statistics
@@ -1420,14 +1264,15 @@ rownames(sem2.fit) <- NULL
 
 sem2.fit <- 
   sem2.fit |> 
-  mutate(Model = "Model2") |> 
+  mutate(Model = "Model2†") |> 
   select(Model, everything())
 
 sem12.fit <- rbind(sem1.fit, sem2.fit)
 
 #print the table
 multi.fit.tab(sem12.fit, 
-              "Fit indices for calibration dataset, model2 comparing with preceding model")
+              "Fit indices for calibration dataset, model2 comparing with preceding model",
+              "Initial model with Factors 3 (workload) and 2 (role conflict) combined")
 ```
 
 See table 3. Goodness-of-fit statistics for this modified model 2 were as follows: chi-square(436) = 955.863, CFI= 0.943, RMSEA = 0.045, suggesting relatively well fit. 
@@ -1483,7 +1328,9 @@ model4 <- paste(model3, "EE1 ~~ EE2\n")
 Model 3 was defined by re-specifying model. After model 3 was estimated, model 4 was defined by re-specifying model 3.
 
 ```{r, fig.height =  16, fig.width = 11, cache=TRUE}
+#set plot layout
 par(mfrow=c(2,1))
+#draw model 3 diagram
 semPaths(semPlotModel(model3),
          style = "lisrel",
          rotation = 2,
@@ -1512,7 +1359,12 @@ title(sub = "Notes: Red arrow indicates factor residuals; gray arrow indicates e
      Blue arrow indicates regression path; black arrow indicates factor loading;
      Newly incorporated parameter is highlighted in orange",
      line = 1, adj = 0.7)
-
+#fine-tune the positions of EE1 and EE2, to make their covariance manifest
+m[43, 45] <- NA
+m[39, 40] <- NA
+m[43, 52] <- "EE1"
+m[42, 42] <- "EE2"
+#draw model 4 diagram
 semPaths(semPlotModel(model4),
          style = "lisrel",
          rotation = 2,
@@ -1585,7 +1437,7 @@ rownames(sem3.fit) <- NULL
 
 sem3.fit <- 
   sem3.fit |> 
-  mutate(Model = "Model3") |> 
+  mutate(Model = "Model3‡") |> 
   select(Model, everything())
 #model4
 names(sem4.fit) <- sem4.fit[1,]
@@ -1594,7 +1446,7 @@ rownames(sem4.fit) <- NULL
 
 sem4.fit <- 
   sem4.fit |> 
-  mutate(Model = "Model4") |> 
+  mutate(Model = "Model4§") |> 
   select(Model, everything())
 
 
@@ -1603,7 +1455,10 @@ sem1234.fit <- rbind(sem1.fit, sem2.fit, sem3.fit, sem4.fit)
 #print the table
 multi.fit.tab(sem1234.fit, 
               "Fit indices for calibration dataset, model 3 and model 4 
-               comparing with preceding models")
+               comparing with preceding models",
+              c("Model2: Initial model with Factors 3 and 2 combined",
+                "Model3: Model2 with parameter F8 on F2 freely estimated",
+                "Model4: Model3 with residual covariance between EE1 and EE2 estimated"))
 ```
 
 See table 5. Model had a chi-square[435] of 907.120, CFI of 0.948 and SRMR of 0.05; Fit of model 4 further improved in comparison to model 3, yielding a chi-square[434] of 866.557 with CFI of 0.953 and SRMR of 0.048, all of which met the numeric requirement for acceptable goodness-of-fit. I hence took model 4 as a well-fitting model.
@@ -1618,19 +1473,452 @@ concern.table(sem4,
               "model4")
 ```
 
-See table 6. The 
+See table 6. No Heywood case was present any more. Yet, five regression paths were still non-significant (p values were highlighted in red). These paths were then removed from the model. 
+
+(4) Re-specification of model 4 to get baseline model
+
+```{r}
+# Modified, restructured baseline model for the calibration data:
+model.bl <- 
+  model4 |> 
+  str_replace_all("F11PA.~.F1ROLA.+.F7SELF.+.F8ELC.+.F9EE.+.F10DP", 
+                  " F11PA ~ F7SELF + F9EE + F10DP") |> 
+  str_replace_all("F10DP.~.F2ROWO.+.F9EE", 
+              " F10DP ~ F9EE") |> 
+  str_replace_all("F8ELC.~.F4DEC", 
+                  "") |> 
+  str_replace_all("F7SELF.~.F4DEC.+.F5SSUP.+.F6PSUP", 
+              " F7SELF ~ F4DEC + F5SSUP")
+
+```
+
+### Establish the baseline model for calibration group
+
+(1) Visualize baseline model
+
+```{r, fig.height =  10, fig.width = 14, cache=TRUE}
+semPaths(semPlotModel(model.bl),
+         style = "lisrel",
+         rotation = 2,
+         covAtResiduals = F,
+         sizeLat = 6,
+         sizeLat2 = 5,
+         sizeMan = 5,
+         sizeMan2 = 2,
+         residScale = 4,
+         shapeMan = "rectangle",
+         edge.color = c(rep("black", 32), #34 
+                        rep("blue", 9),
+                        rep("steelblue",1),
+                        rep("gray", 32),
+                        rep("red", 5)), 
+         residuals = T,
+         layout = m,
+         nCharNodes=0,
+         optimizeLatRes = T,
+         exoVar = F #if exogenous variables also has variance estimated
+         )
+title(main = list(
+  "Figure 8. Baseline model of elementary teacher burnout, modified from model 4",
+                  cex = 1.5, font =1
+  ),
+     outer = F, line = -1)
+title(sub = "Notes: Red arrow indicates factor residuals; gray arrow indicates error residuals;
+     Blue arrow indicates regression path; black arrow indicates factor loading;
+     Covariance between items is highlighted in steelblue",
+     line = 1, adj = 0.7)
+```
+
+However, given deletion of the paths leading from F11 to F1 and from F6 to F7, together with the fact that there are no specified relations between either F1 or F6 and any of the remaining factors, it would be more appropriate if F1 and F6 were deleted from the model, for parsimony. The model was hence redefined without FA and F6 and visualized as follows. 
+
+```{r}
+# Modified, restructured and simplified baseline model for the calibration data:
+model.bl.trim <- '
+F1ROWO       =~ ROLEC1 + ROLEC2 + WORK1 + WORK2
+F2CLIM       =~ CCLIM1 + CCLIM2 + CCLIM3 + CCLIM4
+F3DEC        =~ DEC1 + DEC2
+F4SSUP       =~ SSUP1 + SSUP2
+F5SELF       =~ SELF1 + SELF2 + SELF3
+F6ELC        =~ ELC1 + ELC2 + ELC3 + ELC4 + ELC5
+F7EE         =~ EE1 + EE2 + EE3
+F8DP         =~ DP1 + DP2
+F9PA         =~ PA1 + PA2 + PA3
+
+# Regression paths:
+F5SELF        ~ F3DEC + F4SSUP
+F6ELC         ~ F1ROWO
+F7EE          ~ F1ROWO + F2CLIM
+F8DP          ~ F7EE
+F9PA          ~ F5SELF + F7EE + F8DP
+
+# Residual covariances:
+EE1 ~~ EE2
+'
+```
+
+```{r}
+#redefine the matrix to place the nodes of SEM diagram
+m <- matrix(NA, 60, 72)
+m[4, 48] <- "ROLEC1"
+m[4, 40] <- "ROLEC2"
+m[4, 32] <- "WORK1"
+m[4, 24] <- "WORK2"
+m[4, 16] <- "CCLIM1"
+m[5, 10] <- "CCLIM2"
+m[10, 4] <- "CCLIM3"
+m[15, 4] <- "CCLIM4"
+m[20, 4] <- "DEC1"
+m[27, 6] <- "DEC2"
+m[36, 4] <- "SSUP1"
+m[40, 4] <- "SSUP2"
+m[48, 32] <- "SELF1"
+m[52, 28] <- "SELF2"
+m[51, 21] <- "SELF3"
+m[56, 50] <- "ELC1"
+m[60, 48] <- "ELC2"
+m[60, 42] <- "ELC3"
+m[60, 35] <- "ELC4"
+m[56, 31] <- "ELC5"
+m[43, 52] <- "EE1"
+m[42, 42] <- "EE2"
+m[35, 38] <- "EE3"
+m[20, 64] <- "DP1"
+m[20, 58] <- "DP2"
+m[52, 71] <- "PA1"
+m[56, 64] <- "PA2"
+m[53, 57] <- "PA3"
+m[12, 35] <-"F1ROWO"
+m[12,12] <- "F2CLIM"
+m[21,12] <-"F3DEC"
+m[40,12] <-"F4SSUP"
+m[44,24] <-"F5SELF"
+m[52,40] <-"F6ELC"
+m[37,48] <-"F7EE"
+m[26,60] <-"F8DP"
+m[48,64] <-"F9PA"
+```
 
 
-(2) Estimate model2 for calibration group
+```{r, fig.height =  10, fig.width = 14, cache=TRUE}
+semPaths(semPlotModel(model.bl.trim),
+         style = "lisrel",
+         rotation = 2,
+         covAtResiduals = F,
+         sizeLat = 6,
+         sizeLat2 = 5,
+         sizeMan = 5,
+         sizeMan2 = 2,
+         residScale = 4,
+         shapeMan = "rectangle",
+         edge.color = c(rep("black", 28), #34 
+                        rep("blue", 9),
+                        rep("steelblue",1),
+                        rep("gray", 28),
+                        rep("red", 5)), 
+         residuals = T,
+         layout = m,
+         nCharNodes=0,
+         optimizeLatRes = T,
+         exoVar = F #if exogenous variables also has variance estimated
+         )
+title(main = list(
+  "Figure 9. Streamlined baseline model (with detached factors and the corresponding 
+  indicators deleted) of elementary teacher burnout, modified from initial baseline model",
+                  cex = 1.5, font =1
+  ),
+     outer = F, line = -1)
+title(sub = "Notes: Red arrow indicates factor residuals; gray arrow indicates error residuals;
+     Blue arrow indicates regression path; black arrow indicates factor loading;
+     Covariance between items is highlighted in steelblue",
+     line = 1, adj = 0.7)
+```
+
+(2) Estimate untrimmed and trimmed baseline model for calibration group
+
+```{r}
+sem.bl <-   
+  sem(
+    model.bl,
+    data = ele.cali,
+    estimator = "MLM",
+    mimic = "Mplus"
+  )
+
+sem.bl.trim <-   
+  sem(
+    model.bl.trim,
+    data = ele.cali,
+    estimator = "MLM",
+    mimic = "Mplus"
+  )
+```
+
+```{r}
+# Numerical summary of the model:
+
+sem.bl.fit <-
+  cfa.summary.mlm.a(sem.bl) |>
+  t() |>
+  as.data.frame()
+
+sem.bl.trim.fit <-
+  cfa.summary.mlm.a(sem.bl.trim) |>
+  t() |>
+  as.data.frame()
+
+#combine with preceding fit indices
+#baseline model
+names(sem.bl.fit) <- sem.bl.fit[1,]
+sem.bl.fit <- sem.bl.fit[-1,]
+rownames(sem.bl.fit) <- NULL
+
+sem.bl.fit <- 
+  sem.bl.fit |> 
+  mutate(Model = "Baseline, original§") |> 
+  select(Model, everything())
+#baseline model trimmed
+names(sem.bl.trim.fit) <- sem.bl.trim.fit[1,]#turn 1st row into var names
+sem.bl.trim.fit <- sem.bl.trim.fit[-1,]#delete the 1st row
+rownames(sem.bl.trim.fit) <- NULL #delete row names
+
+sem.bl.trim.fit <- 
+  sem.bl.trim.fit |> 
+  mutate(Model = "Baseline, trimmed**") |> 
+  select(Model, everything())
+
+
+sem1234bl.fit <-
+  rbind(sem1.fit,
+        sem2.fit,
+        sem3.fit,
+        sem4.fit,
+        sem.bl.fit,
+        sem.bl.trim.fit)
+
+#print the table
+multi.fit.tab(
+  sem1234bl.fit,
+  "Fit indices for calibration dataset, original and trimmed baseline models
+               comparing with preceding models",
+  c(
+    "Model2: Initial model with Factors 3 and 2 combined",
+    "Model3: Model2 with parameter F8 on F2 freely estimated",
+    "Model4: Model3 with residual covariance between EE1 and EE2 estimated",
+    "Baseline, original: Model4 with 5 n.s regression paths deleted",
+    "Baseline, trimmed: Original baseline model with detached factors deleted"
+  ))
+```
+
+See table 7. Though the goodness-of-fit of the baseline model with untrimmed number of factors looked much better than the trimmed one, I still turn to results of the latter. No doubt, it is more sensible to delete factors not involved in the structural paths in case the imprecise number of degree of freedom inflates the fit goodness. Results from the last model fitted (Baseline, trimmed) were as follows: chi-square(333) = 726.551, CFI = 0.950, RMSEA = 0.044, and SRMR = 0.051. They looked fairly good. Yet I needed to check its loading/variance/covariance estimates before making final decision. The table was shown below.
+
+```{r}
+#print concern table for model baseline, trimmed
+concern.table(sem.bl.trim, model = "baseline model, trimmed") |> 
+  row_spec(22, color = "red")
+```
+
+See table 8. The parameter estimates yielded good results. None Heywood cases nor non-significant parameters were detected. However, one residual covariance between F9(PA) and F6(ELC) was estimated despite I did not ask lavaan to do so. According to the slides, like Mplus, lavvan estimates the residual covariance between final dependent variables by default. In other words, (as I understand) when we do not configure any causal relationship between any pair of dependent variables in our model, lavaan would estimate their covariance, unsolicited. My understanding about this default setting is: it is commonplace that researchers are interested in the how the  their dependent variables (DVs) influence each other in a SEM model. For example, in examining the emotional risk factors to depression (DV1) and Neuroticism (DV2), it is of interest to look at the inter-dependency of DV1 and DV2, and that is why researchers choose to place them in one model. However, in our case, our research interest is to validate a causal structure involving the impact of organizational and personality factors on three facets of burnout for elementary teachers. The priority outcomes are burnout-related indicators. Both organizational and personality aspects are the influencing factors we want to identify, though we assume the latter can also be influenced by the former (external aspects influence the internal aspects). In the process of searching for baseline model, we have allowed the emergence of any possible predictive effects between personality aspects and burnout by checking model modification indices. Yet F6 did not emerge as being an important predictor of F9. Then again, given F6 (a personality aspect) is not of the same level of interest in the study as F9 (one indicator of MBI), we chose to constrain them not to co-vary, for better estimating the MBI-related indicators. Nonetheless, we can also argue for and estimate their covariance, where needed. 
+
+(3) Re-specification of trimmed baseline model
+
+As discussed above, I further modified the model be constraining the co-variance between F9(PA) and F6(ELC) as zero. The model was defined as below. Note that in the trimmed baseline model we have already reached an fairly acceptable goodness-of-fit. Given the current re-specification did involve big modification and also relax one degree of freedom, I would anyway take this model as the final baseline model.  
+
+```{r}
+model.bl.final <-
+  paste(model.bl.trim,
+        'F6ELC    ~~ 0*F9PA'
+        , sep = "\n ")
+```
+
+
+### Estimate the final baseline model for calibration group
+
+```{r}
+sem.bl.final <-   
+  sem(
+    model.bl.final,
+    data = ele.cali,
+    estimator = "MLM",
+    mimic = "Mplus"
+  )
+```
+
+```{r}
+# Numerical summary of the model:
+sem.bl.final.fit <-
+  cfa.summary.mlm.a(sem.bl.final) |>
+  t() |>
+  as.data.frame()
+
+#combine with preceding fit indices
+#baseline model
+names(sem.bl.final.fit) <- sem.bl.final.fit[1,]
+sem.bl.final.fit <- sem.bl.final.fit[-1,]
+rownames(sem.bl.final.fit) <- NULL
+
+sem.bl.final.fit <- 
+  sem.bl.final.fit |> 
+  mutate(Model = "Baseline, final††") |> 
+  select(Model, everything())
+
+sem1234bl.fit <-
+  rbind(sem1.fit,
+        sem2.fit,
+        sem3.fit,
+        sem4.fit,
+        sem.bl.fit,
+        sem.bl.trim.fit,
+        sem.bl.final.fit)
+
+#print the table
+multi.fit.tab(
+  sem1234bl.fit,
+  "Fit indices for calibration dataset, final baseline model
+               comparing with preceding models",
+  c(
+    "Model2: Initial model with Factors 3 and 2 combined",
+    "Model3: Model2 with parameter F8 on F2 freely estimated",
+    "Model4: Model3 with residual covariance between EE1 and EE2 estimated",
+    "Baseline, original: Model4 with 5 n.s regression paths deleted",
+    "Baseline, trimmed: Original baseline model with detached factors deleted",
+    "Baseline, final: Preceding model with default estimation of F9/F6 covariance negated"
+  ))
+
+```
+
+See table 9. This final baseline model, though with one more degree of freedom, yielded basically the same results of fit indices with the trimmed baseline model. Its parameter estimates also showed nothing to be concerned with. See table 10. 
+
+```{r}
+concern.table(sem.bl.final, model = "baseline model, final") 
+```
+
+## Form and test the multigroup configural model with no parameter constraints
+
+### Merge the calibration and validation datasets
+
+```{r}
+mbi.both <- 
+  merge(
+    data.frame(
+      ele.cali, 
+      sample = "calibration"
+      ),
+    data.frame(
+      ele.vali, 
+      sample = "validation"
+      ),
+    all = TRUE, 
+    sort = FALSE
+    )
+```
+
+### Define the configural model
+
+There are no parameter specifications that are relevant only to the calibration group. The configural model was defined in the same way as final model baseline model had been defined.
+
+```{r}
+model.config <- model.bl.final
+```
+
+
+### Estimate the configural model
+
+The model fit results derived from this model represent a multi-group version of the combined baseline models for calibration and validation data sets.
+
+```{r}
+sem.config <- 
+  sem(
+    model.config, 
+    data = mbi.both, 
+    estimator = "MLM", 
+    group = "sample"
+    )
+```
+
+### Estimate the configural model for merged data sets
+
+```{r}
+# Numerical summary of the model:
+sem.config.fit <-
+  cfa.summary.mlm.a(sem.config) |>
+  t() |>
+  as.data.frame()
+
+#turn baseline model estimates into data frame
+names(sem.config.fit) <- sem.config.fit[1,]
+sem.config.fit <- sem.config.fit[-1,]
+rownames(sem.config.fit) <- NULL
+
+sem.config.fit <- 
+  sem.config.fit |> 
+  mutate(Model = "Configural, for both samples") |> 
+  select(Model, everything())
+
+#combine with preceding fit indices
+model.bl.config <- 
+  rbind(sem.bl.final.fit, sem.config.fit)
+
+model.bl.config[1,1] <- "Baseline, for calibration sample"
+
+#extract and convert needed values
+model.bl.config <- 
+  model.bl.config |> 
+  mutate(chisquare = 'chi square',
+         p = 
+           case_when(
+             as.numeric('p value') < 0.001 ~ "<0.001",
+             as.numeric('p value') >= 0.001 ~ as.character('p value')
+                     ),
+    chi1 = paste0(
+      'chi square',
+      "(", 
+      df, 
+      p,
+      ")")
+    ) |> 
+  select(
+    Model,
+    "p value(df, p)" = chi1,
+    CFI,
+    TLI,
+    RMSEA,
+    SRMR
+    )
+
+
+#add group-level chi-square values
+model.bl.config[3:4,1] <- c("calibration group", "validation group")
+model.bl.config[3:4,2] <- 
+  c(round(sem.config@test[[2]]$stat.group[1],3), 
+    round(sem.config@test[[2]]$stat.group[2],3))
+
+#replace NA across the data frame
+model.bl.config <- 
+  model.bl.config  %>% 
+  replace(is.na(.), "--")
+
+model.bl.config |> 
+  kable(linesep= "",
+        #format = "markdown",
+        booktab = T,
+        caption = "trial") |> 
+  kable_styling() |> 
+  column_spec(1, width = "4.5cm") |> 
+  column_spec(2, width = "3.5cm") |> 
+  column_spec(3, width = "1cm") |> 
+  column_spec(4, width = "1cm") |> 
+  column_spec(5, width = "1cm") |> 
+  column_spec(6, width = "1cm") |> 
+  add_indent(c(3,4))
+```
 
 
 ### Establish and modify the model 2 for calibration group 
 (1) Visualize model 2
 (2) Estimate model2 for calibration group
-(3) Re-specification of model2
+(3) Re-specification of model2 
 
-```{r}
-```
+
 
 
 ```{r}
