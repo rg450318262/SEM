@@ -1605,7 +1605,6 @@ title(sub = "Notes: Red arrow indicates factor residuals; gray arrow indicates e
 
 
 ```{r, fig.width=14, fig.height=10}
-
 grps <- list(c("F10EE","F11DP","F12PA"),
              c("F1ROLA","F2ROLC","F3WORK","F4CLIM","F5DEC","F6SSUP","F8SELF","F9ELC"))
 a <- "Figure 13. Summary of final model structural paths representing determinants 
